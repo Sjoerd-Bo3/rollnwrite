@@ -39,6 +39,7 @@ end
 
 require "base64"
 require "openssl"
+require "tmpdir"
 
 # Rebuild a clean PEM from the ASC_KEY_P8 secret no matter how it was pasted.
 # Handles every common form so "invalid curve name" can't happen:
@@ -153,42 +154,58 @@ platform :ios do
       initial_build_number: 0
     ) + 1
 
-    build_app(
-      project: PROJECT,
-      scheme: SCHEME,
-      configuration: "Release",
-      export_method: "app-store",
-      # Hand the API key to gym so it threads -authenticationKeyPath/ID/IssuerID
-      # into xcodebuild's archive AND export. Without this the archive has no
-      # Apple account for -allowProvisioningUpdates and fails with
-      # "No Accounts" / "No profiles for 'dev.bo3.RollnWrite' were found".
-      api_key: key,
-      # Cloud signing + pin identity/version at build time. Setting
-      # CURRENT_PROJECT_VERSION here keeps the pbxproj untouched (no agvtool).
-      xcargs: [
-        "-allowProvisioningUpdates",
-        "CODE_SIGN_STYLE=Automatic",
-        "DEVELOPMENT_TEAM=#{team_id}",
-        "PRODUCT_BUNDLE_IDENTIFIER=#{bundle_id}",
-        "MARKETING_VERSION=1.0",
-        "CURRENT_PROJECT_VERSION=#{build_number}"
-      ].join(" "),
-      export_options: {
-        method: "app-store",
-        teamID: team_id,
-        signingStyle: "automatic",
-        generateAppStoreInformation: false
-      }
-    )
+    # The ARCHIVE needs the API key passed to xcodebuild explicitly for cloud
+    # signing (gym does not auto-inject auth into the archive). Write the key to
+    # a temp .p8 and pass the -authenticationKey* flags via xcargs. The EXPORT
+    # step, by contrast, gets these flags injected automatically by gym from the
+    # API key in the lane context — so we must NOT also set export_xcargs, or
+    # xcodebuild errors with "option '-authenticationKeyPath' may only be
+    # provided once".
+    tmp_dir = ENV["RUNNER_TEMP"] || Dir.tmpdir
+    auth_key_path = File.join(tmp_dir, "asc_AuthKey_#{ENV.fetch('ASC_KEY_ID')}.p8")
+    File.write(auth_key_path, clean_p8_pem(ENV.fetch("ASC_KEY_P8")))
+    auth_flags = [
+      "-allowProvisioningUpdates",
+      "-authenticationKeyPath", auth_key_path,
+      "-authenticationKeyID", ENV.fetch("ASC_KEY_ID"),
+      "-authenticationKeyIssuerID", ENV.fetch("ASC_ISSUER_ID")
+    ].join(" ")
 
-    changelog = "Build #{build_number} from #{ENV['GITHUB_REF_NAME'] || 'local'} (#{(ENV['GITHUB_SHA'] || '')[0, 7]})"
-    upload_to_testflight(
-      api_key: key,
-      app_identifier: bundle_id,
-      skip_waiting_for_build_processing: true,
-      changelog: changelog
-    )
+    begin
+      build_app(
+        project: PROJECT,
+        scheme: SCHEME,
+        configuration: "Release",
+        export_method: "app-store",
+        # Cloud signing + pin identity/version at build time. Setting
+        # CURRENT_PROJECT_VERSION here keeps the pbxproj untouched (no agvtool).
+        xcargs: [
+          auth_flags,
+          "CODE_SIGN_STYLE=Automatic",
+          "DEVELOPMENT_TEAM=#{team_id}",
+          "PRODUCT_BUNDLE_IDENTIFIER=#{bundle_id}",
+          "MARKETING_VERSION=1.0",
+          "CURRENT_PROJECT_VERSION=#{build_number}"
+        ].join(" "),
+        export_options: {
+          method: "app-store",
+          teamID: team_id,
+          signingStyle: "automatic",
+          generateAppStoreInformation: false
+        }
+      )
 
-    UI.success("✅ Uploaded build #{build_number} to TestFlight. It will appear after Apple finishes processing.")
+      changelog = "Build #{build_number} from #{ENV['GITHUB_REF_NAME'] || 'local'} (#{(ENV['GITHUB_SHA'] || '')[0, 7]})"
+      upload_to_testflight(
+        api_key: key,
+        app_identifier: bundle_id,
+        skip_waiting_for_build_processing: true,
+        changelog: changelog
+      )
+
+      UI.success("✅ Uploaded build #{build_number} to TestFlight. It will appear after Apple finishes processing.")
+    ensure
+      File.delete(auth_key_path) if File.exist?(auth_key_path)
+    end
   end
 end
