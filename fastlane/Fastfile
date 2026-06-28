@@ -30,12 +30,32 @@ def team_id
 end
 
 # Build the App Store Connect API key object used for every ASC interaction.
+#
+# The .p8 secret is tolerant of how it was pasted: a normal PEM (with real
+# newlines), a PEM whose newlines were collapsed/escaped by the secret store
+# (the classic "invalid curve name" cause), or a single-line base64 blob.
 def asc_api_key
+  raw = ENV.fetch("ASC_KEY_P8").strip
+  is_pem = raw.include?("PRIVATE KEY")
+
+  key_content =
+    if is_pem
+      # Repair common secret-store mangling, then rebuild a clean PEM:
+      # unescape literal "\n", normalise CRLF, and re-wrap the base64 body at
+      # 64 chars so OpenSSL parses the EC key reliably.
+      body = raw.gsub('\\n', "\n").gsub("\r\n", "\n")
+      inner = body[/-----BEGIN[^-]*-----(.*)-----END/m, 1].to_s.gsub(/\s+/, "")
+      "-----BEGIN PRIVATE KEY-----\n" + inner.scan(/.{1,64}/).join("\n") +
+        "\n-----END PRIVATE KEY-----"
+    else
+      raw # already a base64 blob
+    end
+
   app_store_connect_api_key(
     key_id: ENV.fetch("ASC_KEY_ID"),
     issuer_id: ENV.fetch("ASC_ISSUER_ID"),
-    key_content: ENV.fetch("ASC_KEY_P8"),
-    is_key_content_base64: false,
+    key_content: key_content,
+    is_key_content_base64: !is_pem,
     in_house: false
   )
 end

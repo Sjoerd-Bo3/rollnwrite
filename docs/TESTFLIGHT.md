@@ -14,9 +14,9 @@ signing. Ours is shorter — one app, cloud signing, **3 secrets, 2 clicks**:
    into the project — no secret needed. Override them with optional
    `APP_BUNDLE_ID` / `APPLE_TEAM_ID` secrets only if you fork to a new account.)
 4. The **1024×1024 app icon** is already committed, so nothing to add.
-5. **Actions tab → Validate Secrets → Run** (1 min sanity check) → **Actions →
-   TestFlight → Run** (~15 min). Add yourself as an internal tester, install
-   the TestFlight app on your iPhone — done.
+5. **Actions tab → 1. Validate Secrets → Run** (1 min sanity check) → **Actions
+   → 2. TestFlight → Run** (~15 min). Add yourself as an internal tester,
+   install the TestFlight app on your iPhone — done.
 
 A scheduled rebuild runs monthly so your build never hits the 90-day TestFlight
 expiry. Full step-by-step below.
@@ -29,12 +29,18 @@ the signing (App Store Connect API key + automatic **cloud signing**). You never
 touch Xcode or a Mac.
 
 The pipeline is driven by **fastlane** (`fastlane/Fastfile`), the same tool the
-Loop/Trio/iAPS DIY apps use for browser-only builds. Two workflows wrap it:
+Loop/Trio/iAPS DIY apps use for browser-only builds. The Actions tab lists the
+workflows in run order:
 
-- **Validate Secrets** (`.github/workflows/validate_secrets.yml`) — a ~1-minute
-  preflight that proves your secrets work before any real build.
-- **TestFlight** (`.github/workflows/testflight.yml`) — builds, cloud-signs, and
-  uploads a new build to TestFlight.
+- **1. Validate Secrets** (`validate_secrets.yml`) — a ~1-minute preflight that
+  proves your secrets work before any real build.
+- **2. TestFlight** (`testflight.yml`) — builds, cloud-signs, and uploads a new
+  build to TestFlight (also runs automatically once a month, see below).
+- **3. iOS Build** (`ios.yml`) — automatic compile-check on every push/PR (no
+  signing); this is the no-Mac way to confirm the project still builds.
+- **4. Bump Version** (`bump_version.yml`) — manual helper to set the marketing
+  version (e.g. 1.0 → 1.1) for the next release. The build number itself
+  auto-increments, so you only run this to change the visible version.
 
 > **Why no `match`?** Trio stores its signing certificates in a private
 > `Match-Secrets` git repo (needing a `GH_PAT` and `MATCH_PASSWORD`) because it
@@ -115,11 +121,11 @@ Optional overrides (only if you fork to a different Apple account): set
 
 ## Releasing
 
-1. **Preflight (recommended the first time):** Actions tab → **Validate
+1. **Preflight (recommended the first time):** Actions tab → **1. Validate
    Secrets** → **Run workflow**. In ~1 minute it confirms your API key
    authenticates and can see the app. Green check = your secrets are good. Fix
    any reported problem before building.
-2. Actions tab → **TestFlight** → **Run workflow** → pick the
+2. Actions tab → **2. TestFlight** → **Run workflow** → pick the
    `claude/qwixx-scorecard-ios-app-1gmje1` branch → **Run workflow**.
 3. The job (~10–15 min) picks the next build number (latest on TestFlight + 1),
    builds, cloud-signs via your API key, and uploads. Watch the logs if you like.
