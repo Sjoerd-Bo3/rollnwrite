@@ -15,6 +15,20 @@ default_platform(:ios)
 PROJECT = "RollnWrite.xcodeproj"
 SCHEME  = "RollnWrite"
 
+# Bundle id and Team ID are not secret (they ship inside every app binary), so
+# they live in the project. The env vars are optional overrides — if a secret
+# isn't set, we fall back to these committed defaults.
+DEFAULT_BUNDLE_ID = "dev.bo3.RollnWrite"
+DEFAULT_TEAM_ID   = "794HF2GP3T"
+
+def bundle_id
+  ENV.fetch("APP_BUNDLE_ID", DEFAULT_BUNDLE_ID)
+end
+
+def team_id
+  ENV.fetch("APPLE_TEAM_ID", DEFAULT_TEAM_ID)
+end
+
 # Build the App Store Connect API key object used for every ASC interaction.
 def asc_api_key
   app_store_connect_api_key(
@@ -32,7 +46,6 @@ platform :ios do
   # first whenever you change a secret.
   desc "Verify the App Store Connect secrets without building"
   lane :validate_secrets do
-    bundle_id = ENV.fetch("APP_BUNDLE_ID")
     latest = latest_testflight_build_number(
       api_key: asc_api_key,
       app_identifier: bundle_id,
@@ -45,8 +58,6 @@ platform :ios do
   desc "Build and upload a new build to TestFlight"
   lane :beta do
     key = asc_api_key
-    bundle_id = ENV.fetch("APP_BUNDLE_ID")
-    team_id = ENV.fetch("APPLE_TEAM_ID")
 
     # Next build number = highest already on TestFlight + 1 (App Store Connect
     # rejects duplicates). Falls back to 1 for a brand-new app.

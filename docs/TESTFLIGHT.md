@@ -3,16 +3,17 @@
 ## TL;DR (the condensed RollnWrite version)
 
 Loop/Trio's guides are long because of `match`, App Groups, and multi-target
-signing. Ours is shorter — one app, cloud signing, **5 secrets, 2 clicks**:
+signing. Ours is shorter — one app, cloud signing, **3 secrets, 2 clicks**:
 
 1. **Pay** for the Apple Developer Program ($99/yr) — the only hard requirement.
-2. In **App Store Connect**, create the app record + bundle id, and an **API
-   key** (App Manager role) → note **Key ID**, **Issuer ID**, download the
-   **`.p8`** (one-time download!). Grab your **Team ID** from the Developer
-   portal.
-3. Add **5 GitHub secrets**: `APPLE_TEAM_ID`, `APP_BUNDLE_ID`, `ASC_KEY_ID`,
-   `ASC_ISSUER_ID`, `ASC_KEY_P8`.
-4. Drop a **1024×1024 icon** into `Assets.xcassets/AppIcon.appiconset`.
+2. In **App Store Connect**, create the app record using bundle id
+   **`dev.bo3.RollnWrite`**, and an **API key** (App Manager role) → note **Key
+   ID**, **Issuer ID**, download the **`.p8`** (one-time download!).
+3. Add **3 GitHub secrets**: `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8`.
+   (Bundle id `dev.bo3.RollnWrite` and Team ID `794HF2GP3T` are already baked
+   into the project — no secret needed. Override them with optional
+   `APP_BUNDLE_ID` / `APPLE_TEAM_ID` secrets only if you fork to a new account.)
+4. The **1024×1024 app icon** is already committed, so nothing to add.
 5. **Actions tab → Validate Secrets → Run** (1 min sanity check) → **Actions →
    TestFlight → Run** (~15 min). Add yourself as an internal tester, install
    the TestFlight app on your iPhone — done.
@@ -62,19 +63,19 @@ That's it. Everything else is configuration you paste into GitHub.
 
 1. Go to <https://appstoreconnect.apple.com> → **Apps** → **+** → **New App**.
 2. Platform: **iOS**. Name: `RollnWrite` (or any unique name).
-3. **Bundle ID**: click the dropdown — if nothing is there, first register one
-   at <https://developer.apple.com/account/resources/identifiers/list> →
-   **+** → **App IDs** → **App**. Use something like
-   `com.yourname.RollnWrite`. Capabilities: none needed. Remember this exact
-   string — it becomes the `APP_BUNDLE_ID` secret.
+3. **Bundle ID**: click the dropdown and pick **`dev.bo3.RollnWrite`**. If it's
+   not there yet, first register it at
+   <https://developer.apple.com/account/resources/identifiers/list> →
+   **+** → **App IDs** → **App** → bundle id `dev.bo3.RollnWrite`, **all
+   capabilities unchecked** (the app needs none). This exact string is already
+   set in the Xcode project, so don't invent a new one.
 4. SKU: any string (e.g. `rollnwrite01`). Finish creating the app.
 
-### 2. Find your Team ID
+> The Team ID (`794HF2GP3T`) and bundle id (`dev.bo3.RollnWrite`) are already
+> committed in the project, so you do **not** need to add them as secrets — only
+> the three API-key values below.
 
-<https://developer.apple.com/account> → scroll to **Membership details** →
-copy the 10-character **Team ID** (e.g. `A1B2C3D4E5`). This is `APPLE_TEAM_ID`.
-
-### 3. Create an App Store Connect API key
+### 2. Create an App Store Connect API key
 
 1. <https://appstoreconnect.apple.com/access/integrations/api> (Users and
    Access → **Integrations** → **App Store Connect API**).
@@ -88,26 +89,27 @@ copy the 10-character **Team ID** (e.g. `A1B2C3D4E5`). This is `APPLE_TEAM_ID`.
      full contents (including the `-----BEGIN PRIVATE KEY-----` lines) become
      `ASC_KEY_P8`.
 
-### 4. Add the five GitHub secrets
+### 3. Add the three GitHub secrets
 
 In this repo: **Settings → Secrets and variables → Actions → New repository
 secret**. Add each of these:
 
 | Secret name     | Value                                                        |
 |-----------------|--------------------------------------------------------------|
-| `APPLE_TEAM_ID` | Your 10-char Team ID from step 2                             |
-| `APP_BUNDLE_ID` | The bundle id from step 1 (e.g. `com.yourname.RollnWrite`)   |
-| `ASC_KEY_ID`    | API Key ID from step 3                                       |
-| `ASC_ISSUER_ID` | API Issuer ID from step 3                                    |
-| `ASC_KEY_P8`    | The entire text of the `AuthKey_XXXXXX.p8` file from step 3  |
+| `ASC_KEY_ID`    | API Key ID from step 2                                       |
+| `ASC_ISSUER_ID` | API Issuer ID from step 2                                    |
+| `ASC_KEY_P8`    | The entire text of the `AuthKey_XXXXXX.p8` file from step 2  |
 
-### 5. App icon (required by App Store Connect)
+Optional overrides (only if you fork to a different Apple account): set
+`APP_BUNDLE_ID` and/or `APPLE_TEAM_ID` to replace the committed defaults.
 
-TestFlight rejects builds without a marketplace icon. Make sure
-`Assets.xcassets/AppIcon.appiconset` contains a 1024×1024 PNG (no alpha,
-no transparency). If you don't have one yet, generate any solid 1024px PNG and
-drop it in — you can refine it later. A build with a placeholder icon still
-installs fine on your phone.
+### 4. App icon & encryption — already done
+
+- A compliant **1024×1024** icon (no alpha) is committed at
+  `RollnWrite/Assets.xcassets/AppIcon.appiconset/AppIcon.png`. Swap the PNG any
+  time to rebrand.
+- `ITSAppUsesNonExemptEncryption = NO` is set in the project, so TestFlight
+  won't ask the export-compliance question on every upload.
 
 ---
 
@@ -173,14 +175,15 @@ code change needed). You don't have to do anything; the app keeps working.
 
 ## Troubleshooting
 
-- **"No profiles for '…' were found"** — the bundle id in `APP_BUNDLE_ID`
-  doesn't match a registered App ID, or the API key lacks access. Re-check
-  steps 1 and 3.
+- **"No profiles for 'dev.bo3.RollnWrite' were found"** — the App ID isn't
+  registered yet, or the API key lacks access. Re-check step 1 (register the
+  bundle id) and step 2 (key role = App Manager).
 - **"Authentication credentials are invalid"** — `ASC_KEY_P8` is truncated.
   Re-paste the *entire* file contents, including the BEGIN/END lines and
   trailing newline.
-- **"Missing app icon" / "asset validation failed"** — add the 1024×1024 icon
-  (step 5) and re-run.
+- **"Missing app icon" / "asset validation failed"** — the committed icon
+  should prevent this; if you swapped it, make sure the replacement is exactly
+  1024×1024 with no alpha channel.
 - **"Redundant binary upload" / duplicate build number** — re-run the
-  workflow; the build number tracks the run number, so a fresh run gets a new
-  one automatically.
+  workflow; the build number is `latest TestFlight build + 1`, so a fresh run
+  gets a new one automatically.
