@@ -1,4 +1,4 @@
-name: TestFlight
+name: 2. TestFlight
 
 # Build → cloud-sign → upload to TestFlight entirely on a GitHub-hosted Mac,
 # driven by fastlane (fastlane/Fastfile, lane `beta`). No local Mac needed.

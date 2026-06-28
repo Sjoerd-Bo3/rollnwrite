@@ -14,9 +14,9 @@ signing. Ours is shorter — one app, cloud signing, **3 secrets, 2 clicks**:
    into the project — no secret needed. Override them with optional
    `APP_BUNDLE_ID` / `APPLE_TEAM_ID` secrets only if you fork to a new account.)
 4. The **1024×1024 app icon** is already committed, so nothing to add.
-5. **Actions tab → Validate Secrets → Run** (1 min sanity check) → **Actions →
-   TestFlight → Run** (~15 min). Add yourself as an internal tester, install
-   the TestFlight app on your iPhone — done.
+5. **Actions tab → 1. Validate Secrets → Run** (1 min sanity check) → **Actions
+   → 2. TestFlight → Run** (~15 min). Add yourself as an internal tester,
+   install the TestFlight app on your iPhone — done.
 
 A scheduled rebuild runs monthly so your build never hits the 90-day TestFlight
 expiry. Full step-by-step below.
@@ -115,11 +115,11 @@ Optional overrides (only if you fork to a different Apple account): set
 
 ## Releasing
 
-1. **Preflight (recommended the first time):** Actions tab → **Validate
+1. **Preflight (recommended the first time):** Actions tab → **1. Validate
    Secrets** → **Run workflow**. In ~1 minute it confirms your API key
    authenticates and can see the app. Green check = your secrets are good. Fix
    any reported problem before building.
-2. Actions tab → **TestFlight** → **Run workflow** → pick the
+2. Actions tab → **2. TestFlight** → **Run workflow** → pick the
    `claude/qwixx-scorecard-ios-app-1gmje1` branch → **Run workflow**.
 3. The job (~10–15 min) picks the next build number (latest on TestFlight + 1),
    builds, cloud-signs via your API key, and uploads. Watch the logs if you like.
