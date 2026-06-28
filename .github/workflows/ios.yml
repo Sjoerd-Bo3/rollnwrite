@@ -1,4 +1,4 @@
-name: iOS Build
+name: 3. iOS Build
 
 # Builds the app on a GitHub-hosted macOS runner — no local Mac required.
 # Compiles every Swift file for the iOS Simulator SDK (no signing needed), so

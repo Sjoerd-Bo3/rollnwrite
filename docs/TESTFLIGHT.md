@@ -29,12 +29,18 @@ the signing (App Store Connect API key + automatic **cloud signing**). You never
 touch Xcode or a Mac.
 
 The pipeline is driven by **fastlane** (`fastlane/Fastfile`), the same tool the
-Loop/Trio/iAPS DIY apps use for browser-only builds. Two workflows wrap it:
+Loop/Trio/iAPS DIY apps use for browser-only builds. The Actions tab lists the
+workflows in run order:
 
-- **Validate Secrets** (`.github/workflows/validate_secrets.yml`) — a ~1-minute
-  preflight that proves your secrets work before any real build.
-- **TestFlight** (`.github/workflows/testflight.yml`) — builds, cloud-signs, and
-  uploads a new build to TestFlight.
+- **1. Validate Secrets** (`validate_secrets.yml`) — a ~1-minute preflight that
+  proves your secrets work before any real build.
+- **2. TestFlight** (`testflight.yml`) — builds, cloud-signs, and uploads a new
+  build to TestFlight (also runs automatically once a month, see below).
+- **3. iOS Build** (`ios.yml`) — automatic compile-check on every push/PR (no
+  signing); this is the no-Mac way to confirm the project still builds.
+- **4. Bump Version** (`bump_version.yml`) — manual helper to set the marketing
+  version (e.g. 1.0 → 1.1) for the next release. The build number itself
+  auto-increments, so you only run this to change the visible version.
 
 > **Why no `match`?** Trio stores its signing certificates in a private
 > `Match-Secrets` git repo (needing a `GH_PAT` and `MATCH_PASSWORD`) because it
