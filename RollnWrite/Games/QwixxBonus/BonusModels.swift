@@ -56,10 +56,12 @@ public enum BonusLayout {
     /// The colour reward of each bonus-bar field, left → right. There are twelve
     /// fields — one for every boxed number on the sheet — so the bar can be
     /// filled exactly if every bonus number is eventually crossed.
+    /// Corrected from the score-sheet image — the bar snakes:
+    /// red, yellow, green, blue, green, red, blue, yellow, red, yellow, blue, green.
     public static let barColors: [GameColor] = [
         .red, .yellow, .green, .blue,
-        .red, .blue, .yellow, .red,
-        .yellow, .blue, .green, .green,
+        .green, .red, .blue, .yellow,
+        .red, .yellow, .blue, .green,
     ]
 
     /// Number of fields on the bonus bar.

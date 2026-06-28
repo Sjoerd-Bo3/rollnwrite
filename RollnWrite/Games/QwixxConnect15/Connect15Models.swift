@@ -21,7 +21,35 @@
 
 import Foundation
 
-/// The three "connection" fields woven into a single colour row. Connection
+/// Positions of the printed "connection" fields, transcribed from the official
+/// Connect 15 score sheet. A position is the 0-based number column index *after
+/// which* a connection field is printed (red/yellow ascend: column `i` → number
+/// `i + 2`; green/blue descend: column `i` → number `12 - i`).
+///
+/// Verified from the sheet image:
+///   • red:    one field, between 3 and 4            → after column 1
+///   • yellow: two fields, between 5–6 and 7–8       → after columns 3 and 5
+///   • green:  one field, between 10 and 9           → after column 0
+///   • blue:   not legible on the supplied photo (the row's right end, where its
+///             connection field(s) sit, is occluded by the scoring table)
+///
+/// NOTE: the supplied sheet shows the connection fields woven between specific
+/// numbers and with a *different count per row* — not the uniform three-at-the-
+/// end assumption the renderer originally used. Scoring is position-independent
+/// (a crossed connection field is just one more cross toward the row's cap of
+/// 15), so the engine stays count-based; this table documents the true print
+/// layout for the view.
+public enum Connect15Layout {
+    /// Connection-field positions per colour, as "after this number column".
+    public static let connectionColumns: [GameColor: [Int]] = [
+        .red:    [1],          // between 3 and 4
+        .yellow: [3, 5],       // between 5–6 and 7–8
+        .green:  [0],          // between 10 and 9
+        .blue:   [],           // TODO verify: blue's connection field(s) are occluded on the photo
+    ]
+}
+
+/// The "connection" fields woven into a single colour row. Connection
 /// fields carry no printed number; they are crossed left → right whenever the
 /// dice form a "15" (a 1 and a 5), may be skipped, and add to the row's crosses.
 ///
