@@ -51,6 +51,7 @@ public enum GameRegistry {
     public static let games: [GameDefinition] = [
         QwixxBigPointsGame(),
         ThatsPrettyCleverGame(),
+        TwiceAsCleverGame(),
 
         // Future variants slot in here with zero changes elsewhere.
         ComingSoonGame(
@@ -59,13 +60,6 @@ public enum GameRegistry {
             subtitle: "The original",
             iconSystemName: "die.face.4",
             accent: .orange
-        ),
-        ComingSoonGame(
-            id: "clever-2",
-            title: "Twice as Clever",
-            subtitle: "Doppelt so clever",
-            iconSystemName: "brain.head.profile",
-            accent: .pink
         ),
         ComingSoonGame(
             id: "clever-3",
