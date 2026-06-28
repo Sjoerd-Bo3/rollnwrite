@@ -2,11 +2,24 @@
 
 You can build, sign, and ship RollnWrite to TestFlight entirely from your
 browser. A GitHub-hosted macOS runner does the Xcode work; Apple's servers do
-the signing (App Store Connect API key + automatic cloud signing). You never
+the signing (App Store Connect API key + automatic **cloud signing**). You never
 touch Xcode or a Mac.
 
-The workflow lives at `.github/workflows/testflight.yml`. Once the one-time
-setup below is done, every run archives the app and uploads it to TestFlight.
+The pipeline is driven by **fastlane** (`fastlane/Fastfile`), the same tool the
+Loop/Trio/iAPS DIY apps use for browser-only builds. Two workflows wrap it:
+
+- **Validate Secrets** (`.github/workflows/validate_secrets.yml`) — a ~1-minute
+  preflight that proves your secrets work before any real build.
+- **TestFlight** (`.github/workflows/testflight.yml`) — builds, cloud-signs, and
+  uploads a new build to TestFlight.
+
+> **Why no `match`?** Trio stores its signing certificates in a private
+> `Match-Secrets` git repo (needing a `GH_PAT` and `MATCH_PASSWORD`) because it
+> has several code-signed targets — a watch app, a complication, a live
+> activity — sharing App Groups, where Apple's cloud signing is awkward.
+> RollnWrite is a **single target**, so Apple's cloud signing
+> (`-allowProvisioningUpdates` + the API key) manages the certificate
+> automatically with **no `match`, no extra repo, and two fewer secrets**.
 
 ---
 
@@ -78,12 +91,15 @@ installs fine on your phone.
 
 ## Releasing
 
-1. Go to the repo's **Actions** tab → **TestFlight** (left sidebar) → **Run
-   workflow** → pick the `claude/qwixx-scorecard-ios-app-1gmje1` branch →
-   **Run workflow**.
-2. The job (~10–15 min) archives, signs via your API key, and uploads. Watch
-   the logs if you like.
-3. The build then **processes on Apple's side** for a few more minutes. Track
+1. **Preflight (recommended the first time):** Actions tab → **Validate
+   Secrets** → **Run workflow**. In ~1 minute it confirms your API key
+   authenticates and can see the app. Green check = your secrets are good. Fix
+   any reported problem before building.
+2. Actions tab → **TestFlight** → **Run workflow** → pick the
+   `claude/qwixx-scorecard-ios-app-1gmje1` branch → **Run workflow**.
+3. The job (~10–15 min) picks the next build number (latest on TestFlight + 1),
+   builds, cloud-signs via your API key, and uploads. Watch the logs if you like.
+4. The build then **processes on Apple's side** for a few more minutes. Track
    it at App Store Connect → your app → **TestFlight** tab.
 
 ### Installing on your iPhone
@@ -102,18 +118,18 @@ own phone.)
 
 ## How the workflow signs without a Mac
 
-- `xcodebuild archive … -allowProvisioningUpdates -authenticationKeyPath …`
-  hands Apple the API key, and Apple's servers create/refresh the signing
-  certificate and provisioning profile on the fly (**cloud signing**) — no
-  manual certificate juggling, no Keychain.
-- `xcodebuild -exportArchive` with an `ExportOptions.plist` of
-  `method=app-store-connect` + `destination=upload` exports the signed `.ipa`
-  and uploads it to TestFlight in one step.
-- `MARKETING_VERSION` is pinned to `1.0`; `CURRENT_PROJECT_VERSION` is set to
-  the GitHub run number so every upload has a unique, increasing build number
-  (App Store Connect rejects duplicates).
-- The `.p8` key is written only to the runner's temp dir and deleted in an
-  `if: always()` cleanup step, so it never lingers.
+- fastlane's **`build_app`** runs `xcodebuild` with `-allowProvisioningUpdates`
+  and the App Store Connect API key, so Apple's servers create/refresh the
+  signing certificate and provisioning profile on the fly (**cloud signing**) —
+  no manual certificate juggling, no Keychain, no `match`.
+- fastlane's **`upload_to_testflight`** sends the signed `.ipa` to App Store
+  Connect with a changelog (branch + commit), and handles upload retries.
+- **`latest_testflight_build_number + 1`** picks the next build number
+  automatically, so every upload is unique and increasing (App Store Connect
+  rejects duplicates). `MARKETING_VERSION` is pinned to `1.0`. Neither value is
+  written into `project.pbxproj` — they're passed at build time.
+- The API key is supplied to fastlane purely through the `ASC_KEY_P8`
+  environment variable; nothing is written to disk by the workflow.
 
 ---
 
