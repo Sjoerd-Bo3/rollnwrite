@@ -21,24 +21,28 @@ The **Qwixx Big Points** variant is fully implemented:
 > Rules and scoring follow the official Qwixx Big Points variant by
 > Nürnberger-Spielkarten-Verlag (NSV).
 
-## Second game: That's Pretty Clever (Clever 1)
+## The Clever series (1–4)
 
-**That's Pretty Clever** (*Ganz schön clever*) is implemented as a smart
-scorecard:
+All four Wolfgang Warsch *Clever* games are implemented as interactive,
+auto-scoring scorecards, each transcribed from its **official score sheet**:
 
-- All five areas with their exact official layout — yellow 4×4 grid (columns
-  10/14/16/20), blue 2–12 grid (scale to 56), green threshold row, orange with
-  ×2/×3 multipliers, and the strictly-increasing purple row.
-- The app **enforces each area's structure** and **auto-computes every score**,
-  including **foxes** (each scores your lowest area) which it detects for you.
-- **Map your physical dice**: remap the colour shown for any area to match your
-  copy of the game (presentation only — scoring is unchanged).
+- **That's Pretty Clever** (*Ganz schön clever*, art. 88198) — yellow 4×4
+  (columns 10/14/16/20), blue 2–12 grid (to 56), green threshold row, orange
+  ×2/×3, strictly-increasing purple. Foxes auto-detected.
+- **Twice as Clever** (*Doppelt so clever*, art. 88234) — silver per-row scale,
+  yellow circle-then-cross, descending blue, green pair-subtraction, pink sum.
+- **Clever Cubed** (*Clever hoch Drei*) — yellow/turquoise per-row tables, the
+  blue ±1 track around 7, brown crosses table, pink × multipliers.
+- **Clever 4ever** (art. 49424) — yellow 3-row (neg/pos/columns), blue 6×6
+  coordinate grid, grey 4×16 columns, green split-triangle fields, pink bar.
 
-Bonus actions (re-roll, +1, extra marks) are applied by tapping the granted
-space yourself, matching how you'd play with physical dice.
+The app **enforces each area's structure** and **auto-computes every score**,
+including **foxes** (each scores your lowest area). **Map your physical dice**:
+remap the colour shown for any area to match your copy of the game (presentation
+only — scoring is unchanged).
 
-> Rules and scoring follow the official *Ganz schön clever* by Wolfgang Warsch
-> (Schmidt Spiele, art. 88198). Twice/Triple/4ever Clever are on the roadmap.
+> Bonus actions (re-roll, +1, extra marks) are applied by tapping the granted
+> space yourself, matching physical play; foxes are counted for you.
 
 ## Running it
 

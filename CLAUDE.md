@@ -147,13 +147,13 @@ the official score sheet: yellow (3 rows, 2/6/12/20/30/42), turquoise (5 rows,
 2/5/9/14/20/27/35/44/54/65/77/90 by crosses), pink (sum of written die ×
 multiplier). Foxes are a manual stepper.
 
-**Clever 4ever (Clever 4)** — `Games/Clever4`. The most complex board
-(polyomino grey area, coordinate blue area, three-rule yellow) with point
-tables printed only on the physical sheet. Shipped as an honest **scorecard
-calculator** v1: the player enters each of the five area totals; the engine
-computes foxes (× lowest area) and the grand total, with dice-colour mapping.
-Upgrade to an interactive board once the official sheet is transcribed — no
-scoring values are guessed.
+**Clever 4ever (Clever 4)** — `Games/Clever4`. The most complex board, now fully
+interactive and auto-scored from the official sheet (art. 49424): yellow (3×5;
+top ascending = 0 pts, middle negative, bottom positive, completed-column stars
+10/10/15/15/20), blue (6×6; columns 7–12 at ≥2 crosses, TR→BL diagonal +6), grey
+(4×16; completed columns 1…11 — polyomino marking modelled as free crossing),
+green (11 split fields, top+bottom summed, doubled from the 4th), pink (12-field
+bar 2…42 + circled 2/4/6 bonuses). Foxes are a manual stepper.
 
 Do not generalise the Clever engines prematurely — each Clever has a
 materially different board.
