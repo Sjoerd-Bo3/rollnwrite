@@ -52,6 +52,7 @@ public enum GameRegistry {
         QwixxBigPointsGame(),
         ThatsPrettyCleverGame(),
         TwiceAsCleverGame(),
+        CleverCubedGame(),
 
         // Future variants slot in here with zero changes elsewhere.
         ComingSoonGame(
@@ -60,13 +61,6 @@ public enum GameRegistry {
             subtitle: "The original",
             iconSystemName: "die.face.4",
             accent: .orange
-        ),
-        ComingSoonGame(
-            id: "clever-3",
-            title: "Clever³",
-            subtitle: "Clever hoch Drei",
-            iconSystemName: "brain.head.profile",
-            accent: .teal
         ),
         ComingSoonGame(
             id: "clever-4",
