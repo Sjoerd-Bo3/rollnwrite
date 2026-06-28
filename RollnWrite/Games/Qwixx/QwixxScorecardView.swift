@@ -16,8 +16,10 @@ public struct QwixxScorecardView: View {
     @State private var showRules = false
     @State private var confirmNewGame = false
 
-    private let spacing: CGFloat = 3
-    private let columns = 12  // 11 numbers + lock
+    private let tileGap: CGFloat = 4
+    private let rowGap: CGFloat = 6
+    // chevron + 11 numbers + lock + per-row score
+    private let columns: CGFloat = 14
 
     public init(game: QwixxGame, rules: RulesDocument, navigationTitle: String) {
         _game = ObservedObject(wrappedValue: game)
@@ -27,35 +29,15 @@ public struct QwixxScorecardView: View {
 
     public var body: some View {
         GeometryReader { geo in
-            // Cap the card width on iPad / large or landscape screens so cells stay
-            // a comfortable touch size and the layout stays centered rather than
-            // stretching edge-to-edge.
-            let contentWidth = min(geo.size.width, 700)
-            let cell = max(24, (contentWidth - 24 - spacing * CGFloat(columns - 1)) / CGFloat(columns))
-            ScrollView {
-                VStack(spacing: 10) {
-                    summary
-
-                    VStack(spacing: spacing) {
-                        colorRow(.red, cell: cell)
-                        if game.hasBonusRows { bonusRow(.redYellow, cell: cell) }
-                        colorRow(.yellow, cell: cell)
-
-                        Divider().padding(.vertical, 3)
-
-                        colorRow(.green, cell: cell)
-                        if game.hasBonusRows { bonusRow(.greenBlue, cell: cell) }
-                        colorRow(.blue, cell: cell)
-                    }
-
-                    penaltiesRow
-                    scoringLegend
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .frame(maxWidth: contentWidth)
-                .frame(maxWidth: .infinity) // center within the available width
+            let s = sizing(for: geo.size)
+            VStack(spacing: 0) {
+                Spacer(minLength: 0)
+                boardStack(cell: s.cell)
+                    .frame(width: s.boardWidth)
+                Spacer(minLength: 0)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.horizontal, 8)
         }
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -76,147 +58,182 @@ public struct QwixxScorecardView: View {
         }
     }
 
-    // MARK: - Summary
+    // MARK: - Sizing (fill the screen in any orientation)
 
-    private var summary: some View {
-        VStack(spacing: 8) {
-            if game.isGameOver {
-                Label("Game over — final score \(game.totalScore)", systemImage: "flag.checkered")
-                    .font(.subheadline.bold())
-                    .frame(maxWidth: .infinity)
-                    .padding(8)
-                    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10))
-            }
-            HStack(spacing: 6) {
-                ForEach(GameColor.allCases) { color in
-                    ScoreChip(
-                        title: "\(min(game.crosses(for: color), 15))×",
-                        value: "\(game.points(for: color))",
-                        tint: color.tint
-                    )
+    private struct BoardLayout { let cell: CGFloat; let boardWidth: CGFloat; let rowGap: CGFloat }
+
+    /// Sizes a cell so the whole banded board fits BOTH the available width and
+    /// height — no scrolling, no cut-off, in portrait or landscape.
+    private func sizing(for size: CGSize) -> BoardLayout {
+        let bandRows = game.hasBonusRows ? 6 : 4
+        let bonusRows = game.hasBonusRows ? 2 : 0
+
+        // Width: band content = columns*cell + inner padding (cell*0.32) + gaps.
+        let usableW = min(size.width, 1024) - 16
+        let cellByWidth = (usableW - (columns - 1) * tileGap) / (columns + 0.32)
+
+        // Height: band ≈ cell*1.28, bonus ≈ cell*0.7, bottom bar ≈ cell*1.1.
+        let rowsCount = CGFloat(bandRows + bonusRows + 1)
+        let units = CGFloat(bandRows) * 1.28 + CGFloat(bonusRows) * 0.7 + 1.1
+        let usableH = size.height - 16 - (rowsCount - 1) * rowGap
+        let cellByHeight = usableH / units
+
+        let cell = max(16, min(cellByWidth, cellByHeight))
+        let boardWidth = cell * (columns + 0.32) + (columns - 1) * tileGap
+        return BoardLayout(cell: cell, boardWidth: boardWidth, rowGap: rowGap)
+    }
+
+    // MARK: - Board
+
+    private func boardStack(cell: CGFloat) -> some View {
+        VStack(spacing: rowGap) {
+            band(.red, cell: cell)
+            if game.hasBonusRows { bonusBand(.redYellow, cell: cell) }
+            band(.yellow, cell: cell)
+            band(.green, cell: cell)
+            if game.hasBonusRows { bonusBand(.greenBlue, cell: cell) }
+            band(.blue, cell: cell)
+            bottomBar(cell: cell)
+        }
+    }
+
+    /// One full-width colour band: a direction chevron, the eleven number tiles,
+    /// the lock, and that colour's running score — styled like the real card.
+    private func band(_ color: GameColor, cell: CGFloat) -> some View {
+        HStack(spacing: tileGap) {
+            Image(systemName: "arrowtriangle.right.fill")
+                .font(.system(size: cell * 0.46, weight: .black))
+                .foregroundStyle(.black.opacity(0.5))
+                .frame(width: cell, height: cell)
+            ForEach(0..<11, id: \.self) { i in numberTile(color, i, cell: cell) }
+            lockTile(color, cell: cell)
+            scoreTile(value: game.points(for: color), cell: cell)
+        }
+        .padding(.horizontal, cell * 0.16)
+        .padding(.vertical, cell * 0.14)
+        .background(color.tint)
+        .clipShape(RoundedRectangle(cornerRadius: cell * 0.24, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: cell * 0.24, style: .continuous)
+                .strokeBorder(.white.opacity(0.15), lineWidth: 1)
+        )
+    }
+
+    private func numberTile(_ color: GameColor, _ i: Int, cell: CGFloat) -> some View {
+        let marked = game.row(for: color).marks.contains(i)
+        let legal = game.canMarkColor(color, i)
+        return Button {
+            game.markColor(color, i)
+        } label: {
+            ZStack {
+                RoundedRectangle(cornerRadius: cell * 0.16, style: .continuous)
+                    .fill(Color.white.opacity(marked ? 0.7 : 0.95))
+                Text("\(color.numbers[i])")
+                    .font(.system(size: cell * 0.42, weight: .heavy, design: .rounded))
+                    .foregroundStyle(color.tint)
+                    .minimumScaleFactor(0.4)
+                    .lineLimit(1)
+                if marked {
+                    Image(systemName: "xmark")
+                        .font(.system(size: cell * 0.66, weight: .black))
+                        .foregroundStyle(color.tint)
                 }
             }
-            HStack {
-                if game.penalties > 0 {
-                    Text("Penalties −\(game.penaltyPoints)")
-                        .font(.caption.bold())
-                        .foregroundStyle(.red)
-                }
-                Spacer()
-                Text("Total")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                Text("\(game.totalScore)")
-                    .font(.title3.bold().monospacedDigit())
-            }
+            .frame(width: cell, height: cell)
         }
+        .buttonStyle(.plain)
+        .disabled(marked || !legal)
+        .opacity(marked || legal ? 1 : 0.4)
+        .accessibilityLabel("\(color.displayName) \(color.numbers[i])")
+        .accessibilityValue(marked ? "crossed" : (legal ? "available" : "blocked"))
     }
 
-    // MARK: - Rows
-
-    private func colorRow(_ color: GameColor, cell: CGFloat) -> some View {
-        let row = game.row(for: color)
-        return HStack(spacing: spacing) {
-            ForEach(0..<11, id: \.self) { i in
-                MarkableCell(
-                    label: "\(color.numbers[i])",
-                    tint: color.tint,
-                    textColor: color.textColor,
-                    isMarked: row.marks.contains(i),
-                    isLegal: game.canMarkColor(color, i),
-                    isInteractive: true,
-                    shape: .square
-                ) { game.markColor(color, i) }
-                .frame(width: cell, height: cell)
-            }
-            lockCell(color: color, locked: row.locked)
-                .frame(width: cell, height: cell)
-        }
-    }
-
-    private func bonusRow(_ id: BonusRowID, cell: CGFloat) -> some View {
-        let bonus = game.bonus(id)
-        let (a, b) = id.colors
-        return HStack(spacing: spacing) {
-            ForEach(0..<11, id: \.self) { i in
-                BonusCell(
-                    label: "\(bonus.numbers[i])",
-                    colorA: a,
-                    colorB: b,
-                    isMarked: bonus.marks.contains(i),
-                    isLegal: game.canMarkBonus(id, i)
-                ) { game.markBonus(id, i) }
-                .frame(width: cell, height: cell)
-            }
-            Color.clear.frame(width: cell, height: cell) // align with the lock column
-        }
-    }
-
-    private func lockCell(color: GameColor, locked: Bool) -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(color.tint)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .strokeBorder(.black.opacity(0.18), lineWidth: 1)
-                )
+    private func lockTile(_ color: GameColor, cell: CGFloat) -> some View {
+        let locked = game.row(for: color).locked
+        return ZStack {
+            RoundedRectangle(cornerRadius: cell * 0.16, style: .continuous)
+                .fill(Color.white.opacity(locked ? 0.95 : 0.42))
             Image(systemName: locked ? "lock.fill" : "lock.open")
-                .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(color.textColor)
+                .font(.system(size: cell * 0.42, weight: .bold))
+                .foregroundStyle(color.tint)
         }
-        .opacity(locked ? 1 : 0.45)
+        .frame(width: cell, height: cell)
         .accessibilityLabel("\(color.displayName) lock")
         .accessibilityValue(locked ? "locked" : "open")
     }
 
-    // MARK: - Penalties
-
-    private var penaltiesRow: some View {
-        HStack {
-            Text("Penalties")
-                .font(.subheadline.weight(.semibold))
-            Spacer()
-            HStack(spacing: 6) {
-                ForEach(0..<QwixxState.maxPenalties, id: \.self) { i in
-                    let filled = i < game.penalties
-                    let isNext = i == game.penalties && game.canAddPenalty()
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .strokeBorder(.red, lineWidth: 2)
-                            .background(
-                                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                    .fill(filled ? Color.red.opacity(0.85) : .clear)
-                            )
-                        if filled {
-                            Image(systemName: "xmark").font(.system(size: 16, weight: .black)).foregroundStyle(.white)
-                        } else {
-                            Text("−5").font(.caption2.bold()).foregroundStyle(.red)
-                        }
-                    }
-                    .frame(width: 34, height: 34)
-                    .opacity(filled || isNext ? 1 : 0.4)
-                    .onTapGesture { if isNext { game.addPenalty() } }
-                    .accessibilityLabel("Penalty \(i + 1)")
-                    .accessibilityValue(filled ? "taken" : "empty")
-                }
-            }
+    private func scoreTile(value: Int, cell: CGFloat) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: cell * 0.16, style: .continuous)
+                .fill(Color.black.opacity(0.2))
+            Text("\(value)")
+                .font(.system(size: cell * 0.4, weight: .bold, design: .rounded).monospacedDigit())
+                .foregroundStyle(.white)
+                .minimumScaleFactor(0.35)
+                .lineLimit(1)
         }
+        .frame(width: cell, height: cell)
     }
 
-    // MARK: - Scoring legend
-
-    private var scoringLegend: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Points per crosses")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-            Text("1·1  2·3  3·6  4·10  5·15  6·21  7·28  8·36  9·45  10·55  11·66  12·78  13·91  14·105  15·120")
-                .font(.system(size: 11, design: .rounded).monospacedDigit())
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+    /// Big-Points bonus row: the two-colour spaces, aligned under the number
+    /// tiles (offset past the chevron column).
+    private func bonusBand(_ id: BonusRowID, cell: CGFloat) -> some View {
+        let bonus = game.bonus(id)
+        let (a, b) = id.colors
+        let h = cell * 0.7
+        return HStack(spacing: tileGap) {
+            Color.clear.frame(width: cell, height: h) // chevron column
+            ForEach(0..<11, id: \.self) { i in
+                BonusCell(
+                    label: "\(bonus.numbers[i])",
+                    colorA: a, colorB: b,
+                    isMarked: bonus.marks.contains(i),
+                    isLegal: game.canMarkBonus(id, i)
+                ) { game.markBonus(id, i) }
+                .frame(width: cell, height: h)
+            }
+            Color.clear.frame(width: cell * 2 + tileGap, height: h) // lock + score columns
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.top, 4)
+        .padding(.horizontal, cell * 0.16)
+    }
+
+    /// Penalties on the left, running total on the right.
+    private func bottomBar(cell: CGFloat) -> some View {
+        let h = cell * 0.82
+        return HStack(spacing: tileGap) {
+            ForEach(0..<QwixxState.maxPenalties, id: \.self) { i in
+                let filled = i < game.penalties
+                let isNext = i == game.penalties && game.canAddPenalty()
+                ZStack {
+                    RoundedRectangle(cornerRadius: cell * 0.16, style: .continuous)
+                        .fill(filled ? Color.red.opacity(0.85) : Color.gray.opacity(0.28))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: cell * 0.16, style: .continuous)
+                                .strokeBorder(.red.opacity(0.7), lineWidth: 1.5)
+                        )
+                    if filled {
+                        Image(systemName: "xmark").font(.system(size: h * 0.5, weight: .black)).foregroundStyle(.white)
+                    } else {
+                        Text("−5").font(.system(size: h * 0.32, weight: .bold)).foregroundStyle(.red)
+                    }
+                }
+                .frame(width: h, height: h)
+                .opacity(filled || isNext ? 1 : 0.5)
+                .onTapGesture { if isNext { game.addPenalty() } }
+                .accessibilityLabel("Penalty \(i + 1)")
+            }
+            Spacer(minLength: cell * 0.2)
+            if game.isGameOver {
+                Image(systemName: "flag.checkered").foregroundStyle(.secondary)
+            }
+            Text("Total")
+                .font(.system(size: h * 0.34, weight: .semibold))
+                .foregroundStyle(.secondary)
+            Text("\(game.totalScore)")
+                .font(.system(size: h * 0.5, weight: .heavy, design: .rounded).monospacedDigit())
+                .frame(minWidth: cell * 1.4, alignment: .trailing)
+        }
+        .frame(height: h)
     }
 }
 
