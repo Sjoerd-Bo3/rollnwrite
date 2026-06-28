@@ -21,6 +21,25 @@ The **Qwixx Big Points** variant is fully implemented:
 > Rules and scoring follow the official Qwixx Big Points variant by
 > Nürnberger-Spielkarten-Verlag (NSV).
 
+## Second game: That's Pretty Clever (Clever 1)
+
+**That's Pretty Clever** (*Ganz schön clever*) is implemented as a smart
+scorecard:
+
+- All five areas with their exact official layout — yellow 4×4 grid (columns
+  10/14/16/20), blue 2–12 grid (scale to 56), green threshold row, orange with
+  ×2/×3 multipliers, and the strictly-increasing purple row.
+- The app **enforces each area's structure** and **auto-computes every score**,
+  including **foxes** (each scores your lowest area) which it detects for you.
+- **Map your physical dice**: remap the colour shown for any area to match your
+  copy of the game (presentation only — scoring is unchanged).
+
+Bonus actions (re-roll, +1, extra marks) are applied by tapping the granted
+space yourself, matching how you'd play with physical dice.
+
+> Rules and scoring follow the official *Ganz schön clever* by Wolfgang Warsch
+> (Schmidt Spiele, art. 88198). Twice/Triple/4ever Clever are on the roadmap.
+
 ## Running it
 
 - **Xcode:** open `RollnWrite.xcodeproj` (Xcode 16+) and run on a simulator or

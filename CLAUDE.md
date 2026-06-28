@@ -27,12 +27,17 @@ RollnWrite/
 │  ├─ RulesDocument.swift    Rules content model + generic RulesView renderer
 │  └─ Components.swift        Reusable cells/chips (MarkableCell, ScoreChip)
 ├─ Games/
-│  └─ Qwixx/                One game module
-│     ├─ GameColor.swift          Colour/number model
-│     ├─ QwixxModels.swift        Codable value types (ColorRow, BonusRow, state)
-│     ├─ QwixxGame.swift          Engine: rules + transitions + persistence
-│     ├─ QwixxBigPointsGame.swift GameDefinition + official rules text
-│     └─ QwixxScorecardView.swift Scorecard UI (presentation only)
+│  ├─ Qwixx/                One game module
+│  │  ├─ GameColor.swift          Colour/number model
+│  │  ├─ QwixxModels.swift        Codable value types (ColorRow, BonusRow, state)
+│  │  ├─ QwixxGame.swift          Engine: rules + transitions + persistence
+│  │  ├─ QwixxBigPointsGame.swift GameDefinition + official rules text
+│  │  └─ QwixxScorecardView.swift Scorecard UI (presentation only)
+│  └─ Clever/               "That's Pretty Clever" (Clever 1)
+│     ├─ CleverModels.swift       Areas, colour theme, EXACT official layout data
+│     ├─ CleverGame.swift         Engine: per-area structure + auto scoring + foxes
+│     ├─ CleverScorecardView.swift Scorecard UI + dice-colour mapping
+│     └─ CleverGameDefinition.swift GameDefinition + official rules text
 └─ Assets.xcassets
 ```
 
@@ -97,8 +102,35 @@ game list, and a **LIFO command history** for exact, dependency-safe undo.
 - The project uses `objectVersion = 77` (file-system synchronized groups);
   build with Xcode 16 or newer.
 
+## Game notes
+
+**Qwixx Big Points** — strict marking, bonus crosses count for both adjacent
+colours (cap 15 → 120). See `Games/Qwixx`.
+
+**That's Pretty Clever (Clever 1)** — `Games/Clever`.
+- All grid numbers, thresholds, multipliers, point scales and bonus/fox
+  positions in `CleverModels.swift` (`CleverLayout`) were transcribed from the
+  official Schmidt Spiele rulebook & score sheet (art. 88198). Treat that file
+  as the source of truth; verify against the official sheet before changing.
+- The engine enforces each area's *structure* (yellow/blue any-order single
+  marks, green left→right, orange left→right with multipliers, purple strictly
+  increasing with the after-6 exception) and computes every area score.
+- **Foxes are auto-detected**: every fox sits at a row/column/reach-this-cell
+  completion, and foxes only matter at scoring time, so the engine derives the
+  fox count rather than asking the player to track it. Other bonuses (re-roll,
+  +1, extra marks, coloured numbers) are applied manually — consistent with the
+  pure-scorecard model (no in-app dice).
+- **Dice-colour mapping**: players can remap the colour shown for each area to
+  match their physical dice (`CleverColorTheme`). It changes only presentation,
+  never scoring, and persists across games.
+
+When adding Clever 2/3/4, add a new `Games/Clever<N>/` module with its own
+layout + engine + view + definition, and register it. Do not generalise the
+Clever 1 engine prematurely — each Clever has a materially different board.
+
 ## Conventions
 
 - Keep rule logic in engines, not views. Views ask `can…` and call mutators.
 - Keep `Core` free of game-specific code.
-- Persist game state via the engine (Qwixx uses `UserDefaults` + `Codable`).
+- Persist game state via the engine (`UserDefaults` + `Codable`).
+- Always implement from the **official** rules/scorecard; if unavailable, ask.

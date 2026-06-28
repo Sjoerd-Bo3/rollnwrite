@@ -50,10 +50,9 @@ public protocol GameDefinition {
 public enum GameRegistry {
     public static let games: [GameDefinition] = [
         QwixxBigPointsGame(),
+        ThatsPrettyCleverGame(),
 
-        // Future variants slot in here with zero changes elsewhere, e.g.:
-        //   QwixxClassicGame(),
-        //   CleverGame(),
+        // Future variants slot in here with zero changes elsewhere.
         ComingSoonGame(
             id: "qwixx-classic",
             title: "Qwixx",
@@ -62,11 +61,25 @@ public enum GameRegistry {
             accent: .orange
         ),
         ComingSoonGame(
-            id: "clever",
-            title: "That's Pretty Clever",
-            subtitle: "Ganz schön clever",
+            id: "clever-2",
+            title: "Twice as Clever",
+            subtitle: "Doppelt so clever",
             iconSystemName: "brain.head.profile",
-            accent: .purple
+            accent: .pink
+        ),
+        ComingSoonGame(
+            id: "clever-3",
+            title: "Clever³",
+            subtitle: "Clever hoch Drei",
+            iconSystemName: "brain.head.profile",
+            accent: .teal
+        ),
+        ComingSoonGame(
+            id: "clever-4",
+            title: "Clever 4ever",
+            subtitle: "The fourth Clever",
+            iconSystemName: "brain.head.profile",
+            accent: .indigo
         ),
     ]
 
