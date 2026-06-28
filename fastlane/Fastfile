@@ -21,12 +21,20 @@ SCHEME  = "RollnWrite"
 DEFAULT_BUNDLE_ID = "dev.bo3.RollnWrite"
 DEFAULT_TEAM_ID   = "794HF2GP3T"
 
+# An unset GitHub secret still arrives as an empty string (the workflow passes
+# `KEY: ${{ secrets.KEY }}`), so treat blank the same as missing and use the
+# committed default.
+def env_or(name, fallback)
+  v = ENV[name]
+  v.nil? || v.strip.empty? ? fallback : v.strip
+end
+
 def bundle_id
-  ENV.fetch("APP_BUNDLE_ID", DEFAULT_BUNDLE_ID)
+  env_or("APP_BUNDLE_ID", DEFAULT_BUNDLE_ID)
 end
 
 def team_id
-  ENV.fetch("APPLE_TEAM_ID", DEFAULT_TEAM_ID)
+  env_or("APPLE_TEAM_ID", DEFAULT_TEAM_ID)
 end
 
 require "base64"
@@ -41,21 +49,23 @@ require "openssl"
 # In every case we extract the raw base64 key body and re-wrap it at 64 chars
 # inside fresh BEGIN/END markers, which OpenSSL parses reliably.
 def clean_p8_pem(raw)
-  raw = raw.to_s.strip.gsub('\\n', "\n").gsub("\r\n", "\n")
+  # Unescape literal "\n"/CRLF FIRST so a one-line secret becomes real text and
+  # no stray characters survive into the base64 body.
+  raw = raw.to_s.strip.gsub('\\r\\n', "\n").gsub('\\n', "\n").gsub("\r\n", "\n")
 
-  body =
+  text =
     if raw.include?("PRIVATE KEY")
-      raw[/-----BEGIN[^-]*-----(.*?)-----END/m, 1].to_s
+      raw
     else
       decoded = (Base64.decode64(raw) rescue "")
-      if decoded.include?("PRIVATE KEY") # base64 of the whole .p8 file
-        decoded[/-----BEGIN[^-]*-----(.*?)-----END/m, 1].to_s
-      else
-        raw # bare base64 body, headers stripped
-      end
+      decoded.include?("PRIVATE KEY") ? decoded : raw # base64 of whole .p8, else bare body
     end
 
-  body = body.gsub(/\s+/, "")
+  # Strip any "-----…-----" PEM armor, then keep only base64 characters. This is
+  # format-agnostic: works whether the key arrived multi-line, single-line, with
+  # spaces, or with the BEGIN/END lines deleted.
+  text = text.gsub(/-----[^-]*-----/m, "") if text.include?("PRIVATE KEY")
+  body = text.gsub(%r{[^A-Za-z0-9+/=]}, "")
   pem = "-----BEGIN PRIVATE KEY-----\n" + body.scan(/.{1,64}/).join("\n") +
     "\n-----END PRIVATE KEY-----"
 
