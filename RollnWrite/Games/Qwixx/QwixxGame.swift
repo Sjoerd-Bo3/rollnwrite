@@ -23,13 +23,20 @@ public final class QwixxGame: ObservableObject, Scoreboard {
     private let scoring: ScoringStrategy
     private let persistenceKey: String
 
+    /// Whether this variant has the two two-colour bonus rows (Big Points) or
+    /// not (classic Qwixx). When `false`, bonus marking is disallowed and bonus
+    /// crosses never contribute to scoring.
+    public let hasBonusRows: Bool
+
     /// Big Points values up to 15 crosses per colour (120 points).
     public init(
         scoring: ScoringStrategy = TriangularScoring(cap: 15),
-        persistenceKey: String = "rollnwrite.qwixx.bigpoints.state"
+        persistenceKey: String = "rollnwrite.qwixx.bigpoints.state",
+        hasBonusRows: Bool = true
     ) {
         self.scoring = scoring
         self.persistenceKey = persistenceKey
+        self.hasBonusRows = hasBonusRows
         load()
     }
 
@@ -91,7 +98,7 @@ public final class QwixxGame: ObservableObject, Scoreboard {
     /// left-to-right is respected within the bonus row, and an adjacent
     /// same-number colour space is already crossed (the activation rule).
     public func canMarkBonus(_ id: BonusRowID, _ index: Int) -> Bool {
-        guard !isGameOver else { return false }
+        guard hasBonusRows, !isGameOver else { return false }
         let b = bonus(id)
         guard !b.marks.contains(index), index > b.maxMarkedIndex else { return false }
         let (a, c) = id.colors
@@ -125,6 +132,7 @@ public final class QwixxGame: ObservableObject, Scoreboard {
     /// Crosses counted toward a colour's score: its own marks, the lock bonus,
     /// and every crossed bonus space adjacent to that colour.
     public func crosses(for color: GameColor) -> Int {
+        guard hasBonusRows else { return row(for: color).scoringCrosses }
         let bonusID: BonusRowID = (color == .red || color == .yellow) ? .redYellow : .greenBlue
         return row(for: color).scoringCrosses + bonus(bonusID).marks.count
     }

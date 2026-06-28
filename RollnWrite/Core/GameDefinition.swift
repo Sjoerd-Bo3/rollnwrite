@@ -50,19 +50,13 @@ public protocol GameDefinition {
 public enum GameRegistry {
     public static let games: [GameDefinition] = [
         QwixxBigPointsGame(),
+        QwixxClassicGame(),
         ThatsPrettyCleverGame(),
         TwiceAsCleverGame(),
         CleverCubedGame(),
         Clever4everGame(),
 
         // Future variants slot in here with zero changes elsewhere.
-        ComingSoonGame(
-            id: "qwixx-classic",
-            title: "Qwixx",
-            subtitle: "The original",
-            iconSystemName: "die.face.4",
-            accent: .orange
-        ),
     ]
 
     public static var playable: [GameDefinition] {

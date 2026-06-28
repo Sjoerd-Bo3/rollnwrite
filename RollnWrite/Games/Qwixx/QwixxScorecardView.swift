@@ -9,8 +9,9 @@
 import SwiftUI
 
 public struct QwixxScorecardView: View {
-    @StateObject private var game = QwixxGame()
+    @StateObject private var game: QwixxGame
     let rules: RulesDocument
+    let navigationTitle: String
 
     @State private var showRules = false
     @State private var confirmNewGame = false
@@ -18,8 +19,14 @@ public struct QwixxScorecardView: View {
     private let spacing: CGFloat = 3
     private let columns = 12  // 11 numbers + lock
 
-    public init(rules: RulesDocument) {
+    public init(
+        rules: RulesDocument,
+        navigationTitle: String = "Qwixx Big Points",
+        makeGame: @escaping () -> QwixxGame = { QwixxGame() }
+    ) {
         self.rules = rules
+        self.navigationTitle = navigationTitle
+        _game = StateObject(wrappedValue: makeGame())
     }
 
     public var body: some View {
@@ -35,13 +42,13 @@ public struct QwixxScorecardView: View {
 
                     VStack(spacing: spacing) {
                         colorRow(.red, cell: cell)
-                        bonusRow(.redYellow, cell: cell)
+                        if game.hasBonusRows { bonusRow(.redYellow, cell: cell) }
                         colorRow(.yellow, cell: cell)
 
                         Divider().padding(.vertical, 3)
 
                         colorRow(.green, cell: cell)
-                        bonusRow(.greenBlue, cell: cell)
+                        if game.hasBonusRows { bonusRow(.greenBlue, cell: cell) }
                         colorRow(.blue, cell: cell)
                     }
 
@@ -54,7 +61,7 @@ public struct QwixxScorecardView: View {
                 .frame(maxWidth: .infinity) // center within the available width
             }
         }
-        .navigationTitle("Qwixx Big Points")
+        .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
