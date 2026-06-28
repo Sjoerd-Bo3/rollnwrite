@@ -33,11 +33,16 @@ RollnWrite/
 │  │  ├─ QwixxGame.swift          Engine: rules + transitions + persistence
 │  │  ├─ QwixxBigPointsGame.swift GameDefinition + official rules text
 │  │  └─ QwixxScorecardView.swift Scorecard UI (presentation only)
-│  └─ Clever/               "That's Pretty Clever" (Clever 1)
-│     ├─ CleverModels.swift       Areas, colour theme, EXACT official layout data
-│     ├─ CleverGame.swift         Engine: per-area structure + auto scoring + foxes
-│     ├─ CleverScorecardView.swift Scorecard UI + dice-colour mapping
-│     └─ CleverGameDefinition.swift GameDefinition + official rules text
+│  ├─ Clever/               "That's Pretty Clever" (Clever 1)
+│  │  ├─ CleverModels.swift       Areas, colour theme, EXACT official layout data
+│  │  ├─ CleverGame.swift         Engine: per-area structure + auto scoring + foxes
+│  │  ├─ CleverScorecardView.swift Scorecard UI + dice-colour mapping
+│  │  └─ CleverGameDefinition.swift GameDefinition + official rules text
+│  └─ Clever2/              "Twice as Clever" (Clever 2)
+│     ├─ Clever2Models.swift      Silver/yellow/blue/green/pink layout data
+│     ├─ Clever2Game.swift        Engine: per-area scoring (manual foxes)
+│     ├─ Clever2ScorecardView.swift Scorecard UI + dice-colour mapping
+│     └─ Clever2GameDefinition.swift GameDefinition + official rules text
 └─ Assets.xcassets
 ```
 
@@ -101,6 +106,9 @@ game list, and a **LIFO command history** for exact, dependency-safe undo.
   (shared scheme: `RollnWrite`). See `docs/XCODE_CLOUD.md`.
 - The project uses `objectVersion = 77` (file-system synchronized groups);
   build with Xcode 16 or newer.
+- **CI without a Mac:** `.github/workflows/ios.yml` builds the app on a
+  GitHub-hosted macOS runner (iOS Simulator, no signing) on every push/PR. This
+  is the no-Mac way to verify the project compiles; check it after each change.
 
 ## Game notes
 
@@ -124,9 +132,17 @@ colours (cap 15 → 120). See `Games/Qwixx`.
   match their physical dice (`CleverColorTheme`). It changes only presentation,
   never scoring, and persists across games.
 
-When adding Clever 2/3/4, add a new `Games/Clever<N>/` module with its own
+**Twice as Clever (Clever 2)** — `Games/Clever2`. Areas: silver (per-row
+scale, summed), yellow (circle-then-cross, scored by crosses), blue
+(descending-or-equal, scale to 78), green (6 pairs, each scores first−second
+of die×multiplier), pink (sum). Layout in `Clever2Layout` is transcribed from
+the official sheet (art. 88234). Foxes are a **manual stepper** here (their
+triggers are spread across many area completions, unlike Clever 1 where each
+fox is a single clean completion), each scoring the lowest area.
+
+When adding Clever 3/4, add a new `Games/Clever<N>/` module with its own
 layout + engine + view + definition, and register it. Do not generalise the
-Clever 1 engine prematurely — each Clever has a materially different board.
+Clever engines prematurely — each Clever has a materially different board.
 
 ## Conventions
 
