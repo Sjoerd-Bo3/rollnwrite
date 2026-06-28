@@ -9,7 +9,7 @@
 import SwiftUI
 
 public struct QwixxScorecardView: View {
-    @StateObject private var game: QwixxGame
+    @ObservedObject var game: QwixxGame
     let rules: RulesDocument
     let navigationTitle: String
 
@@ -19,14 +19,10 @@ public struct QwixxScorecardView: View {
     private let spacing: CGFloat = 3
     private let columns = 12  // 11 numbers + lock
 
-    public init(
-        rules: RulesDocument,
-        navigationTitle: String = "Qwixx Big Points",
-        makeGame: @escaping () -> QwixxGame = { QwixxGame() }
-    ) {
+    public init(game: QwixxGame, rules: RulesDocument, navigationTitle: String) {
+        _game = ObservedObject(wrappedValue: game)
         self.rules = rules
         self.navigationTitle = navigationTitle
-        _game = StateObject(wrappedValue: makeGame())
     }
 
     public var body: some View {
@@ -268,5 +264,39 @@ private struct BonusCell: View {
         .onTapGesture { if isLegal && !isMarked { onTap() } }
         .accessibilityLabel("Bonus \(label)")
         .accessibilityValue(isMarked ? "marked" : (isLegal ? "available" : "blocked"))
+    }
+}
+
+// MARK: - Variant owners
+//
+// Each owns its own `QwixxGame` via the `@StateObject` property-default pattern
+// (which stays clear of strict-concurrency init isolation issues) and renders the
+// shared `QwixxScorecardView`.
+
+/// Qwixx Big Points: the two bonus rows, scoring capped at 15.
+public struct QwixxBigPointsScorecardView: View {
+    @StateObject private var game = QwixxGame()
+    let rules: RulesDocument
+
+    public init(rules: RulesDocument) { self.rules = rules }
+
+    public var body: some View {
+        QwixxScorecardView(game: game, rules: rules, navigationTitle: "Qwixx Big Points")
+    }
+}
+
+/// Classic Qwixx: no bonus rows, scoring capped at 12.
+public struct QwixxClassicScorecardView: View {
+    @StateObject private var game = QwixxGame(
+        scoring: TriangularScoring(cap: 12),
+        persistenceKey: "rollnwrite.qwixx.classic.state",
+        hasBonusRows: false
+    )
+    let rules: RulesDocument
+
+    public init(rules: RulesDocument) { self.rules = rules }
+
+    public var body: some View {
+        QwixxScorecardView(game: game, rules: rules, navigationTitle: "Qwixx")
     }
 }

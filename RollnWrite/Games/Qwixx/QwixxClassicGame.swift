@@ -21,15 +21,7 @@ public struct QwixxClassicGame: GameDefinition {
     public let availability: GameAvailability = .available
 
     public func makeScorecardView() -> AnyView {
-        AnyView(
-            QwixxScorecardView(rules: rules, navigationTitle: "Qwixx") {
-                QwixxGame(
-                    scoring: TriangularScoring(cap: 12),
-                    persistenceKey: "rollnwrite.qwixx.classic.state",
-                    hasBonusRows: false
-                )
-            }
-        )
+        AnyView(QwixxClassicScorecardView(rules: rules))
     }
 
     public var rules: RulesDocument {

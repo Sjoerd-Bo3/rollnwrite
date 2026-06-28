@@ -19,15 +19,7 @@ public struct QwixxBigPointsGame: GameDefinition {
     public let availability: GameAvailability = .available
 
     public func makeScorecardView() -> AnyView {
-        AnyView(
-            QwixxScorecardView(rules: rules, navigationTitle: "Qwixx Big Points") {
-                QwixxGame(
-                    scoring: TriangularScoring(cap: 15),
-                    persistenceKey: "rollnwrite.qwixx.bigpoints.state",
-                    hasBonusRows: true
-                )
-            }
-        )
+        AnyView(QwixxBigPointsScorecardView(rules: rules))
     }
 
     public var rules: RulesDocument {
