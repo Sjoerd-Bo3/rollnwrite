@@ -10,7 +10,7 @@ public struct Clever4everGame: GameDefinition {
 
     public let id = "clever-4"
     public let title = "Clever 4ever"
-    public let subtitle = "Score calculator · yellow, blue, grey, green, pink"
+    public let subtitle = "Clever 4ever · yellow, blue, grey, green, pink"
     public let iconSystemName = "brain.head.profile"
     public let accent = Color(red: 0.20, green: 0.62, blue: 0.30)
     public let availability: GameAvailability = .available
@@ -23,15 +23,31 @@ public struct Clever4everGame: GameDefinition {
             subtitle: "Official rules — Wolfgang Warsch / Schmidt Spiele",
             sections: [
                 RulesSection(heading: "Areas", body: [
-                    "Five areas: yellow (three rows — ascending top, negative middle, positive bottom), blue (cross a cell by blue+white coordinates), grey (cross a polyomino of size = grey die), green and pink.",
-                    "White is wild. Each fox scores your lowest area.",
+                    "Five areas: yellow, blue, grey, green and pink. The white die is a joker. The app auto-scores all five.",
                 ]),
-                RulesSection(heading: "This version", body: [
-                    "Clever 4ever's board (polyominoes, coordinates) isn't interactive in the app yet, and its per-row/column point tables are printed only on the physical sheet.",
-                    "So this is a scorecard calculator: enter each area total from your sheet and the app computes foxes (× your lowest area) and the grand total. The interactive board can be added once the official sheet is transcribed.",
+                RulesSection(heading: "Yellow", body: [
+                    "Three rows of five fields. The top row must strictly ascend (it closes after a 6) and scores 0 itself — it only grants bonuses.",
+                    "The middle row counts as negative; the bottom row as positive. Each fully-filled column scores its yellow star (10, 10, 15, 15, 20).",
+                    "Score = (sum of bottom) − (sum of middle) + completed-column stars.",
+                ]),
+                RulesSection(heading: "Blue", body: [
+                    "A 6×6 grid: cross a cell at (blue die = row, white die = column). A column with two or more crosses scores its value (7, 8, 9, 10, 11, 12).",
+                    "The top-right→bottom-left diagonal scores +6 when it has two or more crosses.",
+                ]),
+                RulesSection(heading: "Grey", body: [
+                    "Cross polyomino cells across a 4×16 grid (cross freely here). Each fully-crossed column scores the value printed above it (1…11).",
+                ]),
+                RulesSection(heading: "Green", body: [
+                    "Eleven fields, each split into an upper and a lower triangle; fill both rows left→right. When both triangles of a field are filled, its box = their sum, doubled from the 4th field onward (×2).",
+                ]),
+                RulesSection(heading: "Pink", body: [
+                    "One bar of twelve fields, filled left→right with no skips. Score = the value above the last filled field (up to 42), plus circled bonuses: each 2 → +2, each 4 → +4, each 6 → +3.",
+                ]),
+                RulesSection(heading: "Foxes & scoring", body: [
+                    "Foxes are tracked with the stepper; each scores your lowest area. Total = yellow + blue + grey + green + pink + (foxes × lowest area).",
                 ]),
             ],
-            source: "Clever 4ever by Wolfgang Warsch, Schmidt Spiele (art. 49424); official rulebook."
+            source: "Clever 4ever by Wolfgang Warsch, Schmidt Spiele (art. 49424); official rulebook & score sheet."
         )
     }
 }
