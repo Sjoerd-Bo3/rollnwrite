@@ -18,6 +18,13 @@ public final class CleverGame: ObservableObject, Scoreboard {
 
     @Published public private(set) var state = CleverState()
 
+    /// Human-readable advisories for bonuses the player must act on themselves
+    /// (dice actions like +1/re-roll, free marks where the box is the player's
+    /// choice, foxes earned, or number-bonuses that couldn't be auto-placed).
+    /// Auto-applied bonuses (numbers into orange/purple, free green marks) do not
+    /// appear here — they are written straight onto the card and pushed to undo.
+    @Published public private(set) var earnedBonuses: [String] = []
+
     private let persistenceKey: String
 
     public init(persistenceKey: String = "rollnwrite.clever1.state") {
@@ -49,8 +56,10 @@ public final class CleverGame: ObservableObject, Scoreboard {
 
     public func markYellow(_ index: Int) {
         guard canMarkYellow(index) else { return }
+        let before = completedTriggers()
         state.yellowCrossed.insert(index)
         state.history.append(.yellow(index))
+        applyNewlyEarned(before: before)
         save()
     }
 
@@ -62,8 +71,10 @@ public final class CleverGame: ObservableObject, Scoreboard {
 
     public func markBlue(_ value: Int) {
         guard canMarkBlue(value) else { return }
+        let before = completedTriggers()
         state.blueCrossed.insert(value)
         state.history.append(.blue(value))
+        applyNewlyEarned(before: before)
         save()
     }
 
@@ -73,8 +84,10 @@ public final class CleverGame: ObservableObject, Scoreboard {
 
     public func markGreen() {
         guard canMarkGreen() else { return }
+        let before = completedTriggers()
         state.greenCount += 1
         state.history.append(.green)
+        applyNewlyEarned(before: before)
         save()
     }
 
@@ -87,8 +100,10 @@ public final class CleverGame: ObservableObject, Scoreboard {
 
     public func fillOrange(_ value: Int) {
         guard let i = orangeNextIndex, (1...6).contains(value) else { return }
+        let before = completedTriggers()
         state.orange[i] = value
         state.history.append(.orange(i, value: value))
+        applyNewlyEarned(before: before)
         save()
     }
 
@@ -105,9 +120,185 @@ public final class CleverGame: ObservableObject, Scoreboard {
 
     public func fillPurple(_ value: Int) {
         guard let i = purpleNextIndex, allowedPurpleValues().contains(value) else { return }
+        let before = completedTriggers()
         state.purple[i] = value
         state.history.append(.purple(i, value: value))
+        applyNewlyEarned(before: before)
         save()
+    }
+
+    // MARK: - Automatic bonuses
+
+    /// Identity of a bonus-granting trigger (a row/column/cell completion).
+    /// Used only to compare "completed before" vs "completed after" a mark; never
+    /// stored, so undo stays consistent and re-completing re-earns the bonus.
+    private enum Trigger: Hashable {
+        case yellowRow(Int)
+        case yellowDiagonal
+        case blueRow(Int)
+        case blueColumn(Int)
+        case greenCell(Int)
+        case orangeCell(Int)
+        case purpleCell(Int)
+    }
+
+    /// Yellow grid row `r`'s numbered (non-free) cell indices.
+    private static let yellowRowCells: [[Int]] = (0..<4).map { r in
+        (0..<4).map { r * 4 + $0 }.filter { CleverLayout.yellowGrid[$0] != nil }
+    }
+
+    /// Blue values that make up display row `r` (skipping the rule-icon cell).
+    private static let blueRowValues: [[Int]] = (0..<3).map { r in
+        (0..<4).compactMap { CleverLayout.blueGrid[r * 4 + $0] }
+    }
+
+    /// Blue values that make up display column `c` (skipping the rule-icon cell).
+    private static let blueColumnValues: [[Int]] = (0..<4).map { c in
+        (0..<3).compactMap { CleverLayout.blueGrid[$0 * 4 + c] }
+    }
+
+    /// The set of triggers that are currently complete in the present state.
+    private func completedTriggers() -> Set<Trigger> {
+        var done = Set<Trigger>()
+        // Yellow rows.
+        for r in CleverGame.yellowRowCells.indices {
+            let cells = CleverGame.yellowRowCells[r]
+            if !cells.isEmpty, Set(cells).isSubset(of: state.yellowCrossed) {
+                done.insert(.yellowRow(r))
+            }
+        }
+        // Yellow main diagonal.
+        if Set(CleverLayout.yellowDiagonal).isSubset(of: state.yellowCrossed) {
+            done.insert(.yellowDiagonal)
+        }
+        // Blue rows & columns.
+        for r in CleverGame.blueRowValues.indices {
+            let vals = CleverGame.blueRowValues[r]
+            if !vals.isEmpty, Set(vals).isSubset(of: state.blueCrossed) { done.insert(.blueRow(r)) }
+        }
+        for c in CleverGame.blueColumnValues.indices {
+            let vals = CleverGame.blueColumnValues[c]
+            if !vals.isEmpty, Set(vals).isSubset(of: state.blueCrossed) { done.insert(.blueColumn(c)) }
+        }
+        // Green / orange / purple: a cell with a bonus is "complete" once filled.
+        for i in CleverLayout.greenBonus.keys where i < state.greenCount {
+            done.insert(.greenCell(i))
+        }
+        for i in CleverLayout.orangeBonus.keys where state.orange.indices.contains(i) && state.orange[i] != nil {
+            done.insert(.orangeCell(i))
+        }
+        for i in CleverLayout.purpleBonus.keys where state.purple.indices.contains(i) && state.purple[i] != nil {
+            done.insert(.purpleCell(i))
+        }
+        return done
+    }
+
+    /// The bonus icon granted by a trigger, if any.
+    private func bonus(for trigger: Trigger) -> BonusIcon? {
+        switch trigger {
+        case let .yellowRow(r): return CleverLayout.yellowRowBonus[r]
+        case .yellowDiagonal:   return .plusOne
+        case let .blueRow(r):   return CleverLayout.blueRowBonus[r]
+        case let .blueColumn(c): return CleverLayout.blueColBonus[c]
+        case let .greenCell(i): return CleverLayout.greenBonus[i]
+        case let .orangeCell(i): return CleverLayout.orangeBonus[i]
+        case let .purpleCell(i): return CleverLayout.purpleBonus[i]
+        }
+    }
+
+    /// After a mark, detect triggers that went from incomplete → complete and
+    /// fire their bonuses. Auto-applied marks may complete further triggers, so
+    /// the detection is re-run (chained) up to a safety depth cap.
+    private func applyNewlyEarned(before: Set<Trigger>, depth: Int = 0) {
+        guard depth < 12 else { return }
+        let after = completedTriggers()
+        let newlyDone = after.subtracting(before)
+        guard !newlyDone.isEmpty else { return }
+
+        // Apply in a stable order so banner messages read consistently.
+        for trigger in newlyDone.sorted(by: { triggerOrder($0) < triggerOrder($1) }) {
+            guard let icon = bonus(for: trigger) else { continue }
+            apply(icon, depth: depth)
+        }
+    }
+
+    /// A deterministic ordering key for triggers (banner readability only).
+    private func triggerOrder(_ t: Trigger) -> Int {
+        switch t {
+        case let .yellowRow(r): return 0 + r
+        case .yellowDiagonal:   return 10
+        case let .blueRow(r):   return 20 + r
+        case let .blueColumn(c): return 30 + c
+        case let .greenCell(i): return 40 + i
+        case let .orangeCell(i): return 60 + i
+        case let .purpleCell(i): return 80 + i
+        }
+    }
+
+    /// Apply a single earned bonus. Auto-placeable bonuses are written onto the
+    /// card (and pushed to undo, then chained); everything else becomes an
+    /// advisory string in `earnedBonuses`.
+    private func apply(_ icon: BonusIcon, depth: Int) {
+        switch icon {
+        case .fox:
+            note("🦊 Fox earned!")
+        case .reroll:
+            note("Re-roll")
+        case .plusOne:
+            note("+1 to a die")
+        case let .mark(area):
+            switch area {
+            case .green:
+                if canMarkGreen() {
+                    let before = completedTriggers()
+                    state.greenCount += 1
+                    state.history.append(.green)
+                    applyNewlyEarned(before: before, depth: depth + 1)
+                } else {
+                    note("Green is full — mark skipped")
+                }
+            case .yellow:
+                note("Cross any yellow box")
+            case .blue:
+                note("Cross any blue box")
+            case .orange, .purple:
+                // No free-mark bonuses target orange/purple; advisory fallback.
+                note("Cross any \(area.title.lowercased()) box")
+            }
+        case let .number(area, n):
+            switch area {
+            case .orange:
+                if let i = orangeNextIndex {
+                    let before = completedTriggers()
+                    state.orange[i] = n
+                    state.history.append(.orange(i, value: n))
+                    applyNewlyEarned(before: before, depth: depth + 1)
+                } else {
+                    note("Orange \(n) earned — row is full")
+                }
+            case .purple:
+                if let i = purpleNextIndex, allowedPurpleValues().contains(n) {
+                    let before = completedTriggers()
+                    state.purple[i] = n
+                    state.history.append(.purple(i, value: n))
+                    applyNewlyEarned(before: before, depth: depth + 1)
+                } else {
+                    note("Purple \(n) earned — doesn't fit the sequence")
+                }
+            case .yellow, .blue, .green:
+                // No number-bonuses target these areas; advisory fallback.
+                note("Write \(n) in \(area.title.lowercased())")
+            }
+        }
+    }
+
+    private func note(_ message: String) {
+        earnedBonuses.append(message)
+    }
+
+    /// Dismiss the earned-bonus banner.
+    public func clearEarnedBonuses() {
+        earnedBonuses.removeAll()
     }
 
     // MARK: - Action trackers (reference only; not scored)
@@ -209,6 +400,7 @@ public final class CleverGame: ObservableObject, Scoreboard {
         var fresh = CleverState()
         fresh.theme = theme
         state = fresh
+        earnedBonuses.removeAll()
         save()
     }
 
