@@ -1,0 +1,41 @@
+name: iOS Build
+
+# Builds the app on a GitHub-hosted macOS runner — no local Mac required.
+# Compiles every Swift file for the iOS Simulator SDK (no signing needed), so
+# this verifies the project builds on each push / PR.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build (iOS Simulator)
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select latest stable Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Xcode version
+        run: xcodebuild -version
+
+      - name: Build for iOS Simulator
+        run: |
+          set -o pipefail
+          xcodebuild clean build \
+            -project RollnWrite.xcodeproj \
+            -scheme RollnWrite \
+            -destination 'generic/platform=iOS Simulator' \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO

@@ -1,0 +1,66 @@
+name: TestFlight
+
+# Build → cloud-sign → upload to TestFlight entirely on a GitHub-hosted Mac,
+# driven by fastlane (fastlane/Fastfile, lane `beta`). No local Mac needed.
+# Trigger it from the Actions tab → "TestFlight" → Run workflow.
+#
+# Run the "Validate Secrets" workflow first to confirm your secrets are good.
+# One-time setup (all browser-based) is in docs/TESTFLIGHT.md. Required
+# repository secrets (Settings → Secrets and variables → Actions):
+#   APPLE_TEAM_ID  – your 10-character Apple Developer Team ID
+#   APP_BUNDLE_ID  – the bundle id of your App Store Connect app record
+#   ASC_KEY_ID     – App Store Connect API key ID
+#   ASC_ISSUER_ID  – App Store Connect API key Issuer ID
+#   ASC_KEY_P8     – the full text contents of the AuthKey_XXXXXX.p8 file
+
+# TestFlight builds expire after 90 days. The scheduled trigger below rebuilds
+# automatically on the 1st of each month so a fresh build is always waiting in
+# TestFlight and the app never stops working on your phone — even with no code
+# changes (the build number just increments). Borrowed from the Loop/Trio
+# browser-build setup. Delete the `schedule:` block to opt out of auto-builds.
+#
+# Caveat (also from LoopDocs): GitHub disables scheduled workflows after 60 days
+# of *no repository activity*. If you stop pushing for two months, re-enable it
+# from the Actions tab or just run it manually.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "37 6 1 * *" # 06:37 UTC on the 1st of every month
+
+jobs:
+  testflight:
+    name: Upload to TestFlight
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select latest stable Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Set up Ruby + fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+
+      - name: Build & upload to TestFlight
+        run: bundle exec fastlane ios beta
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APP_BUNDLE_ID: ${{ secrets.APP_BUNDLE_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ipa-and-logs
+          path: |
+            *.ipa
+            ~/Library/Logs/gym/*.log
+          if-no-files-found: ignore

@@ -1,0 +1,4 @@
+# Bundle id and Team ID aren't secret (they ship in every app binary), so they
+# default to the committed project values; a secret can still override them.
+app_identifier(ENV.fetch("APP_BUNDLE_ID", "dev.bo3.RollnWrite"))
+team_id(ENV.fetch("APPLE_TEAM_ID", "794HF2GP3T"))

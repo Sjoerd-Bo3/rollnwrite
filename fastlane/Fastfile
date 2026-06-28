@@ -1,0 +1,103 @@
+# RollnWrite — browser-only TestFlight pipeline
+#
+# Inspired by the Loop/Trio fastlane setup, simplified for a single-target app:
+# Apple's *cloud signing* (`-allowProvisioningUpdates` + an App Store Connect
+# API key) manages the distribution certificate and provisioning profile on
+# Apple's servers, so there is NO `match`, no `Match-Secrets` repo, no
+# `GH_PAT`, and no `MATCH_PASSWORD` to manage. Everything runs on a
+# GitHub-hosted Mac — see docs/TESTFLIGHT.md. No local Mac required.
+#
+# Required environment (provided as GitHub secrets in the workflow):
+#   APPLE_TEAM_ID  ASC_KEY_ID  ASC_ISSUER_ID  ASC_KEY_P8  APP_BUNDLE_ID
+
+default_platform(:ios)
+
+PROJECT = "RollnWrite.xcodeproj"
+SCHEME  = "RollnWrite"
+
+# Bundle id and Team ID are not secret (they ship inside every app binary), so
+# they live in the project. The env vars are optional overrides — if a secret
+# isn't set, we fall back to these committed defaults.
+DEFAULT_BUNDLE_ID = "dev.bo3.RollnWrite"
+DEFAULT_TEAM_ID   = "794HF2GP3T"
+
+def bundle_id
+  ENV.fetch("APP_BUNDLE_ID", DEFAULT_BUNDLE_ID)
+end
+
+def team_id
+  ENV.fetch("APPLE_TEAM_ID", DEFAULT_TEAM_ID)
+end
+
+# Build the App Store Connect API key object used for every ASC interaction.
+def asc_api_key
+  app_store_connect_api_key(
+    key_id: ENV.fetch("ASC_KEY_ID"),
+    issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+    key_content: ENV.fetch("ASC_KEY_P8"),
+    is_key_content_base64: false,
+    in_house: false
+  )
+end
+
+platform :ios do
+  # Fast preflight: proves the API key authenticates and can read this app's
+  # builds, before anyone spends ~15 minutes on a real archive. Run this lane
+  # first whenever you change a secret.
+  desc "Verify the App Store Connect secrets without building"
+  lane :validate_secrets do
+    latest = latest_testflight_build_number(
+      api_key: asc_api_key,
+      app_identifier: bundle_id,
+      initial_build_number: 0
+    )
+    UI.success("✅ Secrets OK — API key can read TestFlight for #{bundle_id} (latest build: #{latest}).")
+  end
+
+  # Build, cloud-sign, and upload a new build to TestFlight.
+  desc "Build and upload a new build to TestFlight"
+  lane :beta do
+    key = asc_api_key
+
+    # Next build number = highest already on TestFlight + 1 (App Store Connect
+    # rejects duplicates). Falls back to 1 for a brand-new app.
+    build_number = latest_testflight_build_number(
+      api_key: key,
+      app_identifier: bundle_id,
+      initial_build_number: 0
+    ) + 1
+
+    build_app(
+      project: PROJECT,
+      scheme: SCHEME,
+      configuration: "Release",
+      export_method: "app-store",
+      # Cloud signing + pin identity/version at build time. Setting
+      # CURRENT_PROJECT_VERSION here keeps the pbxproj untouched (no agvtool).
+      xcargs: [
+        "-allowProvisioningUpdates",
+        "CODE_SIGN_STYLE=Automatic",
+        "DEVELOPMENT_TEAM=#{team_id}",
+        "PRODUCT_BUNDLE_IDENTIFIER=#{bundle_id}",
+        "MARKETING_VERSION=1.0",
+        "CURRENT_PROJECT_VERSION=#{build_number}"
+      ].join(" "),
+      export_options: {
+        method: "app-store",
+        teamID: team_id,
+        signingStyle: "automatic",
+        generateAppStoreInformation: false
+      }
+    )
+
+    changelog = "Build #{build_number} from #{ENV['GITHUB_REF_NAME'] || 'local'} (#{(ENV['GITHUB_SHA'] || '')[0, 7]})"
+    upload_to_testflight(
+      api_key: key,
+      app_identifier: bundle_id,
+      skip_waiting_for_build_processing: true,
+      changelog: changelog
+    )
+
+    UI.success("✅ Uploaded build #{build_number} to TestFlight. It will appear after Apple finishes processing.")
+  end
+end

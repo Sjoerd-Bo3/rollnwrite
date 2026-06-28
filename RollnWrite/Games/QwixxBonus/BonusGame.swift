@@ -1,0 +1,187 @@
+//
+//  BonusGame.swift
+//  RollnWrite – Qwixx Bonus
+//
+//  The Qwixx "Bonus" (version A) engine: holds state, enforces the rules, and
+//  computes the score through an injected `ScoringStrategy`.
+//
+//  SOLID notes:
+//  - SRP: owns rules + state transitions only; scoring math is delegated
+//         (`ScoringStrategy`), presentation lives in the view.
+//  - DIP: the scoring strategy is injected (classic Qwixx cap 12).
+//  - LSP: conforms to the generic `Scoreboard` protocol used by host UI.
+//
+//  The colour-row rules are identical to classic Qwixx. The variant-specific
+//  twist is the bonus bar: crossing a boxed number automatically advances the
+//  bar one field, whose colour tells the player which free extra cross to make.
+//  The bar awards no points itself (version A scores like classic Qwixx).
+//
+
+import SwiftUI
+
+@MainActor
+public final class BonusGame: ObservableObject, Scoreboard {
+
+    @Published public private(set) var state = BonusState()
+
+    private let scoring: ScoringStrategy
+    private let persistenceKey: String
+
+    /// Classic Qwixx scoring: up to 12 valued crosses per colour (78 points).
+    public init(
+        scoring: ScoringStrategy = TriangularScoring(cap: 12),
+        persistenceKey: String = "rollnwrite.qwixx.bonus.state"
+    ) {
+        self.scoring = scoring
+        self.persistenceKey = persistenceKey
+        load()
+    }
+
+    // MARK: - Accessors
+
+    public func row(for color: GameColor) -> ColorRow {
+        switch color {
+        case .red:    return state.red
+        case .yellow: return state.yellow
+        case .green:  return state.green
+        case .blue:   return state.blue
+        }
+    }
+
+    public var bar: BonusBar { state.bar }
+
+    public var penalties: Int { state.penalties }
+
+    public var lockedRowCount: Int {
+        GameColor.allCases.filter { row(for: $0).locked }.count
+    }
+
+    /// Whether the cell at `index` of `color` is a boxed bonus number.
+    public func isBoxed(_ color: GameColor, _ index: Int) -> Bool {
+        BonusLayout.isBoxedIndex(color, index: index)
+    }
+
+    // MARK: - Rule enforcement (colour rows)
+
+    /// Whether crossing `index` in `color` is a legal move right now.
+    ///
+    /// Enforces: game not over · row not locked · not already marked ·
+    /// left-to-right · the right-most number needs ≥5 earlier crosses to lock.
+    public func canMarkColor(_ color: GameColor, _ index: Int) -> Bool {
+        guard !isGameOver else { return false }
+        let r = row(for: color)
+        guard !r.locked, !r.marks.contains(index), index > r.maxMarkedIndex else { return false }
+        if index == ColorRow.lockIndex {
+            return r.marks.count >= 5
+        }
+        return true
+    }
+
+    public func markColor(_ color: GameColor, _ index: Int) {
+        guard canMarkColor(color, index) else { return }
+        var r = row(for: color)
+        r.marks.insert(index)
+        var didLock = false
+        if index == ColorRow.lockIndex {
+            r.locked = true
+            didLock = true
+        }
+        setRow(r)
+
+        // Boxed numbers advance the bonus bar (if it still has room).
+        var advancedBar = false
+        if isBoxed(color, index), state.bar.hasRoomLeft {
+            state.bar.crossed += 1
+            advancedBar = true
+        }
+
+        state.history.append(.color(color, index: index, didLock: didLock, advancedBar: advancedBar))
+        save()
+    }
+
+    // MARK: - Penalties
+
+    public func canAddPenalty() -> Bool {
+        !isGameOver && state.penalties < BonusState.maxPenalties
+    }
+
+    public func addPenalty() {
+        guard canAddPenalty() else { return }
+        state.penalties += 1
+        state.history.append(.penalty)
+        save()
+    }
+
+    // MARK: - Scoreboard
+
+    /// Crosses counted toward a colour's score: its own marks plus the lock.
+    public func crosses(for color: GameColor) -> Int {
+        row(for: color).scoringCrosses
+    }
+
+    public func points(for color: GameColor) -> Int {
+        scoring.points(forCrosses: crosses(for: color))
+    }
+
+    public var penaltyPoints: Int { state.penalties * 5 }
+
+    public var totalScore: Int {
+        GameColor.allCases.reduce(0) { $0 + points(for: $1) } - penaltyPoints
+    }
+
+    /// Ends when two rows are locked, or the 4th penalty is taken.
+    public var isGameOver: Bool {
+        lockedRowCount >= 2 || state.penalties >= BonusState.maxPenalties
+    }
+
+    public var canUndo: Bool { !state.history.isEmpty }
+
+    /// Reverse the most recent action. Strictly LIFO.
+    public func undo() {
+        guard let last = state.history.popLast() else { return }
+        switch last {
+        case let .color(color, index, didLock, advancedBar):
+            var r = row(for: color)
+            r.marks.remove(index)
+            if didLock { r.locked = false }
+            setRow(r)
+            if advancedBar {
+                state.bar.crossed = max(0, state.bar.crossed - 1)
+            }
+        case .penalty:
+            state.penalties = max(0, state.penalties - 1)
+        }
+        save()
+    }
+
+    public func reset() {
+        state = BonusState()
+        save()
+    }
+
+    // MARK: - Mutation helpers
+
+    private func setRow(_ r: ColorRow) {
+        switch r.color {
+        case .red:    state.red = r
+        case .yellow: state.yellow = r
+        case .green:  state.green = r
+        case .blue:   state.blue = r
+        }
+    }
+
+    // MARK: - Persistence
+
+    private func save() {
+        guard let data = try? JSONEncoder().encode(state) else { return }
+        UserDefaults.standard.set(data, forKey: persistenceKey)
+    }
+
+    private func load() {
+        guard
+            let data = UserDefaults.standard.data(forKey: persistenceKey),
+            let restored = try? JSONDecoder().decode(BonusState.self, from: data)
+        else { return }
+        state = restored
+    }
+}
