@@ -102,6 +102,126 @@ public enum Clever4Layout {
     public static var pinkFields: Int { pinkValues.count }
     /// Circled-number bonuses added on top: entered 2 → +2, 4 → +4, 6 → +3.
     public static let pinkBonuses: [Int: Int] = [2: 2, 4: 4, 6: 3]
+
+    // MARK: - Bonus maps (transcribed from the official Clever 4ever score sheet)
+    //
+    // On the Clever 4ever sheet every printed bonus is a player *choice*: a
+    // re-roll, a +1, an extra/white die ("○"), a fox, or a "?" = choose any
+    // value/cross in that colour. None can be auto-placed deterministically, so
+    // all surface as advisory strings. Foxes stay the manual stepper and are NOT
+    // listed here (they would double-count against the stepper).
+
+    /// Yellow: bonuses sit on the dividers under the 3×5 grid. The icons under
+    /// the *top* row fire when that column's top cell is filled; the icons under
+    /// the *middle* row fire when that column's middle cell is filled.
+    /// Top-row dividers (cols 0–4): –, ○extraDie, ?orange, ?green, fox.
+    /// Mid-row dividers (cols 0–4): reroll, ?purple, ?blue, +1, ?yellow.
+    public static let yellowTopColBonus: [Int: C4Bonus] = [
+        1: .extraDie,
+        2: .pick(.pink),    // orange "?" — nearest area is pink on this card
+        3: .pick(.green),
+        // col 4 = fox (manual stepper) → omitted
+    ]
+    public static let yellowMidColBonus: [Int: C4Bonus] = [
+        0: .reroll,
+        1: .pick(.pink),    // purple "?"
+        2: .pick(.blue),
+        3: .plusOne,
+        4: .pick(.yellow),
+    ]
+
+    /// Blue 6×6 grid — a bonus printed at the right end of each row, earned when
+    /// that whole row (all 6) is crossed.
+    /// Rows 0–5: ?green, ?purple, ?yellow, +1, ?orange, fox. (The TR→BL diagonal
+    /// ends in a re-roll, granted when the diagonal is fully crossed.)
+    public static let blueRowBonus: [Int: C4Bonus] = [
+        0: .pick(.green),
+        1: .pick(.pink),    // purple "?"
+        2: .pick(.yellow),
+        3: .plusOne,
+        4: .pick(.pink),    // orange "?"
+        // row 5 = fox (manual stepper) → omitted
+    ]
+    public static let blueDiagonalBonus: C4Bonus = .reroll
+
+    /// Grey 4×16 grid — bonuses printed inside specific cells; fire when that
+    /// exact cell is crossed. Encoded as (row, col) → icon, 0-indexed.
+    /// Positions read from the sheet (dense grid; cols are a best reading and
+    /// may be ±1 — verify against the official sheet before relying on them).
+    public static let greyCellBonus: [GridPos: C4Bonus] = [
+        GridPos(0, 0):  .extraDie,    // ○ top-left
+        GridPos(0, 5):  .pick(.green),
+        GridPos(0, 12): .extraDie,    // ○
+        GridPos(1, 7):  .reroll,
+        GridPos(1, 15): .pick(.green),
+        GridPos(2, 3):  .pick(.pink), // purple "?"
+        GridPos(2, 5):  .extraDie,    // ○
+        GridPos(2, 9):  .extraDie,    // ○
+        GridPos(2, 13): .pick(.blue),
+        GridPos(3, 0):  .reroll,
+        GridPos(3, 7):  .plusOne,
+        GridPos(3, 11): .pick(.yellow),
+        GridPos(3, 14): .extraDie,    // ○
+    ]
+
+    /// Green 11 split fields — a bonus under each field, earned once both its
+    /// triangles are filled.
+    /// Fields 0–10: reroll, ?blue, ○extraDie, ?yellow, ?orange, +1, ?purple,
+    /// ?blue, ?yellow, fox, +1.
+    public static let greenFieldBonus: [Int: C4Bonus] = [
+        0: .reroll,
+        1: .pick(.blue),
+        2: .extraDie,
+        3: .pick(.yellow),
+        4: .pick(.pink),    // orange "?"
+        5: .plusOne,
+        6: .pick(.pink),    // purple "?"
+        7: .pick(.blue),
+        8: .pick(.yellow),
+        // field 9 = fox (manual stepper) → omitted
+        10: .plusOne,
+    ]
+
+    /// Pink 12-field bar — a bonus under some fields, earned once that field is
+    /// written. Fields 0–11: ○extraDie, –, ?green, +1, reroll, –, ?orange, fox,
+    /// –, ?blue, –, ?yellow.
+    public static let pinkFieldBonus: [Int: C4Bonus] = [
+        0: .extraDie,
+        2: .pick(.green),
+        3: .plusOne,
+        4: .reroll,
+        6: .pick(.pink),    // orange "?"
+        // field 7 = fox (manual stepper) → omitted
+        9: .pick(.blue),
+        11: .pick(.yellow),
+    ]
+}
+
+/// A 0-indexed grid position, used to key grey-cell bonuses.
+public struct GridPos: Hashable {
+    public let row: Int
+    public let col: Int
+    public init(_ row: Int, _ col: Int) { self.row = row; self.col = col }
+}
+
+/// A bonus printed on the Clever 4ever sheet. All are player choices, so each is
+/// surfaced as an advisory message (none auto-place).
+public enum C4Bonus: Equatable {
+    case reroll
+    case plusOne
+    case extraDie
+    case fox
+    case pick(Clever4Area)   // "?" → choose any value/cross in that colour
+
+    public var message: String {
+        switch self {
+        case .reroll:      return "Re-roll a die"
+        case .plusOne:     return "+1 to a die"
+        case .extraDie:    return "Use an extra (white) die"
+        case .fox:         return "🦊 Fox earned!"
+        case let .pick(a): return "Choose any \(a.title.lowercased()) value (?)"
+        }
+    }
 }
 
 public struct Clever4State: Codable, Equatable {

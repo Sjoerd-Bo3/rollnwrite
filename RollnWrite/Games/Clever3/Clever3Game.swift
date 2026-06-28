@@ -12,6 +12,13 @@ import SwiftUI
 public final class Clever3Game: ObservableObject, Scoreboard {
 
     @Published public private(set) var state = Clever3State()
+
+    /// Advisory messages for bonuses the player has just earned. In Clever Cubed
+    /// every printed bonus is a player choice (re-roll / +1 / extra-die / "?" =
+    /// choose a colour value), so none are auto-placed — they all appear here as
+    /// reminders. Foxes stay the manual stepper and are not surfaced here.
+    @Published public private(set) var earnedBonuses: [String] = []
+
     private let persistenceKey: String
 
     public init(persistenceKey: String = "rollnwrite.clever3.state") {
@@ -28,11 +35,15 @@ public final class Clever3Game: ObservableObject, Scoreboard {
     // MARK: - Yellow / turquoise grids
 
     public func toggleYellow(_ index: Int) {
+        let before = completedTriggers()
         if state.yellow.contains(index) { state.yellow.remove(index) } else { state.yellow.insert(index) }
+        applyNewlyEarned(before: before)
         save()
     }
     public func toggleTurquoise(_ index: Int) {
+        let before = completedTriggers()
         if state.turquoise.contains(index) { state.turquoise.remove(index) } else { state.turquoise.insert(index) }
+        applyNewlyEarned(before: before)
         save()
     }
     public func yellowMarks(inRow row: Int) -> Int {
@@ -69,8 +80,10 @@ public final class Clever3Game: ObservableObject, Scoreboard {
 
     public func fillBlue(left: Bool, _ value: Int) {
         guard allowedBlue(left: left).contains(value) else { return }
+        let before = completedTriggers()
         if left, let i = blueLeftNext { state.blueLeft[i] = value }
         else if !left, let i = blueRightNext { state.blueRight[i] = value }
+        applyNewlyEarned(before: before)
         save()
     }
 
@@ -88,19 +101,102 @@ public final class Clever3Game: ObservableObject, Scoreboard {
 
     public func canCrossBrown(_ index: Int) -> Bool { index > (state.brown.max() ?? -1) }
     public func toggleBrown(_ index: Int) {
+        let before = completedTriggers()
         if state.brown.contains(index) {
             if index == state.brown.max() { state.brown.remove(index) }   // only the rightmost can be undone
         } else if canCrossBrown(index) {
             state.brown.insert(index)
         }
+        applyNewlyEarned(before: before)
         save()
     }
     public var brownScore: Int { Clever3Layout.brownScale[state.brown.count] }
 
     // MARK: - Pink (write numbers; sum)
 
-    public func setPink(_ index: Int, _ value: Int?) { state.pink[index] = value; save() }
+    public func setPink(_ index: Int, _ value: Int?) {
+        let before = completedTriggers()
+        state.pink[index] = value
+        applyNewlyEarned(before: before)
+        save()
+    }
     public var pinkScore: Int { state.pink.compactMap { $0 }.reduce(0, +) }
+
+    // MARK: - Automatic bonuses (advisory only)
+
+    /// Identity of a bonus-granting completion. Compared "before" vs "after" each
+    /// mark; never persisted, so undo (clearing a cell) re-arms it for next time.
+    private enum Trigger: Hashable {
+        case yellowRow(Int)
+        case turquoiseRow(Int)
+        case turquoiseCol(Int)
+        case blueLeft(Int)
+        case blueRight(Int)
+        case brownCell(Int)
+        case pinkCell(Int)
+    }
+
+    private func completedTriggers() -> Set<Trigger> {
+        var done = Set<Trigger>()
+        // Yellow rows: all 6 cells of a row crossed.
+        for r in 0..<Clever3Layout.yellowRows where yellowMarks(inRow: r) == Clever3Layout.yellowCols {
+            done.insert(.yellowRow(r))
+        }
+        // Turquoise rows & columns fully crossed.
+        for r in 0..<Clever3Layout.turquoiseRows where turquoiseMarks(inRow: r) == Clever3Layout.turquoiseCols {
+            done.insert(.turquoiseRow(r))
+        }
+        for c in 0..<Clever3Layout.turquoiseCols {
+            let full = (0..<Clever3Layout.turquoiseRows).allSatisfy {
+                state.turquoise.contains($0 * Clever3Layout.turquoiseCols + c)
+            }
+            if full { done.insert(.turquoiseCol(c)) }
+        }
+        // Blue track cells: a position is "reached" once written.
+        for i in state.blueLeft.indices where state.blueLeft[i] != nil { done.insert(.blueLeft(i)) }
+        for i in state.blueRight.indices where state.blueRight[i] != nil { done.insert(.blueRight(i)) }
+        // Brown cells crossed.
+        for i in state.brown { done.insert(.brownCell(i)) }
+        // Pink cells written.
+        for i in state.pink.indices where state.pink[i] != nil { done.insert(.pinkCell(i)) }
+        return done
+    }
+
+    private func bonus(for t: Trigger) -> C3Bonus? {
+        switch t {
+        case let .yellowRow(r):    return Clever3Layout.yellowRowBonus[r]
+        case let .turquoiseRow(r): return Clever3Layout.turquoiseRowBonus[r]
+        case let .turquoiseCol(c): return Clever3Layout.turquoiseColBonus[c]
+        case let .blueLeft(i):     return Clever3Layout.blueLeftBonus[i]
+        case let .blueRight(i):    return Clever3Layout.blueRightBonus[i]
+        case let .brownCell(i):    return Clever3Layout.brownBonus[i]
+        case let .pinkCell(i):     return Clever3Layout.pinkBonus[i]
+        }
+    }
+
+    /// Detect completions that flipped incomplete → complete and surface their
+    /// (advisory) bonuses. None auto-place, so there is no chaining to do here.
+    private func applyNewlyEarned(before: Set<Trigger>) {
+        let newly = completedTriggers().subtracting(before)
+        guard !newly.isEmpty else { return }
+        for t in newly.sorted(by: { order($0) < order($1) }) {
+            if let b = bonus(for: t) { earnedBonuses.append(b.message) }
+        }
+    }
+
+    private func order(_ t: Trigger) -> Int {
+        switch t {
+        case let .yellowRow(r):    return 0 + r
+        case let .turquoiseRow(r): return 10 + r
+        case let .turquoiseCol(c): return 20 + c
+        case let .blueLeft(i):     return 30 + i
+        case let .blueRight(i):    return 40 + i
+        case let .brownCell(i):    return 50 + i
+        case let .pinkCell(i):     return 70 + i
+        }
+    }
+
+    public func clearEarnedBonuses() { earnedBonuses.removeAll() }
 
     // MARK: - Foxes
 
@@ -130,6 +226,7 @@ public final class Clever3Game: ObservableObject, Scoreboard {
         var fresh = Clever3State()
         fresh.theme = theme
         state = fresh
+        earnedBonuses.removeAll()
         save()
     }
 

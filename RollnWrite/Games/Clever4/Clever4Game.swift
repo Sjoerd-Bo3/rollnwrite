@@ -12,6 +12,13 @@ import SwiftUI
 public final class Clever4Game: ObservableObject, Scoreboard {
 
     @Published public private(set) var state = Clever4State()
+
+    /// Advisory messages for bonuses the player has just earned. On the Clever
+    /// 4ever sheet every printed bonus is a player choice (re-roll / +1 / extra
+    /// die / "?" = choose a colour value), so none are auto-placed — they appear
+    /// here as reminders. Foxes stay the manual stepper and are not surfaced.
+    @Published public private(set) var earnedBonuses: [String] = []
+
     private let persistenceKey: String
 
     public init(persistenceKey: String = "rollnwrite.clever4.state") {
@@ -62,9 +69,11 @@ public final class Clever4Game: ObservableObject, Scoreboard {
 
     public func fillYellow(_ row: YellowRow, _ value: Int) {
         guard allowedYellow(row).contains(value), let i = yellowNext(row) else { return }
+        let before = completedTriggers()
         var arr = yellowArray(row)
         arr[i] = value
         setYellowArray(row, arr)
+        applyNewlyEarned(before: before)
         save()
     }
 
@@ -93,7 +102,9 @@ public final class Clever4Game: ObservableObject, Scoreboard {
     // MARK: - Blue (6×6 grid)
 
     public func toggleBlue(_ index: Int) {
+        let before = completedTriggers()
         if state.blue.contains(index) { state.blue.remove(index) } else { state.blue.insert(index) }
+        applyNewlyEarned(before: before)
         save()
     }
     private func blueColumnCount(_ col: Int) -> Int {
@@ -116,7 +127,9 @@ public final class Clever4Game: ObservableObject, Scoreboard {
     // MARK: - Grey (4×16 grid; free crossing)
 
     public func toggleGrey(_ index: Int) {
+        let before = completedTriggers()
         if state.grey.contains(index) { state.grey.remove(index) } else { state.grey.insert(index) }
+        applyNewlyEarned(before: before)
         save()
     }
     private func greyColumnFilled(_ col: Int) -> Bool {
@@ -135,11 +148,17 @@ public final class Clever4Game: ObservableObject, Scoreboard {
 
     public func fillGreenTop(_ value: Int) {
         guard (1...6).contains(value), let i = greenTopNext() else { return }
-        state.greenTop[i] = value; save()
+        let before = completedTriggers()
+        state.greenTop[i] = value
+        applyNewlyEarned(before: before)
+        save()
     }
     public func fillGreenBottom(_ value: Int) {
         guard (1...6).contains(value), let i = greenBottomNext() else { return }
-        state.greenBottom[i] = value; save()
+        let before = completedTriggers()
+        state.greenBottom[i] = value
+        applyNewlyEarned(before: before)
+        save()
     }
     public func clearLastGreenTop() {
         guard let i = state.greenTop.lastIndex(where: { $0 != nil }) else { return }
@@ -165,7 +184,10 @@ public final class Clever4Game: ObservableObject, Scoreboard {
 
     public func fillPink(_ value: Int) {
         guard (1...6).contains(value), let i = pinkNext() else { return }
-        state.pink[i] = value; save()
+        let before = completedTriggers()
+        state.pink[i] = value
+        applyNewlyEarned(before: before)
+        save()
     }
     public func clearLastPink() {
         guard let i = state.pink.lastIndex(where: { $0 != nil }) else { return }
@@ -177,6 +199,89 @@ public final class Clever4Game: ObservableObject, Scoreboard {
         let bonus = state.pink.compactMap { $0 }.reduce(0) { $0 + (Clever4Layout.pinkBonuses[$1] ?? 0) }
         return base + bonus
     }
+
+    // MARK: - Automatic bonuses (advisory only)
+
+    /// Identity of a bonus-granting completion. Compared "before" vs "after" each
+    /// mark; never persisted, so clearing a cell re-arms it for next time.
+    private enum Trigger: Hashable {
+        case yellowTopCol(Int)
+        case yellowMidCol(Int)
+        case blueRow(Int)
+        case blueDiagonal
+        case greyCell(Int, Int)   // (row, col)
+        case greenField(Int)
+        case pinkField(Int)
+    }
+
+    private func completedTriggers() -> Set<Trigger> {
+        var done = Set<Trigger>()
+        // Yellow: a top/middle cell of a column is filled.
+        for c in 0..<Clever4Layout.yellowCols {
+            if state.yellowTop[c] != nil { done.insert(.yellowTopCol(c)) }
+            if state.yellowMiddle[c] != nil { done.insert(.yellowMidCol(c)) }
+        }
+        // Blue: a full row (all 6 crossed); the TR→BL diagonal fully crossed.
+        for r in 0..<Clever4Layout.blueRows {
+            let full = (0..<Clever4Layout.blueCols).allSatisfy {
+                state.blue.contains(r * Clever4Layout.blueCols + $0)
+            }
+            if full { done.insert(.blueRow(r)) }
+        }
+        let diagFull = (0..<min(Clever4Layout.blueRows, Clever4Layout.blueCols)).allSatisfy {
+            state.blue.contains($0 * Clever4Layout.blueCols + (Clever4Layout.blueCols - 1 - $0))
+        }
+        if diagFull { done.insert(.blueDiagonal) }
+        // Grey: a specific bonus cell is crossed.
+        for pos in Clever4Layout.greyCellBonus.keys
+        where state.grey.contains(pos.row * Clever4Layout.greyCols + pos.col) {
+            done.insert(.greyCell(pos.row, pos.col))
+        }
+        // Green: a field with both triangles filled.
+        for i in 0..<Clever4Layout.greenFields
+        where state.greenTop[i] != nil && state.greenBottom[i] != nil {
+            done.insert(.greenField(i))
+        }
+        // Pink: a field written.
+        for i in state.pink.indices where state.pink[i] != nil { done.insert(.pinkField(i)) }
+        return done
+    }
+
+    private func bonus(for t: Trigger) -> C4Bonus? {
+        switch t {
+        case let .yellowTopCol(c): return Clever4Layout.yellowTopColBonus[c]
+        case let .yellowMidCol(c): return Clever4Layout.yellowMidColBonus[c]
+        case let .blueRow(r):      return Clever4Layout.blueRowBonus[r]
+        case .blueDiagonal:        return Clever4Layout.blueDiagonalBonus
+        case let .greyCell(r, c):  return Clever4Layout.greyCellBonus[GridPos(r, c)]
+        case let .greenField(i):   return Clever4Layout.greenFieldBonus[i]
+        case let .pinkField(i):    return Clever4Layout.pinkFieldBonus[i]
+        }
+    }
+
+    /// Detect completions that flipped incomplete → complete and surface their
+    /// (advisory) bonuses. None auto-place, so there is no chaining to do.
+    private func applyNewlyEarned(before: Set<Trigger>) {
+        let newly = completedTriggers().subtracting(before)
+        guard !newly.isEmpty else { return }
+        for t in newly.sorted(by: { order($0) < order($1) }) {
+            if let b = bonus(for: t) { earnedBonuses.append(b.message) }
+        }
+    }
+
+    private func order(_ t: Trigger) -> Int {
+        switch t {
+        case let .yellowTopCol(c): return 0 + c
+        case let .yellowMidCol(c): return 10 + c
+        case let .blueRow(r):      return 20 + r
+        case .blueDiagonal:        return 30
+        case let .greyCell(r, c):  return 40 + r * 16 + c
+        case let .greenField(i):   return 120 + i
+        case let .pinkField(i):    return 140 + i
+        }
+    }
+
+    public func clearEarnedBonuses() { earnedBonuses.removeAll() }
 
     // MARK: - Foxes & scoring
 
@@ -206,6 +311,7 @@ public final class Clever4Game: ObservableObject, Scoreboard {
         var fresh = Clever4State()
         fresh.theme = theme
         state = fresh
+        earnedBonuses.removeAll()
         save()
     }
 

@@ -25,6 +25,7 @@ public struct Clever3ScorecardView: View {
             ScrollView {
                 VStack(spacing: 12) {
                     summary
+                    bonusBanner
                     foxStepper
                     grid(.yellow, rows: Clever3Layout.yellowRows, cols: Clever3Layout.yellowCols,
                          marks: game.state.yellow, scale: Clever3Layout.yellowRowScale,
@@ -84,6 +85,27 @@ public struct Clever3ScorecardView: View {
                 Text("Total").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
                 Text("\(game.totalScore)").font(.title3.bold().monospacedDigit())
             }
+        }
+    }
+
+    @ViewBuilder private var bonusBanner: some View {
+        if !game.earnedBonuses.isEmpty {
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: "gift.fill").font(.caption).foregroundStyle(.tint)
+                VStack(alignment: .leading, spacing: 2) {
+                    ForEach(Array(game.earnedBonuses.suffix(4).enumerated()), id: \.offset) { _, msg in
+                        Text(msg).font(.caption.weight(.medium))
+                    }
+                }
+                Spacer(minLength: 0)
+                Button { game.clearEarnedBonuses() } label: {
+                    Image(systemName: "xmark.circle.fill").font(.body).foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 12).padding(.vertical, 8)
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+            .frame(maxWidth: .infinity)
         }
     }
 
