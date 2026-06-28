@@ -94,11 +94,35 @@ game list, and a **LIFO command history** for exact, dependency-safe undo.
 
 ## Platforms & layout
 
-- Universal: iPhone (all sizes) and iPad. Portrait + landscape.
+- Universal: iPhone (all sizes) and iPad.
 - Deployment target: iOS 17.
-- The scorecard sizes its cells with `GeometryReader` and caps the card width
-  (700 pt) so it stays touch-friendly and centered on large/iPad screens.
-  Verified targets include iPhone 15 Pro Max and iPhone 15 Plus.
+
+### Scorecard layout requirements (non-negotiable)
+
+These are explicit product requirements — every scorecard must follow them:
+
+- **Always fullscreen, edge-to-edge.** The board fills the entire available
+  space with no empty margins and no scrolling. Tiles fill the full width
+  edge-to-edge; tile **width and height are decoupled** (a `GeometryReader`
+  computes `w` from the available width and `h` from the available height), so
+  tiles go slightly rectangular on tall boards rather than leaving gaps. Do not
+  cap the card width or centre it with side margins.
+- **iPhone is landscape-only.** Portrait is disabled on iPhone
+  (`INFOPLIST_KEY_UISupportedInterfaceOrientations` = landscape left/right).
+  iPad keeps all orientations.
+- **Use the leftover space wisely.** If a board can't fill an axis with square
+  tiles, fill it with content (rectangular tiles, an inline per-row score, a
+  bottom/side bar) rather than dead space.
+- **Style like the real game.** Match the official card: full-width colour
+  bands with light number tiles, a direction chevron per row, inline lock, and
+  per-row scores — not a generic grid. Study the official scorecard art.
+- **iPad two-player (mirrored).** On iPad (regular width) a board may offer a
+  "2 players" toggle that shows a second, independent board mirrored
+  (`rotationEffect(180°)`) above the first, for players across a table. See
+  `QwixxBoardView` (pure board) + `QwixxScorecardView` (nav + optional mirror).
+
+Reference: `Games/Qwixx/QwixxScorecardView.swift` is the canonical implementation
+of all of the above; new games should mirror its approach.
 
 ## Build & CI
 
