@@ -30,6 +30,7 @@ def team_id
 end
 
 require "base64"
+require "openssl"
 
 # Rebuild a clean PEM from the ASC_KEY_P8 secret no matter how it was pasted.
 # Handles every common form so "invalid curve name" can't happen:
@@ -55,8 +56,24 @@ def clean_p8_pem(raw)
     end
 
   body = body.gsub(/\s+/, "")
-  "-----BEGIN PRIVATE KEY-----\n" + body.scan(/.{1,64}/).join("\n") +
+  pem = "-----BEGIN PRIVATE KEY-----\n" + body.scan(/.{1,64}/).join("\n") +
     "\n-----END PRIVATE KEY-----"
+
+  # Fail fast with a clear, safe message (no key material) if the reconstructed
+  # key can't be parsed — almost always a truncated or mis-pasted secret.
+  begin
+    OpenSSL::PKey.read(pem)
+  rescue StandardError => e
+    UI.user_error!(
+      "ASC_KEY_P8 is not a valid private key (#{e.message}). " \
+      "After cleanup the key body is #{body.length} base64 chars — a real App " \
+      "Store Connect key is ~184. Re-create the secret: open the downloaded " \
+      "AuthKey_XXXXXX.p8 in a text editor, Select-All, and paste the ENTIRE " \
+      "contents (including the BEGIN/END PRIVATE KEY lines) with nothing " \
+      "trimmed or added."
+    )
+  end
+  pem
 end
 
 # Build the App Store Connect API key object used for every ASC interaction.
