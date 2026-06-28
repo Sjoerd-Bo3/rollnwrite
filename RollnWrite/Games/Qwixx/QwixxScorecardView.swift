@@ -16,7 +16,9 @@ struct QwixxBoardView: View {
     @State private var confirmReset = false
 
     private let tileGap: CGFloat = 4
-    private let rowGap: CGFloat = 6
+    private let rowGap: CGFloat = 4
+    private let outerPad: CGFloat = 4   // gap to the safe-area edge
+    private let bandPad: CGFloat = 4    // coloured border inside each band
     // chevron + 11 numbers + lock + per-row score
     private let columns: CGFloat = 14
 
@@ -29,8 +31,9 @@ struct QwixxBoardView: View {
             let s = sizing(for: geo.size)
             boardStack(w: s.w, h: s.h)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(8)
+                .padding(outerPad)
         }
+        .ignoresSafeArea(.container, edges: .bottom)
         .confirmationDialog("Start a new game?", isPresented: $confirmReset, titleVisibility: .visible) {
             Button("New game", role: .destructive) { game.reset() }
             Button("Cancel", role: .cancel) {}
@@ -52,11 +55,11 @@ struct QwixxBoardView: View {
         let bonusRows = CGFloat(game.hasBonusRows ? 2 : 0)
         let rowsCount = bandRows + bonusRows + 1 // + bottom bar
 
-        let availW = size.width - 16
-        let w = max(14, (availW - (columns - 1) * tileGap) / (columns + 0.24))
+        let availW = size.width - 2 * outerPad
+        let w = max(14, (availW - (columns - 1) * tileGap - 2 * bandPad) / columns)
 
         // Row heights: colour band = h, bonus row ≈ 0.6h, bottom bar ≈ 0.95h.
-        let availH = size.height - 16
+        let availH = size.height - 2 * outerPad
         let vUnits = bandRows + 0.6 * bonusRows + 0.95
         let h = max(14, (availH - (rowsCount - 1) * rowGap) / vUnits)
         return BoardLayout(w: w, h: h)
@@ -92,7 +95,7 @@ struct QwixxBoardView: View {
             lockTile(color, w: w, h: th)
             scoreTile(value: game.points(for: color), w: w, h: th)
         }
-        .padding(.horizontal, w * 0.12)
+        .padding(.horizontal, bandPad)
         .padding(.vertical, h * 0.08)
         .frame(maxWidth: .infinity)
         .background(color.tint)
@@ -180,7 +183,7 @@ struct QwixxBoardView: View {
             }
             Color.clear.frame(width: w * 2 + tileGap, height: h) // lock + score columns
         }
-        .padding(.horizontal, w * 0.12)
+        .padding(.horizontal, bandPad)
         .frame(maxWidth: .infinity)
     }
 
@@ -208,7 +211,7 @@ struct QwixxBoardView: View {
         }
         .frame(maxWidth: .infinity)
         .frame(height: h)
-        .padding(.horizontal, w * 0.12)
+        .padding(.horizontal, bandPad)
     }
 
     private func penaltyBox(_ i: Int, size h: CGFloat) -> some View {
