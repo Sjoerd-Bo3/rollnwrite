@@ -13,8 +13,19 @@ name: TestFlight
 #   ASC_ISSUER_ID  – App Store Connect API key Issuer ID
 #   ASC_KEY_P8     – the full text contents of the AuthKey_XXXXXX.p8 file
 
+# TestFlight builds expire after 90 days. The scheduled trigger below rebuilds
+# automatically on the 1st of each month so a fresh build is always waiting in
+# TestFlight and the app never stops working on your phone — even with no code
+# changes (the build number just increments). Borrowed from the Loop/Trio
+# browser-build setup. Delete the `schedule:` block to opt out of auto-builds.
+#
+# Caveat (also from LoopDocs): GitHub disables scheduled workflows after 60 days
+# of *no repository activity*. If you stop pushing for two months, re-enable it
+# from the Actions tab or just run it manually.
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "37 6 1 * *" # 06:37 UTC on the 1st of every month
 
 jobs:
   testflight:

@@ -1,5 +1,27 @@
 # Releasing to TestFlight — without a Mac
 
+## TL;DR (the condensed RollnWrite version)
+
+Loop/Trio's guides are long because of `match`, App Groups, and multi-target
+signing. Ours is shorter — one app, cloud signing, **5 secrets, 2 clicks**:
+
+1. **Pay** for the Apple Developer Program ($99/yr) — the only hard requirement.
+2. In **App Store Connect**, create the app record + bundle id, and an **API
+   key** (App Manager role) → note **Key ID**, **Issuer ID**, download the
+   **`.p8`** (one-time download!). Grab your **Team ID** from the Developer
+   portal.
+3. Add **5 GitHub secrets**: `APPLE_TEAM_ID`, `APP_BUNDLE_ID`, `ASC_KEY_ID`,
+   `ASC_ISSUER_ID`, `ASC_KEY_P8`.
+4. Drop a **1024×1024 icon** into `Assets.xcassets/AppIcon.appiconset`.
+5. **Actions tab → Validate Secrets → Run** (1 min sanity check) → **Actions →
+   TestFlight → Run** (~15 min). Add yourself as an internal tester, install
+   the TestFlight app on your iPhone — done.
+
+A scheduled rebuild runs monthly so your build never hits the 90-day TestFlight
+expiry. Full step-by-step below.
+
+---
+
 You can build, sign, and ship RollnWrite to TestFlight entirely from your
 browser. A GitHub-hosted macOS runner does the Xcode work; Apple's servers do
 the signing (App Store Connect API key + automatic **cloud signing**). You never
@@ -113,6 +135,22 @@ installs fine on your phone.
 Internal testers get builds immediately with no Apple review. (External testing
 requires a one-time Beta App Review, which you don't need just to test on your
 own phone.)
+
+---
+
+## Keeping your build fresh (automatic monthly rebuilds)
+
+A TestFlight build **stops working 90 days after upload**. So, like Loop and
+Trio, the TestFlight workflow also runs on a schedule — **06:37 UTC on the 1st
+of every month** — and uploads a fresh build (the build number just bumps; no
+code change needed). You don't have to do anything; the app keeps working.
+
+- **To turn it off:** delete the `schedule:` block in
+  `.github/workflows/testflight.yml`. You can always build manually instead.
+- **Heads-up (from LoopDocs):** GitHub disables scheduled workflows after **60
+  days with no repository activity**. If you go quiet for two months, the
+  monthly build won't fire — re-enable it from the Actions tab, or just run it
+  manually, and any push re-arms the schedule.
 
 ---
 
