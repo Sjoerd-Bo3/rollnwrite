@@ -51,6 +51,7 @@ public enum GameRegistry {
     public static let games: [GameDefinition] = [
         QwixxBigPointsGame(),
         QwixxClassicGame(),
+        QwixxLucky15Game(),
         ThatsPrettyCleverGame(),
         TwiceAsCleverGame(),
         CleverCubedGame(),
