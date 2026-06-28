@@ -26,6 +26,22 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "37 6 1 * *" # 06:37 UTC on the 1st of every month
+  # Every code push to these branches builds and auto-uploads a fresh TestFlight
+  # build. Doc-only changes are skipped so they don't burn a build.
+  push:
+    branches:
+      - main
+      - "claude/**"
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "LICENSE"
+
+# A newer push supersedes an in-flight upload, so cancel the older run rather
+# than uploading two builds back-to-back.
+concurrency:
+  group: testflight-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   testflight:
