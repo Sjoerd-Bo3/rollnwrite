@@ -76,12 +76,41 @@ def clean_p8_pem(raw)
   pem
 end
 
+# Print a SAFE summary of the secrets seen by the runner — lengths and presence
+# only, never the values. Pinpoints "secret not reaching the workflow" (length 0
+# = wrong scope/name) vs "secret present but malformed" (length > 0).
+def log_secret_diagnostics
+  %w[ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 APP_BUNDLE_ID APPLE_TEAM_ID].each do |name|
+    v = ENV[name]
+    state =
+      if v.nil? then "NOT SET"
+      elsif v.strip.empty? then "EMPTY (length #{v.length})"
+      else "set, #{v.strip.length} chars#{name == 'ASC_KEY_P8' ? ", has-header=#{v.include?('PRIVATE KEY')}" : ''}"
+      end
+    UI.message("🔑 #{name}: #{state}")
+  end
+end
+
 # Build the App Store Connect API key object used for every ASC interaction.
 def asc_api_key
+  log_secret_diagnostics
+  raw = ENV["ASC_KEY_P8"].to_s
+  if raw.strip.empty?
+    UI.user_error!(
+      "ASC_KEY_P8 is empty / not set on this runner (length #{raw.length}). The " \
+      "key text isn't reaching the workflow, so this is a secret SCOPE or NAME " \
+      "problem, not the key itself. Check: (1) it's under Settings → Secrets and " \
+      "variables → Actions → 'Repository secrets' (NOT an Environment secret, NOT " \
+      "an Organization secret without repo access, NOT a 'Variable'); (2) the name " \
+      "is exactly ASC_KEY_P8 with no trailing space or case change; (3) you clicked " \
+      "'Update secret' / 'Add secret' to save it."
+    )
+  end
+
   app_store_connect_api_key(
     key_id: ENV.fetch("ASC_KEY_ID"),
     issuer_id: ENV.fetch("ASC_ISSUER_ID"),
-    key_content: clean_p8_pem(ENV.fetch("ASC_KEY_P8")),
+    key_content: clean_p8_pem(raw),
     is_key_content_base64: false,
     in_house: false
   )
