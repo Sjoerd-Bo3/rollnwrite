@@ -149,9 +149,16 @@ The confirmed tables were cross-checked against the official scoring calculator.
 No values were guessed — verify blue/brown against the official sheet before
 converting them to auto-scoring.
 
-When adding Clever 4, add a new `Games/Clever4/` module with its own
-layout + engine + view + definition, and register it. Do not generalise the
-Clever engines prematurely — each Clever has a materially different board.
+**Clever 4ever (Clever 4)** — `Games/Clever4`. The most complex board
+(polyomino grey area, coordinate blue area, three-rule yellow) with point
+tables printed only on the physical sheet. Shipped as an honest **scorecard
+calculator** v1: the player enters each of the five area totals; the engine
+computes foxes (× lowest area) and the grand total, with dice-colour mapping.
+Upgrade to an interactive board once the official sheet is transcribed — no
+scoring values are guessed.
+
+Do not generalise the Clever engines prematurely — each Clever has a
+materially different board.
 
 ## Conventions
 

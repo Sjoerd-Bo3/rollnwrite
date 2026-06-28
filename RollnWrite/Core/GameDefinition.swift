@@ -53,6 +53,7 @@ public enum GameRegistry {
         ThatsPrettyCleverGame(),
         TwiceAsCleverGame(),
         CleverCubedGame(),
+        Clever4everGame(),
 
         // Future variants slot in here with zero changes elsewhere.
         ComingSoonGame(
@@ -61,13 +62,6 @@ public enum GameRegistry {
             subtitle: "The original",
             iconSystemName: "die.face.4",
             accent: .orange
-        ),
-        ComingSoonGame(
-            id: "clever-4",
-            title: "Clever 4ever",
-            subtitle: "The fourth Clever",
-            iconSystemName: "brain.head.profile",
-            accent: .indigo
         ),
     ]
 
