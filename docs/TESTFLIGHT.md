@@ -35,7 +35,8 @@ workflows in run order:
 - **1. Validate Secrets** (`validate_secrets.yml`) — a ~1-minute preflight that
   proves your secrets work before any real build.
 - **2. TestFlight** (`testflight.yml`) — builds, cloud-signs, and uploads a new
-  build to TestFlight (also runs automatically once a month, see below).
+  build to TestFlight. Runs on **every code push** to `main`/`claude/**` (doc
+  changes skipped), plus a monthly rebuild, plus manual *Run workflow*.
 - **3. iOS Build** (`ios.yml`) — automatic compile-check on every push/PR (no
   signing); this is the no-Mac way to confirm the project still builds.
 - **4. Bump Version** (`bump_version.yml`) — manual helper to set the marketing
