@@ -158,6 +158,11 @@ platform :ios do
       scheme: SCHEME,
       configuration: "Release",
       export_method: "app-store",
+      # Hand the API key to gym so it threads -authenticationKeyPath/ID/IssuerID
+      # into xcodebuild's archive AND export. Without this the archive has no
+      # Apple account for -allowProvisioningUpdates and fails with
+      # "No Accounts" / "No profiles for 'dev.bo3.RollnWrite' were found".
+      api_key: key,
       # Cloud signing + pin identity/version at build time. Setting
       # CURRENT_PROJECT_VERSION here keeps the pbxproj untouched (no agvtool).
       xcargs: [
