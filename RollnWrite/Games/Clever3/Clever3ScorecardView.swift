@@ -12,7 +12,7 @@ public struct Clever3ScorecardView: View {
     @State private var showRules = false
     @State private var showColors = false
     @State private var confirmNewGame = false
-    @State private var pinkEntry: Int?   // index of pink cell being filled
+    @State private var entry: C3Entry?
 
     private let spacing: CGFloat = 3
 
@@ -20,12 +20,11 @@ public struct Clever3ScorecardView: View {
 
     public var body: some View {
         GeometryReader { geo in
-            let contentWidth = min(geo.size.width, 680)
-            let cell = max(28, min(48, (contentWidth - 24 - spacing * 5) / 6))
+            let contentWidth = min(geo.size.width, 720)
+            let cell = max(24, min(46, (contentWidth - 24 - spacing * 12) / 13))
             ScrollView {
                 VStack(spacing: 12) {
                     summary
-                    note
                     foxStepper
                     grid(.yellow, rows: Clever3Layout.yellowRows, cols: Clever3Layout.yellowCols,
                          marks: game.state.yellow, scale: Clever3Layout.yellowRowScale,
@@ -33,9 +32,9 @@ public struct Clever3ScorecardView: View {
                     grid(.turquoise, rows: Clever3Layout.turquoiseRows, cols: Clever3Layout.turquoiseCols,
                          marks: game.state.turquoise, scale: Clever3Layout.turquoiseRowScale,
                          marksInRow: game.turquoiseMarks(inRow:), toggle: game.toggleTurquoise, cell: cell)
-                    pinkArea(cell: cell)
-                    manualArea(.blue, total: game.state.blueTotal, max: Clever3Layout.blueMax) { game.setBlueTotal($0) }
-                    manualArea(.brown, total: game.state.brownTotal, max: Clever3Layout.brownMax) { game.setBrownTotal($0) }
+                    blueTrack(cell: cell)
+                    brownRow(cell: cell)
+                    pinkRow(cell: cell)
                 }
                 .padding(.horizontal, 12).padding(.vertical, 8)
                 .frame(maxWidth: contentWidth).frame(maxWidth: .infinity)
@@ -57,15 +56,17 @@ public struct Clever3ScorecardView: View {
             Button("Cancel", role: .cancel) {}
         } message: { Text("This clears the scorecard. Your dice-colour mapping is kept.") }
         .confirmationDialog(
-            "Pink written value",
-            isPresented: Binding(get: { pinkEntry != nil }, set: { if !$0 { pinkEntry = nil } }),
+            entry?.title ?? "",
+            isPresented: Binding(get: { entry != nil }, set: { if !$0 { entry = nil } }),
             titleVisibility: .visible
         ) {
-            ForEach(1...12, id: \.self) { v in
-                Button("\(v)") { if let i = pinkEntry { game.setPink(i, v) }; pinkEntry = nil }
+            ForEach(entry?.allowed ?? [], id: \.self) { v in
+                Button("\(v)") { entry?.commit(v); entry = nil }
             }
-            Button("Clear", role: .destructive) { if let i = pinkEntry { game.setPink(i, nil) }; pinkEntry = nil }
-            Button("Cancel", role: .cancel) { pinkEntry = nil }
+            if entry?.allowClear == true {
+                Button("Clear", role: .destructive) { entry?.commit(0); entry = nil }
+            }
+            Button("Cancel", role: .cancel) { entry = nil }
         }
     }
 
@@ -86,14 +87,6 @@ public struct Clever3ScorecardView: View {
         }
     }
 
-    private var note: some View {
-        Text("Yellow, turquoise and pink are scored automatically. Blue and brown use point tables printed only on the physical sheet — enter those two area totals below.")
-            .font(.caption2).foregroundStyle(.secondary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(8)
-            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8))
-    }
-
     private var foxStepper: some View {
         Stepper(value: Binding(get: { game.state.foxes }, set: { nv in if nv > game.state.foxes { game.addFox() } else { game.removeFox() } }), in: 0...20) {
             Text("🦊 Foxes earned: \(game.state.foxes)").font(.subheadline.weight(.semibold))
@@ -112,39 +105,99 @@ public struct Clever3ScorecardView: View {
                             toggle(r * cols + c)
                         }
                     }
-                    Text("\(scale[marksInRow(r)])")
-                        .font(.caption.bold().monospacedDigit())
-                        .foregroundStyle(.secondary)
-                        .frame(minWidth: cell)
+                    Text("\(scale[marksInRow(r)])").font(.caption.bold().monospacedDigit()).foregroundStyle(.secondary).frame(minWidth: cell)
                 }
             }
         }
     }
 
-    private func pinkArea(cell: CGFloat) -> some View {
+    // MARK: - Blue ±1 track
+
+    private func blueTrack(cell: CGFloat) -> some View {
+        let tint = game.color(.blue)
+        let n = Clever3Layout.blueSideCells
+        return VStack(alignment: .leading, spacing: 2) {
+            header(.blue)
+            HStack(spacing: spacing) {
+                ForEach(0..<n, id: \.self) { k in
+                    let i = n - 1 - k          // outermost-left first
+                    blueCell(side: true, index: i, cell: cell, tint: tint)
+                }
+                centerSeven(cell: cell, tint: tint)
+                ForEach(0..<n, id: \.self) { i in
+                    blueCell(side: false, index: i, cell: cell, tint: tint)
+                }
+            }
+            Text("Outermost left + outermost right + 4 per 2/3/4/10/11/12.").font(.caption2).foregroundStyle(.secondary)
+        }
+    }
+
+    private func centerSeven(cell: CGFloat, tint: ThemeColor) -> some View {
+        VStack(spacing: 1) {
+            Text(" ").font(.system(size: 8))
+            ZStack { RoundedRectangle(cornerRadius: 6).fill(tint.color); Text("7").font(.system(size: 15, weight: .black)).foregroundStyle(tint.textColor) }
+                .frame(width: cell, height: cell)
+        }
+    }
+
+    private func blueCell(side left: Bool, index: Int, cell: CGFloat, tint: ThemeColor) -> some View {
+        let value = left ? game.state.blueLeft[index] : game.state.blueRight[index]
+        let isNext = (left ? game.blueLeftNext : game.blueRightNext) == index
+        return VStack(spacing: 1) {
+            Text("\(Clever3Layout.bluePositionScale[index])").font(.system(size: 8, weight: .bold)).foregroundStyle(.secondary)
+            ZStack {
+                RoundedRectangle(cornerRadius: 6).fill(value != nil ? tint.color : tint.color.opacity(0.18))
+                if let value { Text("\(value)").font(.system(size: 13, weight: .bold, design: .rounded)).foregroundStyle(tint.textColor) }
+                else if isNext { Text(left ? "−1" : "+1").font(.system(size: 9, weight: .bold)).foregroundStyle(tint.color) }
+            }
+            .frame(width: cell, height: cell)
+            .opacity(value != nil || isNext ? 1 : 0.45)
+            .onTapGesture {
+                if isNext {
+                    let allowed = game.allowedBlue(left: left)
+                    if !allowed.isEmpty { entry = C3Entry(title: "Blue value", allowed: allowed, allowClear: false) { game.fillBlue(left: left, $0) } }
+                }
+            }
+        }
+    }
+
+    // MARK: - Brown
+
+    private func brownRow(cell: CGFloat) -> some View {
+        let tint = game.color(.brown)
+        return VStack(alignment: .leading, spacing: 2) {
+            header(.brown)
+            HStack(spacing: spacing) {
+                ForEach(0..<Clever3Layout.brownNumbers.count, id: \.self) { i in
+                    let crossed = game.state.brown.contains(i)
+                    let enabled = game.canCrossBrown(i) || (crossed && i == (game.state.brown.max() ?? -1))
+                    VStack(spacing: 1) {
+                        Text("\(Clever3Layout.brownScale[i + 1])").font(.system(size: 7, weight: .bold)).foregroundStyle(.secondary)
+                        C3GridCell(label: Clever3Layout.brownNumbers[i], tint: tint, crossed: crossed, size: cell) { game.toggleBrown(i) }
+                            .opacity(enabled || crossed ? 1 : 0.4)
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Pink
+
+    private func pinkRow(cell: CGFloat) -> some View {
         let tint = game.color(.pink)
         return VStack(alignment: .leading, spacing: 2) {
             header(.pink)
             HStack(spacing: spacing) {
                 ForEach(0..<Clever3Layout.pinkCells, id: \.self) { i in
-                    C3PinkCell(value: game.state.pink[i], tint: tint, size: cell) { pinkEntry = i }
+                    VStack(spacing: 1) {
+                        Text("×\(Clever3Layout.pinkMultipliers[i])").font(.system(size: 8, weight: .bold)).foregroundStyle(.secondary)
+                        C3PinkCell(value: game.state.pink[i], tint: tint, size: cell) {
+                            entry = C3Entry(title: "Pink written value", allowed: Array(1...12), allowClear: true) { game.setPink(i, $0 == 0 ? nil : $0) }
+                        }
+                    }
                 }
             }
-            Text("Enter the value you wrote (die × multiplier, or the halved bonus value).").font(.caption2).foregroundStyle(.secondary)
-        }
-    }
-
-    private func manualArea(_ area: Clever3Area, total: Int, max: Int, set: @escaping (Int) -> Void) -> some View {
-        HStack(spacing: 10) {
-            RoundedRectangle(cornerRadius: 3).fill(game.color(area).color).frame(width: 14, height: 14)
-            Text("\(area.title) total").font(.subheadline.weight(.semibold))
-            Spacer()
-            TextField("0", value: Binding(get: { total }, set: { set($0) }), format: .number)
-                .keyboardType(.numberPad)
-                .multilineTextAlignment(.trailing)
-                .frame(width: 64)
-                .textFieldStyle(.roundedBorder)
-            Text("/ \(max)").font(.caption).foregroundStyle(.secondary)
+            Text("Enter the value you wrote (die × the shown multiplier, or the halved bonus value).").font(.caption2).foregroundStyle(.secondary)
         }
     }
 
@@ -156,6 +209,14 @@ public struct Clever3ScorecardView: View {
             Text("\(game.score(for: area)) pts").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
         }
     }
+}
+
+private struct C3Entry: Identifiable {
+    let id = UUID()
+    let title: String
+    let allowed: [Int]
+    let allowClear: Bool
+    let commit: (Int) -> Void
 }
 
 private struct C3GridCell: View {

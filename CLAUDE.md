@@ -140,14 +140,12 @@ the official sheet (art. 88234). Foxes are a **manual stepper** here (their
 triggers are spread across many area completions, unlike Clever 1 where each
 fox is a single clean completion), each scoring the lowest area.
 
-**Clever Cubed (Clever 3)** — `Games/Clever3`. Areas: yellow (3 rows, per-row
-2/6/12/20/30/42), turquoise (5 rows, per-row 1/3/6/10/15/21), pink (sum) are
-**auto-scored**; blue and brown use point tables printed only on the physical
-score sheet, so those two totals are **entered by the player** (as the official
-online calculator does) until the sheet is sourced. Foxes are a manual stepper.
-The confirmed tables were cross-checked against the official scoring calculator.
-No values were guessed — verify blue/brown against the official sheet before
-converting them to auto-scoring.
+**Clever Cubed (Clever 3)** — `Games/Clever3`. All five areas auto-scored from
+the official score sheet: yellow (3 rows, 2/6/12/20/30/42), turquoise (5 rows,
+1/3/6/10/15/21), blue (±1 track around 7; outermost-left + outermost-right of
+3/6/9/13/17/22, +4 per 2/3/4/10/11/12), brown (one row,
+2/5/9/14/20/27/35/44/54/65/77/90 by crosses), pink (sum of written die ×
+multiplier). Foxes are a manual stepper.
 
 **Clever 4ever (Clever 4)** — `Games/Clever4`. The most complex board
 (polyomino grey area, coordinate blue area, three-rule yellow) with point
