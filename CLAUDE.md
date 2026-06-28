@@ -140,7 +140,16 @@ the official sheet (art. 88234). Foxes are a **manual stepper** here (their
 triggers are spread across many area completions, unlike Clever 1 where each
 fox is a single clean completion), each scoring the lowest area.
 
-When adding Clever 3/4, add a new `Games/Clever<N>/` module with its own
+**Clever Cubed (Clever 3)** — `Games/Clever3`. Areas: yellow (3 rows, per-row
+2/6/12/20/30/42), turquoise (5 rows, per-row 1/3/6/10/15/21), pink (sum) are
+**auto-scored**; blue and brown use point tables printed only on the physical
+score sheet, so those two totals are **entered by the player** (as the official
+online calculator does) until the sheet is sourced. Foxes are a manual stepper.
+The confirmed tables were cross-checked against the official scoring calculator.
+No values were guessed — verify blue/brown against the official sheet before
+converting them to auto-scoring.
+
+When adding Clever 4, add a new `Games/Clever4/` module with its own
 layout + engine + view + definition, and register it. Do not generalise the
 Clever engines prematurely — each Clever has a materially different board.
 

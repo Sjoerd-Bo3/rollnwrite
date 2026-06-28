@@ -108,17 +108,14 @@ public struct Clever3ScorecardView: View {
             ForEach(0..<rows, id: \.self) { r in
                 HStack(spacing: spacing) {
                     ForEach(0..<cols, id: \.self) { c in
-                        let idx = r * cols + c
-                        let crossed = marks.contains(idx)
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 6).fill(tint.color)
-                            Text("\(c + 1)").font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(tint.textColor)
-                            if crossed { Image(systemName: "xmark").font(.system(size: 16, weight: .black)).foregroundStyle(tint.textColor) }
+                        C3GridCell(label: c + 1, tint: tint, crossed: marks.contains(r * cols + c), size: cell) {
+                            toggle(r * cols + c)
                         }
-                        .frame(width: cell, height: cell)
-                        .onTapGesture { toggle(idx) }
                     }
-                    Text("\(scale[marksInRow(r)])").font(.caption.bold().monospacedDigit()).foregroundStyle(.secondary).frame(minWidth: cell)
+                    Text("\(scale[marksInRow(r)])")
+                        .font(.caption.bold().monospacedDigit())
+                        .foregroundStyle(.secondary)
+                        .frame(minWidth: cell)
                 }
             }
         }
@@ -130,14 +127,7 @@ public struct Clever3ScorecardView: View {
             header(.pink)
             HStack(spacing: spacing) {
                 ForEach(0..<Clever3Layout.pinkCells, id: \.self) { i in
-                    let v = game.state.pink[i]
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 6).fill(v != nil ? tint.color : tint.color.opacity(0.18))
-                        if let v { Text("\(v)").font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(tint.textColor) }
-                        else { Image(systemName: "plus").font(.system(size: 11, weight: .bold)).foregroundStyle(tint.color) }
-                    }
-                    .frame(width: cell, height: cell)
-                    .onTapGesture { pinkEntry = i }
+                    C3PinkCell(value: game.state.pink[i], tint: tint, size: cell) { pinkEntry = i }
                 }
             }
             Text("Enter the value you wrote (die × multiplier, or the halved bonus value).").font(.caption2).foregroundStyle(.secondary)
@@ -165,6 +155,46 @@ public struct Clever3ScorecardView: View {
             Spacer()
             Text("\(game.score(for: area)) pts").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
         }
+    }
+}
+
+private struct C3GridCell: View {
+    let label: Int
+    let tint: ThemeColor
+    let crossed: Bool
+    let size: CGFloat
+    let onTap: () -> Void
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 6).fill(tint.color)
+            Text("\(label)").font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(tint.textColor)
+            if crossed {
+                Image(systemName: "xmark").font(.system(size: 16, weight: .black)).foregroundStyle(tint.textColor)
+            }
+        }
+        .frame(width: size, height: size)
+        .onTapGesture(perform: onTap)
+    }
+}
+
+private struct C3PinkCell: View {
+    let value: Int?
+    let tint: ThemeColor
+    let size: CGFloat
+    let onTap: () -> Void
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 6).fill(value != nil ? tint.color : tint.color.opacity(0.18))
+            if let value {
+                Text("\(value)").font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(tint.textColor)
+            } else {
+                Image(systemName: "plus").font(.system(size: 11, weight: .bold)).foregroundStyle(tint.color)
+            }
+        }
+        .frame(width: size, height: size)
+        .onTapGesture(perform: onTap)
     }
 }
 
