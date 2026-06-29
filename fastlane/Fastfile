@@ -40,6 +40,7 @@ end
 require "base64"
 require "openssl"
 require "tmpdir"
+require "shellwords"
 
 # Rebuild a clean PEM from the ASC_KEY_P8 secret no matter how it was pasted.
 # Handles every common form so "invalid curve name" can't happen:
@@ -203,7 +204,10 @@ platform :ios do
         "CODE_SIGN_STYLE=Manual",
         "DEVELOPMENT_TEAM=#{team_id}",
         "PRODUCT_BUNDLE_IDENTIFIER=#{bundle_id}",
-        "PROVISIONING_PROFILE_SPECIFIER=#{profile}",
+        # The match profile name contains spaces ("match AppStore <bundle id>").
+        # xcargs is joined with spaces and run through a shell, so the value must
+        # be shell-escaped or xcodebuild sees only "match" and signing fails.
+        "PROVISIONING_PROFILE_SPECIFIER=#{profile.shellescape}",
         "MARKETING_VERSION=1.0",
         "CURRENT_PROJECT_VERSION=#{build_number}"
       ].join(" "),
