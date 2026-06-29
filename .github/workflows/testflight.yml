@@ -51,8 +51,13 @@ jobs:
           bundler-cache: true
 
       - name: Configure match git auth (GH_PAT for the Match-Secrets repo)
+        # Basic-auth the certs-repo clone as "<owner>:<PAT>", exactly like the
+        # Trio/Loop fastlane. A PAT must be paired with the real account
+        # username; the "x-access-token" username is only for GitHub App
+        # installation tokens, and pairing it with a PAT makes GitHub return
+        # "Repository not found" (404) on the private Match-Secrets repo.
         run: |
-          AUTH=$(printf '%s' "x-access-token:${{ secrets.GH_PAT }}" | base64 | tr -d '\n')
+          AUTH=$(printf '%s' "${{ github.repository_owner }}:${{ secrets.GH_PAT }}" | base64 | tr -d '\n')
           echo "::add-mask::$AUTH"
           echo "MATCH_GIT_BASIC_AUTHORIZATION=$AUTH" >> "$GITHUB_ENV"
 
