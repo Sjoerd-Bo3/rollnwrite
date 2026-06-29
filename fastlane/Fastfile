@@ -202,6 +202,11 @@ platform :ios do
       # here keeps the pbxproj untouched (no agvtool).
       xcargs: [
         "CODE_SIGN_STYLE=Manual",
+        # Force the App Store distribution identity. Without this, the archive
+        # falls back to the project's default ("iOS Development") and fails —
+        # match installs an "Apple Distribution" cert, not a development one.
+        # Shell-escaped because the value contains a space.
+        "CODE_SIGN_IDENTITY=#{'Apple Distribution'.shellescape}",
         "DEVELOPMENT_TEAM=#{team_id}",
         "PRODUCT_BUNDLE_IDENTIFIER=#{bundle_id}",
         # The match profile name contains spaces ("match AppStore <bundle id>").
