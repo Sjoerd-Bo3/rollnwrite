@@ -2,6 +2,15 @@
 //  Clever3ScorecardView.swift
 //  RollnWrite – Clever3
 //
+//  Interactive "Clever Cubed" scorecard. Presentation + touch only — all rules,
+//  scoring, bonuses and foxes live in `Clever3Game`.
+//
+//  Restyled to mirror the printed *light* Clever Cubed score sheet: a cream
+//  background with dark text and the official area colours, a compact in-board
+//  header (no system nav bar), and an iPhone landscape lock. The board fills the
+//  screen via a `GeometryReader`-sized cell; it scrolls only when a very narrow
+//  device can't fit every area, which the official-sized board normally avoids.
+//
 
 import SwiftUI
 
@@ -9,6 +18,7 @@ public struct Clever3ScorecardView: View {
     @StateObject private var game = Clever3Game()
     let rules: RulesDocument
 
+    @Environment(\.dismiss) private var dismiss
     @State private var showRules = false
     @State private var showColors = false
     @State private var confirmNewGame = false
@@ -16,12 +26,21 @@ public struct Clever3ScorecardView: View {
 
     private let spacing: CGFloat = 3
 
+    /// Light "paper" palette so the card reads like the printed sheet.
+    private static let paper = Color(red: 0.98, green: 0.97, blue: 0.93)
+    private static let panel = Color(red: 1.0, green: 1.0, blue: 0.99)
+    private static let ink = Color(red: 0.13, green: 0.13, blue: 0.15)
+
     public init(rules: RulesDocument) { self.rules = rules }
 
     public var body: some View {
         GeometryReader { geo in
-            let contentWidth = min(geo.size.width, 720)
-            let cell = max(24, min(46, (contentWidth - 24 - spacing * 12) / 13))
+            // Cell sized to fill the width across the two widest stacked rows
+            // (yellow/turquoise grids are 6 wide + a score column → 7 units; the
+            // blue track is 13 units across, so size off the blue track which is
+            // the wide constraint, then let the grids use the same cell).
+            let avail = geo.size.width - 24
+            let cell = max(22, min(58, (avail - spacing * 12) / 13))
             ScrollView {
                 VStack(spacing: 12) {
                     summary
@@ -38,18 +57,17 @@ public struct Clever3ScorecardView: View {
                     pinkRow(cell: cell)
                 }
                 .padding(.horizontal, 12).padding(.vertical, 8)
-                .frame(maxWidth: contentWidth).frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity)
             }
         }
-        .navigationTitle("Clever Cubed")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                Button { showColors = true } label: { Image(systemName: "paintpalette") }
-                Button { showRules = true } label: { Image(systemName: "info.circle") }
-                Button(role: .destructive) { confirmNewGame = true } label: { Image(systemName: "trash") }
-            }
-        }
+        .background(Self.paper.ignoresSafeArea())
+        .foregroundStyle(Self.ink)
+        .tint(Color(red: 0.10, green: 0.50, blue: 0.46))
+        .safeAreaInset(edge: .top, spacing: 0) { header }
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
+        .landscapeLockediPhone(when: true)
+        .preferredColorScheme(.light)
         .sheet(isPresented: $showRules) { RulesView(document: rules) }
         .sheet(isPresented: $showColors) { Clever3ColorSettingsView(game: game) }
         .confirmationDialog("Start a new game?", isPresented: $confirmNewGame, titleVisibility: .visible) {
@@ -68,6 +86,28 @@ public struct Clever3ScorecardView: View {
                 Button("Clear", role: .destructive) { entry?.commit(0); entry = nil }
             }
             Button("Cancel", role: .cancel) { entry = nil }
+        }
+    }
+
+    // MARK: - Compact in-board header (replaces the system nav bar)
+
+    private var header: some View {
+        HStack(spacing: 16) {
+            Button { dismiss() } label: { Image(systemName: "chevron.left") }
+            Text("Clever Cubed").font(.headline).lineLimit(1).minimumScaleFactor(0.7)
+            Spacer()
+            Button { showColors = true } label: { Image(systemName: "paintpalette") }
+            Button { showRules = true } label: { Image(systemName: "info.circle") }
+            Button(role: .destructive) { confirmNewGame = true } label: { Image(systemName: "trash") }
+        }
+        .font(.title3)
+        .foregroundStyle(Self.ink)
+        .padding(.horizontal, 16)
+        .padding(.top, 4)
+        .padding(.bottom, 6)
+        .background(Self.paper)
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(Self.ink.opacity(0.12)).frame(height: 1)
         }
     }
 
@@ -104,7 +144,8 @@ public struct Clever3ScorecardView: View {
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, 12).padding(.vertical, 8)
-            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+            .background(Self.panel, in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Self.ink.opacity(0.12), lineWidth: 1))
             .frame(maxWidth: .infinity)
         }
     }
@@ -118,8 +159,7 @@ public struct Clever3ScorecardView: View {
     private func grid(_ area: Clever3Area, rows: Int, cols: Int, marks: Set<Int>, scale: [Int],
                       marksInRow: @escaping (Int) -> Int, toggle: @escaping (Int) -> Void, cell: CGFloat) -> some View {
         let tint = game.color(area)
-        return VStack(alignment: .leading, spacing: 2) {
-            header(area)
+        return panel(area) {
             ForEach(0..<rows, id: \.self) { r in
                 HStack(spacing: spacing) {
                     ForEach(0..<cols, id: \.self) { c in
@@ -138,8 +178,7 @@ public struct Clever3ScorecardView: View {
     private func blueTrack(cell: CGFloat) -> some View {
         let tint = game.color(.blue)
         let n = Clever3Layout.blueSideCells
-        return VStack(alignment: .leading, spacing: 2) {
-            header(.blue)
+        return panel(.blue) {
             HStack(spacing: spacing) {
                 ForEach(0..<n, id: \.self) { k in
                     let i = n - 1 - k          // outermost-left first
@@ -187,8 +226,7 @@ public struct Clever3ScorecardView: View {
 
     private func brownRow(cell: CGFloat) -> some View {
         let tint = game.color(.brown)
-        return VStack(alignment: .leading, spacing: 2) {
-            header(.brown)
+        return panel(.brown) {
             HStack(spacing: spacing) {
                 ForEach(0..<Clever3Layout.brownNumbers.count, id: \.self) { i in
                     let crossed = game.state.brown.contains(i)
@@ -207,8 +245,7 @@ public struct Clever3ScorecardView: View {
 
     private func pinkRow(cell: CGFloat) -> some View {
         let tint = game.color(.pink)
-        return VStack(alignment: .leading, spacing: 2) {
-            header(.pink)
+        return panel(.pink) {
             HStack(spacing: spacing) {
                 ForEach(0..<Clever3Layout.pinkCells, id: \.self) { i in
                     VStack(spacing: 1) {
@@ -221,6 +258,22 @@ public struct Clever3ScorecardView: View {
             }
             Text("Enter the value you wrote (die × the shown multiplier, or the halved bonus value).").font(.caption2).foregroundStyle(.secondary)
         }
+    }
+
+    /// A light area panel: coloured header + content, on a paper-white card so
+    /// every area reads on the light background like the printed sheet.
+    private func panel<Content: View>(_ area: Clever3Area, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            header(area)
+            content()
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Self.panel, in: RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(game.color(area).color.opacity(0.45), lineWidth: 1.5)
+        )
     }
 
     private func header(_ area: Clever3Area) -> some View {
