@@ -70,34 +70,39 @@ struct QwixxBoardView: View {
     private func boardStack(w: CGFloat, h: CGFloat) -> some View {
         let bonusH = h * 0.72
         let bottomH = h * 0.95
+        // Colour bands flex to fill all leftover height (so the board ALWAYS
+        // reaches top and bottom); bonus rows and the bottom bar keep fixed,
+        // smaller heights. `h` is only a font-scale hint.
         return VStack(spacing: rowGap) {
-            band(.red, w: w, h: h)
+            band(.red, w: w, unit: h).frame(maxHeight: .infinity)
             if game.hasBonusRows { bonusBand(.redYellow, w: w, h: bonusH) }
-            band(.yellow, w: w, h: h)
-            band(.green, w: w, h: h)
+            band(.yellow, w: w, unit: h).frame(maxHeight: .infinity)
+            band(.green, w: w, unit: h).frame(maxHeight: .infinity)
             if game.hasBonusRows { bonusBand(.greenBlue, w: w, h: bonusH) }
-            band(.blue, w: w, h: h)
+            band(.blue, w: w, unit: h).frame(maxHeight: .infinity)
             bottomBar(w: w, h: bottomH)
         }
+        .frame(maxHeight: .infinity)
     }
 
     /// One full-width colour band: a direction chevron, the eleven number tiles,
     /// the lock, and that colour's running score — styled like the real card.
-    private func band(_ color: GameColor, w: CGFloat, h: CGFloat) -> some View {
-        let th = h * 0.86
-        let s = min(w, th)
+    /// The band fills its (flexible) row height; `unit` only scales the fonts.
+    private func band(_ color: GameColor, w: CGFloat, unit: CGFloat) -> some View {
+        let s = min(w, unit * 0.86)
         return HStack(spacing: tileGap) {
             Image(systemName: "arrowtriangle.right.fill")
                 .font(.system(size: s * 0.5, weight: .black))
                 .foregroundStyle(.black.opacity(0.5))
-                .frame(width: w, height: th)
-            ForEach(0..<11, id: \.self) { i in numberTile(color, i, w: w, h: th) }
-            lockTile(color, w: w, h: th)
-            scoreTile(value: game.points(for: color), w: w, h: th)
+                .frame(width: w)
+                .frame(maxHeight: .infinity)
+            ForEach(0..<11, id: \.self) { i in numberTile(color, i, w: w, s: s) }
+            lockTile(color, w: w, s: s)
+            scoreTile(value: game.points(for: color), w: w, s: s)
         }
         .padding(.horizontal, bandPad)
-        .padding(.vertical, h * 0.07)
-        .frame(maxWidth: .infinity)
+        .padding(.vertical, unit * 0.07)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(color.tint)
         .clipShape(RoundedRectangle(cornerRadius: s * 0.3, style: .continuous))
         .overlay(
@@ -106,10 +111,9 @@ struct QwixxBoardView: View {
         )
     }
 
-    private func numberTile(_ color: GameColor, _ i: Int, w: CGFloat, h: CGFloat) -> some View {
+    private func numberTile(_ color: GameColor, _ i: Int, w: CGFloat, s: CGFloat) -> some View {
         let marked = game.row(for: color).marks.contains(i)
         let legal = game.canMarkColor(color, i)
-        let s = min(w, h)
         return Button {
             game.markColor(color, i)
         } label: {
@@ -127,7 +131,8 @@ struct QwixxBoardView: View {
                         .foregroundStyle(color.tint)
                 }
             }
-            .frame(width: w, height: h)
+            .frame(width: w)
+            .frame(maxHeight: .infinity)
         }
         .buttonStyle(.plain)
         .disabled(marked || !legal)
@@ -136,9 +141,8 @@ struct QwixxBoardView: View {
         .accessibilityValue(marked ? "crossed" : (legal ? "available" : "blocked"))
     }
 
-    private func lockTile(_ color: GameColor, w: CGFloat, h: CGFloat) -> some View {
+    private func lockTile(_ color: GameColor, w: CGFloat, s: CGFloat) -> some View {
         let locked = game.row(for: color).locked
-        let s = min(w, h)
         return ZStack {
             RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
                 .fill(Color.white.opacity(locked ? 0.95 : 0.42))
@@ -146,14 +150,14 @@ struct QwixxBoardView: View {
                 .font(.system(size: s * 0.5, weight: .bold))
                 .foregroundStyle(color.tint)
         }
-        .frame(width: w, height: h)
+        .frame(width: w)
+        .frame(maxHeight: .infinity)
         .accessibilityLabel("\(color.displayName) lock")
         .accessibilityValue(locked ? "locked" : "open")
     }
 
-    private func scoreTile(value: Int, w: CGFloat, h: CGFloat) -> some View {
-        let s = min(w, h)
-        return ZStack {
+    private func scoreTile(value: Int, w: CGFloat, s: CGFloat) -> some View {
+        ZStack {
             RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
                 .fill(Color.black.opacity(0.2))
             Text("\(value)")
@@ -162,7 +166,8 @@ struct QwixxBoardView: View {
                 .minimumScaleFactor(0.3)
                 .lineLimit(1)
         }
-        .frame(width: w, height: h)
+        .frame(width: w)
+        .frame(maxHeight: .infinity)
     }
 
     /// Big-Points bonus row: the two-colour spaces, aligned under the number
