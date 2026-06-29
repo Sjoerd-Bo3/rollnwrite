@@ -184,7 +184,10 @@ platform :ios do
     rescue => e
       raise unless e.message =~ /not valid|expired|renew it|revoked/i
       UI.important("🔁 Distribution certificate is invalid/expired — auto-renewing (nuke + recreate)…")
-      match_nuke(sign_base.merge(skip_confirmation: true))
+      # readonly: false is REQUIRED here — setup_ci enables match readonly mode,
+      # and match_nuke silently refuses to delete anything while readonly, so the
+      # explicit override is what lets the renewal actually happen.
+      match_nuke(sign_base.merge(skip_confirmation: true, readonly: false))
       match(sign_base.merge(readonly: false))
     end
 
@@ -247,8 +250,9 @@ platform :ios do
 
     # 1) Revoke the old cert + delete App Store profiles (portal + repo).
     #    skip_confirmation is required on CI — match_nuke is interactive
-    #    otherwise and would hang waiting for a typed "yes".
-    match_nuke(shared.merge(skip_confirmation: true))
+    #    otherwise and would hang waiting for a typed "yes". readonly: false
+    #    overrides the readonly mode setup_ci enables, or nuke deletes nothing.
+    match_nuke(shared.merge(skip_confirmation: true, readonly: false))
 
     # 2) Recreate a fresh distribution certificate + App Store profile and
     #    commit them back to the encrypted repo (readonly off lets match write).
