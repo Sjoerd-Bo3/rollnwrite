@@ -107,9 +107,11 @@ These are explicit product requirements — every scorecard must follow them:
   computes `w` from the available width and `h` from the available height), so
   tiles go slightly rectangular on tall boards rather than leaving gaps. Do not
   cap the card width or centre it with side margins.
-- **iPhone is landscape-only.** Portrait is disabled on iPhone
-  (`INFOPLIST_KEY_UISupportedInterfaceOrientations` = landscape left/right).
-  iPad keeps all orientations.
+- **Orientation is per-screen.** The catalogue (menu) rotates freely. A
+  single-player scorecard pins iPhone to landscape via `.landscapeLockediPhone`
+  (an `AppDelegate` + `OrientationGate` mask in `App/OrientationLock.swift`);
+  Info.plist still *allows* portrait so other screens can rotate. Two-player
+  mode frees rotation so the mirrored boards can stack in portrait on iPhone.
 - **Use the leftover space wisely.** If a board can't fill an axis with square
   tiles, fill it with content (rectangular tiles, an inline per-row score, a
   bottom/side bar) rather than dead space.

@@ -58,9 +58,9 @@ struct QwixxBoardView: View {
         let availW = size.width - 2 * outerPad
         let w = max(14, (availW - (columns - 1) * tileGap - 2 * bandPad) / columns)
 
-        // Row heights: colour band = h, bonus row ≈ 0.6h, bottom bar ≈ 0.95h.
+        // Row heights: colour band = h, bonus row ≈ 0.72h, bottom bar ≈ 0.95h.
         let availH = size.height - 2 * outerPad
-        let vUnits = bandRows + 0.6 * bonusRows + 0.95
+        let vUnits = bandRows + 0.72 * bonusRows + 0.95
         let h = max(14, (availH - (rowsCount - 1) * rowGap) / vUnits)
         return BoardLayout(w: w, h: h)
     }
@@ -68,7 +68,7 @@ struct QwixxBoardView: View {
     // MARK: - Board
 
     private func boardStack(w: CGFloat, h: CGFloat) -> some View {
-        let bonusH = h * 0.6
+        let bonusH = h * 0.72
         let bottomH = h * 0.95
         return VStack(spacing: rowGap) {
             band(.red, w: w, h: h)
@@ -84,7 +84,7 @@ struct QwixxBoardView: View {
     /// One full-width colour band: a direction chevron, the eleven number tiles,
     /// the lock, and that colour's running score — styled like the real card.
     private func band(_ color: GameColor, w: CGFloat, h: CGFloat) -> some View {
-        let th = h * 0.84
+        let th = h * 0.86
         let s = min(w, th)
         return HStack(spacing: tileGap) {
             Image(systemName: "arrowtriangle.right.fill")
@@ -96,7 +96,7 @@ struct QwixxBoardView: View {
             scoreTile(value: game.points(for: color), w: w, h: th)
         }
         .padding(.horizontal, bandPad)
-        .padding(.vertical, h * 0.08)
+        .padding(.vertical, h * 0.07)
         .frame(maxWidth: .infinity)
         .background(color.tint)
         .clipShape(RoundedRectangle(cornerRadius: s * 0.3, style: .continuous))
@@ -260,7 +260,7 @@ public struct QwixxScorecardView: View {
     let rules: RulesDocument
     let navigationTitle: String
 
-    @Environment(\.horizontalSizeClass) private var hSize
+    @Environment(\.dismiss) private var dismiss
     @State private var showRules = false
     @State private var twoPlayer = false
 
@@ -271,36 +271,54 @@ public struct QwixxScorecardView: View {
         self.navigationTitle = navigationTitle
     }
 
-    private var canMirror: Bool { opponent != nil && hSize == .regular }
+    // Two-player mirror is available wherever a second engine is supplied —
+    // iPad, or iPhone in portrait (the two boards stack).
+    private var canMirror: Bool { opponent != nil }
 
     public var body: some View {
-        Group {
-            if canMirror, twoPlayer, let opponent {
-                VStack(spacing: 8) {
-                    QwixxBoardView(game: opponent)
-                        .rotationEffect(.degrees(180))
-                    Divider()
-                    QwixxBoardView(game: game)
-                }
-                .padding(.vertical, 4)
-            } else {
+        VStack(spacing: 0) {
+            header
+            content
+        }
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
+        .sheet(isPresented: $showRules) { RulesView(document: rules) }
+        // Single player is pinned to landscape on iPhone; two-player frees
+        // rotation so it can stack vertically in portrait.
+        .landscapeLockediPhone(when: !twoPlayer)
+    }
+
+    @ViewBuilder private var content: some View {
+        if canMirror, twoPlayer, let opponent {
+            VStack(spacing: 6) {
+                QwixxBoardView(game: opponent).rotationEffect(.degrees(180))
                 QwixxBoardView(game: game)
             }
+        } else {
+            QwixxBoardView(game: game)
         }
-        .navigationTitle(navigationTitle)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                if canMirror {
-                    Button { twoPlayer.toggle() } label: {
-                        Image(systemName: twoPlayer ? "person.fill" : "person.2.fill")
-                    }
-                    .accessibilityLabel(twoPlayer ? "Single player" : "Two players")
+    }
+
+    /// Compact header replacing the system nav bar, so the board gets the full
+    /// screen height.
+    private var header: some View {
+        HStack(spacing: 16) {
+            Button { dismiss() } label: { Image(systemName: "chevron.left") }
+            Text(navigationTitle).font(.headline).lineLimit(1).minimumScaleFactor(0.7)
+            Spacer()
+            if canMirror {
+                Button { twoPlayer.toggle() } label: {
+                    Image(systemName: twoPlayer ? "person.fill" : "person.2.fill")
                 }
-                Button { showRules = true } label: { Image(systemName: "info.circle") }
+                .accessibilityLabel(twoPlayer ? "Single player" : "Two players")
             }
+            Button { showRules = true } label: { Image(systemName: "info.circle") }
         }
-        .sheet(isPresented: $showRules) { RulesView(document: rules) }
+        .font(.title3)
+        .foregroundStyle(.primary)
+        .padding(.horizontal, 16)
+        .padding(.top, 4)
+        .padding(.bottom, 6)
     }
 }
 
