@@ -58,9 +58,24 @@ public struct ScorecardScaffold<Board: View>: View {
 
     @ViewBuilder private var content: some View {
         if canMirror, twoPlayer, let opponentBoard {
-            VStack(spacing: 6) {
-                opponentBoard.rotationEffect(.degrees(180))
-                board
+            // Across-the-table mirror (opponent rotated 180°). Stacking two
+            // full-width boards is only comfortable in PORTRAIT; in landscape the
+            // rows get too thin, so place the two boards SIDE BY SIDE instead.
+            // Each board self-sizes to the half it's handed.
+            GeometryReader { geo in
+                let landscape = geo.size.width > geo.size.height
+                let opponent = opponentBoard.rotationEffect(.degrees(180))
+                if landscape {
+                    HStack(spacing: 6) {
+                        opponent
+                        board
+                    }
+                } else {
+                    VStack(spacing: 6) {
+                        opponent
+                        board
+                    }
+                }
             }
         } else {
             board

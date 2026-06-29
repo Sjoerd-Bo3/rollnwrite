@@ -14,6 +14,7 @@ import SwiftUI
 struct QwixxBoardView: View {
     @ObservedObject var game: QwixxGame
     @State private var confirmReset = false
+    @State private var showResults = false
 
     private let tileGap: CGFloat = 4
     private let rowGap: CGFloat = 4
@@ -29,7 +30,7 @@ struct QwixxBoardView: View {
     var body: some View {
         GeometryReader { geo in
             let s = sizing(for: geo.size)
-            boardStack(w: s.w, h: s.h)
+            boardStack(w: s.w, th: s.th)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(outerPad)
         }
@@ -40,39 +41,62 @@ struct QwixxBoardView: View {
         } message: {
             Text("This clears the current scorecard.")
         }
+        .overlay {
+            if showResults {
+                GameOverCard(
+                    lines: GameColor.allCases.map {
+                        GameOverCard.Line(label: $0.displayName, value: game.points(for: $0), tint: $0.tint)
+                    } + (game.penaltyPoints > 0
+                         ? [GameOverCard.Line(label: "Penalties", value: -game.penaltyPoints, tint: .red)]
+                         : []),
+                    total: game.totalScore,
+                    onNewGame: { game.reset(); showResults = false },
+                    onDismiss: { withAnimation { showResults = false } }
+                )
+                .transition(.opacity.combined(with: .scale(scale: 0.92)))
+            }
+        }
+        .onChange(of: game.isGameOver) { _, isOver in
+            if isOver {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) { showResults = true }
+            } else {
+                showResults = false
+            }
+        }
     }
 
     // MARK: - Sizing (fill the screen in any orientation)
 
-    private struct BoardLayout { let w: CGFloat; let h: CGFloat }
+    private struct BoardLayout { let w: CGFloat; let th: CGFloat }
 
-    /// Tiles fill the FULL width edge-to-edge (`w`); their height (`h`) shrinks
-    /// so every row fits the screen. Tiles go slightly rectangular when a board
-    /// has many rows, but the board is always fullscreen — no margins, no
-    /// scrolling — in any orientation.
+    /// Tiles fill the FULL width edge-to-edge (`w`) AND the full height: the tile
+    /// height grows to consume the screen, capped at the tile width (square is the
+    /// MAX — never tall-skinny) and floored at a readable MIN. Dense boards
+    /// (Big Points: 4 bands + 2 bonus rows) fill rectangularly; roomy boards
+    /// (classic: 4 bands) hit the square cap and centre the leftover.
     private func sizing(for size: CGSize) -> BoardLayout {
-        let bandRows = CGFloat(game.hasBonusRows ? 6 : 4)
         let bonusRows = CGFloat(game.hasBonusRows ? 2 : 0)
-        let rowsCount = bandRows + bonusRows + 1 // + bottom bar
+        let bandCount: CGFloat = 4
+        let children = bandCount + bonusRows + 1 // colour bands + bonus rows + bottom bar
+        let gaps = max(0, children - 1)
 
         let availW = size.width - 2 * outerPad
         let w = max(14, (availW - (columns - 1) * tileGap - 2 * bandPad) / columns)
 
-        // Row heights: colour band = h, bonus row ≈ 0.72h, bottom bar ≈ 0.95h.
+        // Each row's height as a multiple of the tile height `th`: a colour band
+        // is the tile plus its vertical band padding (≈1.18·th), a bonus row
+        // ≈0.82·th, the bottom bar ≈1.05·th. Solve for the `th` that fills the
+        // available height exactly, then cap at the width and floor at the min.
+        let units = bandCount * 1.18 + bonusRows * 0.82 + 1.05
         let availH = size.height - 2 * outerPad
-        let vUnits = bandRows + 0.72 * bonusRows + 0.95
-        let h = max(14, (availH - (rowsCount - 1) * rowGap) / vUnits)
-        return BoardLayout(w: w, h: h)
+        let fill = (availH - gaps * rowGap) / units
+        let th = max(20, min(fill, w))
+        return BoardLayout(w: w, th: th)
     }
 
     // MARK: - Board
 
-    private func boardStack(w: CGFloat, h: CGFloat) -> some View {
-        // Tile height fills the row, but capped at the tile WIDTH (square is the
-        // MAX — never tall skinny tiles) and floored at a readable MIN. When the
-        // cap leaves spare height the board centres; when cramped (Big Points)
-        // tiles go rectangular and fill. Bonus/bottom rows scale off the tile.
-        let th = max(20, min(h * 0.86, w))
+    private func boardStack(w: CGFloat, th: CGFloat) -> some View {
         let bonusH = th * 0.82
         let bottomH = th * 1.05
         return VStack(spacing: rowGap) {
