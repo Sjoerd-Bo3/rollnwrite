@@ -2,9 +2,18 @@
 //  Clever4ScorecardView.swift
 //  RollnWrite – Clever4
 //
-//  Interactive, auto-scoring scorecard. View bodies are intentionally small and
-//  each cell is extracted into a private `struct …: View` so the Swift
-//  type-checker stays fast.
+//  Interactive, auto-scoring scorecard, styled LIGHT to mirror the official
+//  printed "Clever 4ever" score sheet (cream paper, white tiles, dark text and
+//  the official area colours) and presented fullscreen in landscape — no system
+//  nav bar, a compact in-board header with every control, and GeometryReader
+//  sizing so the board fills the width edge-to-edge.
+//
+//  This board is genuinely the densest in the app (grey is 4×16, plus an
+//  11-field green and a 12-field pink bar), so a ScrollView is kept as a
+//  fallback — but the areas are laid out in two columns in landscape so most of
+//  the card is visible at once. View bodies are intentionally small and each
+//  cell is extracted into a private `struct …: View` so the Swift type-checker
+//  stays fast.
 //
 
 import SwiftUI
@@ -13,6 +22,7 @@ public struct Clever4ScorecardView: View {
     @StateObject private var game = Clever4Game()
     let rules: RulesDocument
 
+    @Environment(\.dismiss) private var dismiss
     @State private var showRules = false
     @State private var showColors = false
     @State private var confirmNewGame = false
@@ -20,38 +30,66 @@ public struct Clever4ScorecardView: View {
 
     private let spacing: CGFloat = 3
 
+    /// Cream "paper" the printed sheet is on, plus a slightly lighter panel for
+    /// each area so it reads like a card on a table.
+    private let paper = Color(red: 0.97, green: 0.96, blue: 0.92)
+    private let panel = Color.white
+    private let ink = Color(red: 0.12, green: 0.12, blue: 0.14)
+
     public init(rules: RulesDocument) { self.rules = rules }
 
     public var body: some View {
         GeometryReader { geo in
-            let contentWidth = min(geo.size.width, 720)
-            let cell = max(22, min(44, (contentWidth - 24 - spacing * 15) / 16))
+            // Fill the available width edge-to-edge. In landscape the areas sit
+            // in two columns, so each column gets ~half the width; the grey
+            // 4×16 grid is the column-count driver and gets the full width.
+            let landscape = geo.size.width > geo.size.height
+            let colCount: CGFloat = landscape ? 2 : 1
+            let columnW = (geo.size.width - 24 - (colCount - 1) * 12) / colCount
+            // Grey (16 cols) sets the smallest cell; it spans the FULL width.
+            let greyCell = max(16, min(40, (geo.size.width - 24 - spacing * 15) / 16))
+            // Other areas size to a single column.
+            let cell = max(20, min(44, (columnW - spacing * 12) / 13))
+
             ScrollView {
-                VStack(spacing: 14) {
+                VStack(spacing: 12) {
                     summary
                     bonusBanner
                     foxStepper
-                    yellowArea(cell: cell)
-                    blueArea(cell: cell)
-                    greyArea(cell: cell)
-                    greenArea(cell: cell)
-                    pinkArea(cell: cell)
+                    if landscape {
+                        HStack(alignment: .top, spacing: 12) {
+                            VStack(spacing: 12) {
+                                areaPanel { yellowArea(cell: cell) }
+                                areaPanel { greenArea(cell: cell) }
+                            }
+                            VStack(spacing: 12) {
+                                areaPanel { blueArea(cell: cell) }
+                                areaPanel { pinkArea(cell: cell) }
+                            }
+                        }
+                        areaPanel { greyArea(cell: greyCell) }
+                    } else {
+                        areaPanel { yellowArea(cell: cell) }
+                        areaPanel { blueArea(cell: cell) }
+                        areaPanel { greyArea(cell: greyCell) }
+                        areaPanel { greenArea(cell: cell) }
+                        areaPanel { pinkArea(cell: cell) }
+                    }
                 }
-                .padding(.horizontal, 12).padding(.vertical, 8)
-                .frame(maxWidth: contentWidth).frame(maxWidth: .infinity)
+                .padding(.horizontal, 12).padding(.vertical, 10)
+                .frame(maxWidth: .infinity)
             }
         }
-        .navigationTitle("Clever 4ever")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                Button { showColors = true } label: { Image(systemName: "paintpalette") }
-                Button { showRules = true } label: { Image(systemName: "info.circle") }
-                Button(role: .destructive) { confirmNewGame = true } label: { Image(systemName: "trash") }
-            }
-        }
-        .sheet(isPresented: $showRules) { RulesView(document: rules) }
-        .sheet(isPresented: $showColors) { Clever4ColorSettingsView(game: game) }
+        .background(paper.ignoresSafeArea())
+        .foregroundStyle(ink)
+        .tint(game.color(.green).color)
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
+        .landscapeLockediPhone(when: true)
+        .preferredColorScheme(.light)
+        .safeAreaInset(edge: .top, spacing: 0) { header }
+        .sheet(isPresented: $showRules) { RulesView(document: rules).preferredColorScheme(.light) }
+        .sheet(isPresented: $showColors) { Clever4ColorSettingsView(game: game).preferredColorScheme(.light) }
         .confirmationDialog("Start a new game?", isPresented: $confirmNewGame, titleVisibility: .visible) {
             Button("New game", role: .destructive) { game.reset() }
             Button("Cancel", role: .cancel) {}
@@ -66,6 +104,34 @@ public struct Clever4ScorecardView: View {
             }
             Button("Cancel", role: .cancel) { entry = nil }
         }
+    }
+
+    // MARK: - Header (replaces the system nav bar)
+
+    private var header: some View {
+        HStack(spacing: 16) {
+            Button { dismiss() } label: { Image(systemName: "chevron.left") }
+            Text("Clever 4ever").font(.headline).lineLimit(1).minimumScaleFactor(0.7)
+            Spacer()
+            Button { showColors = true } label: { Image(systemName: "paintpalette") }
+            Button { showRules = true } label: { Image(systemName: "info.circle") }
+            Button(role: .destructive) { confirmNewGame = true } label: { Image(systemName: "trash") }
+        }
+        .font(.title3)
+        .foregroundStyle(ink)
+        .padding(.horizontal, 16)
+        .padding(.top, 4)
+        .padding(.bottom, 8)
+        .background(paper)
+    }
+
+    /// A light "card" panel that each area sits on.
+    private func areaPanel<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        content()
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(panel, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(.black.opacity(0.08), lineWidth: 1))
     }
 
     // MARK: - Summary
@@ -103,7 +169,8 @@ public struct Clever4ScorecardView: View {
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, 12).padding(.vertical, 8)
-            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+            .background(Color(red: 0.99, green: 0.97, blue: 0.88), in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(.black.opacity(0.08), lineWidth: 1))
             .frame(maxWidth: .infinity)
         }
     }
@@ -112,6 +179,9 @@ public struct Clever4ScorecardView: View {
         Stepper(value: Binding(get: { game.state.foxes }, set: { nv in if nv > game.state.foxes { game.addFox() } else { game.removeFox() } }), in: 0...20) {
             Text("🦊 Foxes earned: \(game.state.foxes)").font(.subheadline.weight(.semibold))
         }
+        .padding(.horizontal, 12).padding(.vertical, 4)
+        .background(panel, in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(.black.opacity(0.08), lineWidth: 1))
     }
 
     private func header(_ area: Clever4Area) -> some View {
@@ -147,17 +217,18 @@ public struct Clever4ScorecardView: View {
 
     private func yellowRow(_ row: Clever4Game.YellowRow, label: String, values: [Int?], cell: CGFloat, tint: ThemeColor) -> some View {
         let next = game.yellowNext(row)
+        let last = values.lastIndex(where: { $0 != nil })
         return HStack(spacing: spacing) {
             Text(label).font(.system(size: 8, weight: .semibold)).foregroundStyle(.secondary)
                 .frame(width: cell, alignment: .leading).lineLimit(2)
             ForEach(0..<Clever4Layout.yellowCols, id: \.self) { c in
-                C4ValueCell(value: values[c], isNext: next == c, tint: tint, size: cell) {
+                C4ValueCell(value: values[c], isNext: next == c, isLast: last == c, tint: tint, size: cell) {
                     if next == c {
                         let allowed = game.allowedYellow(row)
                         if !allowed.isEmpty {
                             entry = C4Entry(title: "Yellow value", allowed: allowed) { game.fillYellow(row, $0) }
                         }
-                    } else if values[c] != nil && values.lastIndex(where: { $0 != nil }) == c {
+                    } else if values[c] != nil && last == c {
                         game.clearLastYellow(row)
                     }
                 }
@@ -231,6 +302,8 @@ public struct Clever4ScorecardView: View {
         let tint = game.color(.green)
         let topNext = game.greenTopNext()
         let botNext = game.greenBottomNext()
+        let topLast = game.state.greenTop.lastIndex(where: { $0 != nil })
+        let botLast = game.state.greenBottom.lastIndex(where: { $0 != nil })
         return VStack(alignment: .leading, spacing: 3) {
             header(.green)
             HStack(spacing: spacing) {
@@ -242,15 +315,17 @@ public struct Clever4ScorecardView: View {
                         doubled: i >= Clever4Layout.greenDoubleFromIndex,
                         topIsNext: topNext == i,
                         bottomIsNext: botNext == i,
+                        topIsLast: topLast == i,
+                        bottomIsLast: botLast == i,
                         tint: tint,
                         size: cell,
                         tapTop: {
                             if topNext == i { entry = C4Entry(title: "Green top", allowed: Array(1...6)) { game.fillGreenTop($0) } }
-                            else if game.state.greenTop.lastIndex(where: { $0 != nil }) == i { game.clearLastGreenTop() }
+                            else if topLast == i { game.clearLastGreenTop() }
                         },
                         tapBottom: {
                             if botNext == i { entry = C4Entry(title: "Green bottom", allowed: Array(1...6)) { game.fillGreenBottom($0) } }
-                            else if game.state.greenBottom.lastIndex(where: { $0 != nil }) == i { game.clearLastGreenBottom() }
+                            else if botLast == i { game.clearLastGreenBottom() }
                         }
                     )
                 }
@@ -265,15 +340,16 @@ public struct Clever4ScorecardView: View {
     private func pinkArea(cell: CGFloat) -> some View {
         let tint = game.color(.pink)
         let next = game.pinkNext()
+        let last = game.state.pink.lastIndex(where: { $0 != nil })
         return VStack(alignment: .leading, spacing: 3) {
             header(.pink)
             HStack(spacing: spacing) {
                 ForEach(0..<Clever4Layout.pinkFields, id: \.self) { i in
                     VStack(spacing: 1) {
                         Text("\(Clever4Layout.pinkValues[i])").font(.system(size: 8, weight: .bold)).foregroundStyle(.secondary)
-                        C4ValueCell(value: game.state.pink[i], isNext: next == i, tint: tint, size: cell) {
+                        C4ValueCell(value: game.state.pink[i], isNext: next == i, isLast: last == i, tint: tint, size: cell) {
                             if next == i { entry = C4Entry(title: "Pink value", allowed: Array(1...6)) { game.fillPink($0) } }
-                            else if game.state.pink.lastIndex(where: { $0 != nil }) == i { game.clearLastPink() }
+                            else if last == i { game.clearLastPink() }
                         }
                     }
                 }
@@ -294,18 +370,26 @@ private struct C4Entry: Identifiable {
 }
 
 // MARK: - Cells
+//
+// Tiles are LIGHT: an empty cell is a white box with a coloured outline; a
+// filled cell is the area colour with legible text. The most-recently entered
+// cell is ringed to advertise tap-to-undo (LIFO).
 
 /// A free-entry value cell (yellow / pink). Tap to enter, tap last to clear.
 private struct C4ValueCell: View {
     let value: Int?
     let isNext: Bool
+    let isLast: Bool
     let tint: ThemeColor
     let size: CGFloat
     let onTap: () -> Void
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 6).fill(value != nil ? tint.color : tint.color.opacity(0.18))
+            RoundedRectangle(cornerRadius: 6)
+                .fill(value != nil ? tint.color : Color.white)
+            RoundedRectangle(cornerRadius: 6)
+                .strokeBorder(isLast ? Color.primary : tint.color.opacity(0.5), lineWidth: isLast ? 2.5 : 1)
             if let value {
                 Text("\(value)").font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(tint.textColor)
             } else if isNext {
@@ -313,7 +397,7 @@ private struct C4ValueCell: View {
             }
         }
         .frame(width: size, height: size)
-        .opacity(value != nil || isNext ? 1 : 0.45)
+        .opacity(value != nil || isNext ? 1 : 0.4)
         .onTapGesture(perform: onTap)
     }
 }
@@ -328,7 +412,8 @@ private struct C4MarkCell: View {
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 6).fill(crossed ? tint.color : tint.color.opacity(0.18))
+            RoundedRectangle(cornerRadius: 6).fill(crossed ? tint.color : Color.white)
+            RoundedRectangle(cornerRadius: 6).strokeBorder(tint.color.opacity(0.5), lineWidth: 1)
             Text("\(label)").font(.system(size: 12, weight: .bold, design: .rounded))
                 .foregroundStyle(crossed ? tint.textColor : tint.color)
             if crossed {
@@ -349,7 +434,8 @@ private struct C4PlainCell: View {
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 4).fill(crossed ? tint.color : tint.color.opacity(0.18))
+            RoundedRectangle(cornerRadius: 4).fill(crossed ? tint.color : Color.white)
+            RoundedRectangle(cornerRadius: 4).strokeBorder(tint.color.opacity(0.5), lineWidth: 1)
             if crossed {
                 Image(systemName: "xmark").font(.system(size: 12, weight: .black)).foregroundStyle(tint.textColor)
             }
@@ -367,6 +453,8 @@ private struct C4GreenCell: View {
     let doubled: Bool
     let topIsNext: Bool
     let bottomIsNext: Bool
+    let topIsLast: Bool
+    let bottomIsLast: Bool
     let tint: ThemeColor
     let size: CGFloat
     let tapTop: () -> Void
@@ -375,15 +463,17 @@ private struct C4GreenCell: View {
     var body: some View {
         VStack(spacing: 1) {
             Text(doubled ? "×2" : " ").font(.system(size: 8, weight: .bold)).foregroundStyle(.secondary)
-            half(value: top, isNext: topIsNext, onTap: tapTop)
-            half(value: bottom, isNext: bottomIsNext, onTap: tapBottom)
+            half(value: top, isNext: topIsNext, isLast: topIsLast, onTap: tapTop)
+            half(value: bottom, isNext: bottomIsNext, isLast: bottomIsLast, onTap: tapBottom)
             Text(score > 0 ? "\(score)" : " ").font(.system(size: 8, weight: .bold, design: .rounded)).foregroundStyle(.secondary)
         }
     }
 
-    private func half(value: Int?, isNext: Bool, onTap: @escaping () -> Void) -> some View {
+    private func half(value: Int?, isNext: Bool, isLast: Bool, onTap: @escaping () -> Void) -> some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 4).fill(value != nil ? tint.color : tint.color.opacity(0.18))
+            RoundedRectangle(cornerRadius: 4).fill(value != nil ? tint.color : Color.white)
+            RoundedRectangle(cornerRadius: 4)
+                .strokeBorder(isLast ? Color.primary : tint.color.opacity(0.5), lineWidth: isLast ? 2.5 : 1)
             if let value {
                 Text("\(value)").font(.system(size: 12, weight: .bold, design: .rounded)).foregroundStyle(tint.textColor)
             } else if isNext {
@@ -391,7 +481,7 @@ private struct C4GreenCell: View {
             }
         }
         .frame(width: size, height: size * 0.66)
-        .opacity(value != nil || isNext ? 1 : 0.45)
+        .opacity(value != nil || isNext ? 1 : 0.4)
         .onTapGesture(perform: onTap)
     }
 }

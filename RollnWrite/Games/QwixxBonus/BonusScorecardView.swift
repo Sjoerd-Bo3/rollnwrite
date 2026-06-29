@@ -6,70 +6,54 @@
 //  scoring are delegated to `BonusGame`; this file is presentation + touch
 //  handling only.
 //
-//  View bodies are kept small and extracted, and the game is owned by the
-//  `@StateObject` property-default pattern (no closure-injection init), to stay
-//  clear of strict-concurrency init isolation issues.
+//  Built on the shared scorecard framework: a pure `BonusBoardView` renders the
+//  board fullscreen edge-to-edge via `BoardMetrics` + Core components, and a thin
+//  `QwixxBonusScorecardView` wraps it in `ScorecardScaffold` (compact header,
+//  landscape lock, rules sheet — no system nav bar). Mirrors `QwixxBoardView` /
+//  `QwixxScorecardView`.
+//
+//  Variant twist preserved: twelve black-boxed numbers across the four rows feed
+//  a snaking twelve-field bonus bar (the `BonusLayout.barColors` sequence). The
+//  boxed cells wear a heavy black outline; the bar is auto-advanced by the engine
+//  and rendered here as a coloured band below the rows.
 //
 
 import SwiftUI
 
-public struct BonusScorecardView: View {
+/// The pure banded board for one player — no navigation chrome. Per-board
+/// controls (undo, new game) live in its bottom bar, like the printed card.
+struct BonusBoardView: View {
     @ObservedObject var game: BonusGame
-    let rules: RulesDocument
+    @State private var confirmReset = false
 
-    @State private var showRules = false
-    @State private var confirmNewGame = false
+    private let tileGap: CGFloat = 4
+    private let rowGap: CGFloat = 4
+    private let outerPad: CGFloat = 4   // gap to the safe-area edge
+    private let bandPad: CGFloat = 4    // coloured border inside each band
+    // chevron + 11 numbers + lock + per-row score
+    private let columns: CGFloat = 14
 
-    private let spacing: CGFloat = 3
-    private let columns = 12  // 11 numbers + lock
-
-    public init(game: BonusGame, rules: RulesDocument) {
+    init(game: BonusGame) {
         _game = ObservedObject(wrappedValue: game)
-        self.rules = rules
     }
 
-    public var body: some View {
+    var body: some View {
         GeometryReader { geo in
-            // Cap the card width so cells stay a comfortable touch size and the
-            // layout stays centered rather than stretching edge-to-edge.
-            let contentWidth = min(geo.size.width, 700)
-            let cell = max(24, (contentWidth - 24 - spacing * CGFloat(columns - 1)) / CGFloat(columns))
-            ScrollView {
-                VStack(spacing: 10) {
-                    summary
-
-                    VStack(spacing: spacing) {
-                        colorRow(.red, cell: cell)
-                        colorRow(.yellow, cell: cell)
-                        Divider().padding(.vertical, 3)
-                        colorRow(.green, cell: cell)
-                        colorRow(.blue, cell: cell)
-                    }
-
-                    Divider().padding(.vertical, 3)
-                    bonusBar(cell: cell)
-
-                    penaltiesRow
-                    scoringLegend
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .frame(maxWidth: contentWidth)
-                .frame(maxWidth: .infinity) // center within the available width
-            }
+            // 4 colour bands + bonus bar (≈0.82) + bottom bar (≈1.05).
+            let t = BoardMetrics.tile(
+                in: geo.size,
+                columns: columns,
+                rowUnits: 4 + 0.82 + 1.05,
+                rowCount: 6,
+                gap: rowGap,
+                pad: outerPad
+            )
+            boardStack(w: t.w, h: t.h)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(outerPad)
         }
-        .navigationTitle("Qwixx Bonus")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                Button { game.undo() } label: { Image(systemName: "arrow.uturn.backward") }
-                    .disabled(!game.canUndo)
-                Button { showRules = true } label: { Image(systemName: "info.circle") }
-                Button(role: .destructive) { confirmNewGame = true } label: { Image(systemName: "trash") }
-            }
-        }
-        .sheet(isPresented: $showRules) { RulesView(document: rules) }
-        .confirmationDialog("Start a new game?", isPresented: $confirmNewGame, titleVisibility: .visible) {
+        .ignoresSafeArea(.container, edges: .bottom)
+        .confirmationDialog("Start a new game?", isPresented: $confirmReset, titleVisibility: .visible) {
             Button("New game", role: .destructive) { game.reset() }
             Button("Cancel", role: .cancel) {}
         } message: {
@@ -77,213 +61,138 @@ public struct BonusScorecardView: View {
         }
     }
 
-    // MARK: - Summary
+    // MARK: - Board
 
-    private var summary: some View {
-        VStack(spacing: 8) {
-            if game.isGameOver {
-                Label("Game over — final score \(game.totalScore)", systemImage: "flag.checkered")
-                    .font(.subheadline.bold())
-                    .frame(maxWidth: .infinity)
-                    .padding(8)
-                    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10))
-            }
-            HStack(spacing: 6) {
-                ForEach(GameColor.allCases) { color in
-                    ScoreChip(
-                        title: "\(min(game.crosses(for: color), 12))×",
-                        value: "\(game.points(for: color))",
-                        tint: color.tint
-                    )
-                }
-            }
-            totalsRow
+    private func boardStack(w: CGFloat, h: CGFloat) -> some View {
+        let barH = h * 0.82
+        let bottomH = h * 1.05
+        return VStack(spacing: rowGap) {
+            band(.red, w: w, tile: h)
+            band(.yellow, w: w, tile: h)
+            band(.green, w: w, tile: h)
+            band(.blue, w: w, tile: h)
+            bonusBar(w: w, h: barH)
+            bottomBar(w: w, h: bottomH)
         }
     }
 
-    private var totalsRow: some View {
-        HStack {
-            if game.penalties > 0 {
-                Text("Penalties −\(game.penaltyPoints)")
-                    .font(.caption.bold())
-                    .foregroundStyle(.red)
-            }
-            Spacer()
-            Text("Total")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.secondary)
-            Text("\(game.totalScore)")
-                .font(.title3.bold().monospacedDigit())
-        }
-    }
-
-    // MARK: - Colour rows
-
-    private func colorRow(_ color: GameColor, cell: CGFloat) -> some View {
+    /// One full-width colour band: direction chevron, eleven number tiles (boxed
+    /// ones outlined), the lock indicator, and the row's running score.
+    private func band(_ color: GameColor, w: CGFloat, tile th: CGFloat) -> some View {
         let row = game.row(for: color)
-        return HStack(spacing: spacing) {
+        return HStack(spacing: tileGap) {
+            BandChevron(w: w, h: th)
             ForEach(0..<11, id: \.self) { i in
+                let marked = row.marks.contains(i)
+                let undoable = marked && game.isLastColorMark(color, i)
                 ZStack {
-                    MarkableCell(
-                        label: "\(color.numbers[i])",
-                        tint: color.tint,
-                        textColor: color.textColor,
-                        isMarked: row.marks.contains(i),
-                        isLegal: game.canMarkColor(color, i),
-                        isInteractive: true,
-                        shape: .square
-                    ) { game.markColor(color, i) }
+                    NumberTile("\(color.numbers[i])", tint: color.tint,
+                               marked: marked, legal: game.canMarkColor(color, i),
+                               undoable: undoable, w: w, h: th) {
+                        if undoable { game.undo() } else { game.markColor(color, i) }
+                    }
                     // Boxed bonus numbers wear a heavy black outline, matching the
-                    // printed sheet. The outline is decorative only.
+                    // printed sheet. Decorative only — it never blocks taps.
                     if game.isBoxed(color, i) {
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        RoundedRectangle(cornerRadius: min(w, th) * 0.18, style: .continuous)
                             .strokeBorder(.black, lineWidth: 2.5)
+                            .frame(width: w, height: th)
                             .allowsHitTesting(false)
                     }
                 }
-                .frame(width: cell, height: cell)
+                .accessibilityLabel("\(color.displayName) \(color.numbers[i])")
             }
-            lockCell(color: color, locked: row.locked)
-                .frame(width: cell, height: cell)
+            LockTile(tint: color.tint, locked: row.locked, w: w, h: th)
+                .accessibilityLabel("\(color.displayName) lock")
+            ScoreTile(game.points(for: color), w: w, h: th)
         }
+        .colourBand(tint: color.tint, hPad: bandPad, vPad: th * 0.09, corner: min(w, th) * 0.3)
     }
 
-    private func lockCell(color: GameColor, locked: Bool) -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
+    /// The snaking bonus bar: twelve coloured fields, crossed left-to-right as
+    /// boxed numbers are hit. Aligned under the number tiles (offset past the
+    /// chevron column). The engine advances it automatically; it is read-only.
+    private func bonusBar(w: CGFloat, h: CGFloat) -> some View {
+        HStack(spacing: tileGap) {
+            Color.clear.frame(width: w, height: h) // chevron column
+            ForEach(Array(BonusLayout.barColors.enumerated()), id: \.offset) { idx, color in
+                barField(idx: idx, color: color, w: w, h: h)
+                    .frame(width: w, height: h)
+            }
+            // Remaining columns: pad out to the full 11-number + lock + score grid.
+            let used = CGFloat(BonusLayout.barCount)
+            let remaining = (columns - 1) - used // minus the chevron column
+            if remaining > 0 {
+                Color.clear.frame(width: w * remaining + tileGap * (remaining - 1), height: h)
+            }
+        }
+        .padding(.horizontal, bandPad)
+        .frame(maxWidth: .infinity)
+    }
+
+    private func barField(idx: Int, color: GameColor, w: CGFloat, h: CGFloat) -> some View {
+        let s = min(w, h)
+        let isCrossed = idx < game.bar.crossed
+        return ZStack {
+            RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
                 .fill(color.tint)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .strokeBorder(.black.opacity(0.18), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
+                        .strokeBorder(.black.opacity(0.25), lineWidth: 1)
                 )
-            Image(systemName: locked ? "lock.fill" : "lock.open")
-                .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(color.textColor)
-        }
-        .opacity(locked ? 1 : 0.45)
-        .accessibilityLabel("\(color.displayName) lock")
-        .accessibilityValue(locked ? "locked" : "open")
-    }
-
-    // MARK: - Bonus bar
-
-    private func bonusBar(cell: CGFloat) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text("Bonus bar")
-                    .font(.caption.weight(.heavy))
-                    .foregroundStyle(.secondary)
-                Spacer()
-                if let reward = game.bar.lastRewardColor {
-                    Text("Last reward: \(reward.displayName)")
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(reward.tint)
-                }
-            }
-            // Fixed cells that wrap; a horizontal scroll keeps every field
-            // reachable on the narrowest iPhone.
-            let barCell = max(20, min(cell, 30))
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: spacing + 4) {
-                    ForEach(Array(BonusLayout.barColors.enumerated()), id: \.offset) { idx, color in
-                        barField(idx: idx, color: color, side: barCell)
-                        if idx < BonusLayout.barColors.count - 1 {
-                            Image(systemName: "arrowtriangle.right.fill")
-                                .font(.system(size: 8))
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-                .padding(.vertical, 2)
+            if isCrossed {
+                Image(systemName: "xmark")
+                    .font(.system(size: s * 0.6, weight: .black))
+                    .foregroundStyle(color.textColor)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(width: w, height: h)
+        .opacity(isCrossed ? 1 : 0.5)
+        .accessibilityLabel("Bonus \(color.displayName)")
+        .accessibilityValue(isCrossed ? "crossed" : "open")
     }
 
-    private func barField(idx: Int, color: GameColor, side: CGFloat) -> some View {
-        let isCrossed = idx < game.bar.crossed
-        return RoundedRectangle(cornerRadius: 6, style: .continuous)
-            .fill(color.tint)
-            .overlay(
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .strokeBorder(.black.opacity(0.25), lineWidth: 1)
-            )
-            .overlay {
-                if isCrossed {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 14, weight: .black))
-                        .foregroundStyle(color.textColor)
+    /// Controls (undo, new game) on the left; penalties + running total on the
+    /// right — echoing the printed card's corner buttons.
+    private func bottomBar(w: CGFloat, h: CGFloat) -> some View {
+        let b = min(h, 64)
+        return HStack(spacing: tileGap) {
+            BoardControlButton("arrow.uturn.backward", size: b) { game.undo() }
+                .disabled(!game.canUndo)
+                .opacity(game.canUndo ? 1 : 0.4)
+            BoardControlButton("trash", size: b) { confirmReset = true }
+            Spacer(minLength: w * 0.1)
+            ForEach(0..<BonusState.maxPenalties, id: \.self) { i in
+                let isNext = i == game.penalties && game.canAddPenalty()
+                PenaltyBox(
+                    filled: i < game.penalties,
+                    isNext: isNext,
+                    undoable: i == game.penalties - 1 && game.isLastPenalty(),
+                    size: b
+                ) {
+                    if isNext { game.addPenalty() } else { game.undo() }
                 }
+                .accessibilityLabel("Penalty \(i + 1)")
             }
-            .frame(width: side, height: side)
-            .opacity(isCrossed ? 1 : 0.5)
-            .accessibilityLabel("Bonus \(color.displayName)")
-            .accessibilityValue(isCrossed ? "crossed" : "open")
-    }
-
-    // MARK: - Penalties
-
-    private var penaltiesRow: some View {
-        HStack {
-            Text("Penalties")
-                .font(.subheadline.weight(.semibold))
-            Spacer()
-            HStack(spacing: 6) {
-                ForEach(0..<BonusState.maxPenalties, id: \.self) { i in
-                    penaltyBox(i)
-                }
+            if game.isGameOver {
+                Image(systemName: "flag.checkered").foregroundStyle(.secondary)
             }
-        }
-    }
-
-    private func penaltyBox(_ i: Int) -> some View {
-        let filled = i < game.penalties
-        let isNext = i == game.penalties && game.canAddPenalty()
-        return ZStack {
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .strokeBorder(.red, lineWidth: 2)
-                .background(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(filled ? Color.red.opacity(0.85) : .clear)
-                )
-            if filled {
-                Image(systemName: "xmark").font(.system(size: 16, weight: .black)).foregroundStyle(.white)
-            } else {
-                Text("−5").font(.caption2.bold()).foregroundStyle(.red)
-            }
-        }
-        .frame(width: 34, height: 34)
-        .opacity(filled || isNext ? 1 : 0.4)
-        .onTapGesture { if isNext { game.addPenalty() } }
-        .accessibilityLabel("Penalty \(i + 1)")
-        .accessibilityValue(filled ? "taken" : "empty")
-    }
-
-    // MARK: - Scoring legend
-
-    private var scoringLegend: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Points per crosses")
-                .font(.caption.weight(.semibold))
+            Text("Total")
+                .font(.system(size: b * 0.34, weight: .semibold))
                 .foregroundStyle(.secondary)
-            Text("1·1  2·3  3·6  4·10  5·15  6·21  7·28  8·36  9·45  10·55  11·66  12·78")
-                .font(.system(size: 11, design: .rounded).monospacedDigit())
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-            Text("Crossing a black-boxed number crosses the next bonus-bar field; its colour earns one free extra cross in that row (chains allowed). The bonus bar scores no points itself.")
-                .font(.system(size: 11, design: .rounded))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            Text("\(game.totalScore)")
+                .font(.system(size: b * 0.55, weight: .heavy, design: .rounded).monospacedDigit())
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.top, 4)
+        .frame(maxWidth: .infinity)
+        .frame(height: h)
+        .padding(.horizontal, bandPad)
     }
 }
 
 // MARK: - Variant owner
 //
 // Owns its own `BonusGame` via the `@StateObject` property-default pattern and
-// renders the scorecard.
+// wraps the pure board in the shared `ScorecardScaffold`.
 
 /// Qwixx Bonus (version A): four classic colour rows (cap 12) plus the bonus bar.
 public struct QwixxBonusScorecardView: View {
@@ -293,6 +202,10 @@ public struct QwixxBonusScorecardView: View {
     public init(rules: RulesDocument) { self.rules = rules }
 
     public var body: some View {
-        BonusScorecardView(game: game, rules: rules)
+        ScorecardScaffold(
+            title: "Qwixx Bonus",
+            rules: rules,
+            board: { BonusBoardView(game: game) }
+        )
     }
 }

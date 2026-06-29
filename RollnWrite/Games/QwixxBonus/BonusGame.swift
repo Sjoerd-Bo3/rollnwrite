@@ -136,6 +136,21 @@ public final class BonusGame: ObservableObject, Scoreboard {
 
     public var canUndo: Bool { !state.history.isEmpty }
 
+    // Tap-to-undo helpers: only the most-recent action is reversible by tapping,
+    // so these tell the view which single cell (or penalty box) wears the ring.
+
+    /// Whether the most-recent action was crossing `index` of `color`.
+    public func isLastColorMark(_ color: GameColor, _ index: Int) -> Bool {
+        if case let .color(c, i, _, _) = state.history.last { return c == color && i == index }
+        return false
+    }
+
+    /// Whether the most-recent action was a penalty.
+    public func isLastPenalty() -> Bool {
+        if case .penalty = state.history.last { return true }
+        return false
+    }
+
     /// Reverse the most recent action. Strictly LIFO.
     public func undo() {
         guard let last = state.history.popLast() else { return }

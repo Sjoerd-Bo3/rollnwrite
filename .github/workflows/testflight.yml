@@ -13,32 +13,20 @@ name: 2. TestFlight
 #   ASC_ISSUER_ID  – App Store Connect API key Issuer ID
 #   ASC_KEY_P8     – the full text contents of the AuthKey_XXXXXX.p8 file
 
-# TestFlight builds expire after 90 days. The scheduled trigger below rebuilds
-# automatically on the 1st of each month so a fresh build is always waiting in
-# TestFlight and the app never stops working on your phone — even with no code
-# changes (the build number just increments). Borrowed from the Loop/Trio
-# browser-build setup. Delete the `schedule:` block to opt out of auto-builds.
-#
-# Caveat (also from LoopDocs): GitHub disables scheduled workflows after 60 days
-# of *no repository activity*. If you stop pushing for two months, re-enable it
-# from the Actions tab or just run it manually.
+# Minimal trigger set to conserve Actions minutes (macOS runners cost 10×):
+# this is the ONLY auto-running workflow, and it builds ONLY from `main`.
+# Push to main → one TestFlight build. Run it by hand any time from the Actions
+# tab. No per-feature-branch builds, no scheduled builds.
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "37 6 1 * *" # 06:37 UTC on the 1st of every month
-  # Every code push to these branches builds and auto-uploads a fresh TestFlight
-  # build. Doc-only changes are skipped so they don't burn a build.
   push:
-    branches:
-      - main
-      - "claude/**"
+    branches: [main]
     paths-ignore:
       - "**.md"
       - "docs/**"
       - "LICENSE"
 
-# A newer push supersedes an in-flight upload, so cancel the older run rather
-# than uploading two builds back-to-back.
+# A newer push supersedes an in-flight upload, so cancel the older run.
 concurrency:
   group: testflight-${{ github.ref }}
   cancel-in-progress: true

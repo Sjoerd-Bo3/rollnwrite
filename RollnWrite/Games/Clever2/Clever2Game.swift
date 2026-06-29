@@ -320,6 +320,41 @@ public final class Clever2Game: ObservableObject, Scoreboard {
     public var isGameOver: Bool { false }
     public var canUndo: Bool { !state.history.isEmpty }
 
+    // MARK: - Tap-to-undo (last action only, strictly LIFO)
+
+    /// The most recent action on the LIFO history, if any.
+    private var lastAction: Clever2Action? { state.history.last }
+
+    /// True when crossing this silver cell was the most recent action.
+    public func isLastSilver(_ index: Int) -> Bool {
+        if case let .silver(i) = lastAction { return i == index }
+        return false
+    }
+
+    /// True when advancing this yellow cell was the most recent action.
+    public func isLastYellow(_ index: Int) -> Bool {
+        if case let .yellow(i) = lastAction { return i == index }
+        return false
+    }
+
+    /// True when filling this blue cell was the most recent action.
+    public func isLastBlue(_ index: Int) -> Bool {
+        if case let .blue(i, _) = lastAction { return i == index }
+        return false
+    }
+
+    /// True when filling this green cell was the most recent action.
+    public func isLastGreen(_ index: Int) -> Bool {
+        if case let .green(i, _) = lastAction { return i == index }
+        return false
+    }
+
+    /// True when filling this pink cell was the most recent action.
+    public func isLastPink(_ index: Int) -> Bool {
+        if case let .pink(i, _) = lastAction { return i == index }
+        return false
+    }
+
     public func undo() {
         guard let last = state.history.popLast() else { return }
         switch last {

@@ -5,70 +5,48 @@
 //  The interactive Qwixx "Lucky 15" scorecard. Rule enforcement and scoring are
 //  delegated to `Lucky15Game`; this file is presentation + touch handling only.
 //
-//  View bodies are kept small and extracted, and the game is owned by the
-//  `@StateObject` property-default pattern (no closure-injection init), to stay
-//  clear of strict-concurrency init isolation issues.
+//  Built on the reusable scorecard framework: a pure `Lucky15BoardView` composes
+//  the Core board components (colour bands, number/lock/score tiles, the bottom
+//  bar) and `QwixxLucky15ScorecardView` wraps it in `ScorecardScaffold` to inherit
+//  the compact header, landscape lock and rules sheet. Lucky15's variant-specific
+//  Lucky 15 bonus track is rendered as an extra band of number tiles.
 //
 
 import SwiftUI
 
-public struct Lucky15ScorecardView: View {
+/// The pure banded board for one Lucky15 player — no navigation chrome, so it
+/// can be wrapped by the shared `ScorecardScaffold`. Per-board controls (undo,
+/// new game) live in its bottom bar, like the physical card's corner buttons.
+struct Lucky15BoardView: View {
     @ObservedObject var game: Lucky15Game
-    let rules: RulesDocument
+    @State private var confirmReset = false
 
-    @State private var showRules = false
-    @State private var confirmNewGame = false
+    private let tileGap: CGFloat = 4
+    private let rowGap: CGFloat = 4
+    private let outerPad: CGFloat = 4   // gap to the safe-area edge
+    private let bandPad: CGFloat = 4    // coloured border inside each band
+    // chevron + 11 numbers + lock + per-row score
+    private let columns: CGFloat = 14
 
-    private let spacing: CGFloat = 3
-    private let columns = 12  // 11 numbers + lock
+    /// Orange tint of the Lucky 15 track, matching the official sheet.
+    static let luckyTint = Color(red: 0.93, green: 0.45, blue: 0.13)
 
-    public init(game: Lucky15Game, rules: RulesDocument) {
+    init(game: Lucky15Game) {
         _game = ObservedObject(wrappedValue: game)
-        self.rules = rules
     }
 
-    public var body: some View {
+    var body: some View {
         GeometryReader { geo in
-            // Cap the card width so cells stay a comfortable touch size and the
-            // layout stays centered rather than stretching edge-to-edge.
-            let contentWidth = min(geo.size.width, 700)
-            let cell = max(24, (contentWidth - 24 - spacing * CGFloat(columns - 1)) / CGFloat(columns))
-            ScrollView {
-                VStack(spacing: 10) {
-                    summary
-
-                    VStack(spacing: spacing) {
-                        colorRow(.red, cell: cell)
-                        colorRow(.yellow, cell: cell)
-                        Divider().padding(.vertical, 3)
-                        colorRow(.green, cell: cell)
-                        colorRow(.blue, cell: cell)
-                    }
-
-                    Divider().padding(.vertical, 3)
-                    luckyTrack(cell: cell)
-
-                    penaltiesRow
-                    scoringLegend
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .frame(maxWidth: contentWidth)
-                .frame(maxWidth: .infinity) // center within the available width
-            }
+            // 4 colour bands + 1 Lucky 15 track band + bottom bar = 6 rows.
+            let t = BoardMetrics.tile(in: geo.size, columns: columns,
+                                      rowUnits: 4 + 0.82 + 1.05,
+                                      rowCount: 6, gap: tileGap, pad: outerPad)
+            boardStack(w: t.w, h: t.h)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(outerPad)
         }
-        .navigationTitle("Qwixx Lucky15")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                Button { game.undo() } label: { Image(systemName: "arrow.uturn.backward") }
-                    .disabled(!game.canUndo)
-                Button { showRules = true } label: { Image(systemName: "info.circle") }
-                Button(role: .destructive) { confirmNewGame = true } label: { Image(systemName: "trash") }
-            }
-        }
-        .sheet(isPresented: $showRules) { RulesView(document: rules) }
-        .confirmationDialog("Start a new game?", isPresented: $confirmNewGame, titleVisibility: .visible) {
+        .ignoresSafeArea(.container, edges: .bottom)
+        .confirmationDialog("Start a new game?", isPresented: $confirmReset, titleVisibility: .visible) {
             Button("New game", role: .destructive) { game.reset() }
             Button("Cancel", role: .cancel) {}
         } message: {
@@ -76,184 +54,111 @@ public struct Lucky15ScorecardView: View {
         }
     }
 
-    // MARK: - Summary
+    // MARK: - Board
 
-    private var summary: some View {
-        VStack(spacing: 8) {
-            if game.isGameOver {
-                Label("Game over — final score \(game.totalScore)", systemImage: "flag.checkered")
-                    .font(.subheadline.bold())
-                    .frame(maxWidth: .infinity)
-                    .padding(8)
-                    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10))
-            }
-            HStack(spacing: 6) {
-                ForEach(GameColor.allCases) { color in
-                    ScoreChip(
-                        title: "\(min(game.crosses(for: color), 12))×",
-                        value: "\(game.points(for: color))",
-                        tint: color.tint
-                    )
-                }
-                ScoreChip(
-                    title: "Lucky15",
-                    value: "\(game.luckyPoints)",
-                    tint: Self.luckyTint
-                )
-            }
-            totalsRow
+    private func boardStack(w: CGFloat, h: CGFloat) -> some View {
+        let th = h
+        let luckyH = th * 0.82
+        let bottomH = th * 1.05
+        return VStack(spacing: rowGap) {
+            band(.red, w: w, tile: th)
+            band(.yellow, w: w, tile: th)
+            band(.green, w: w, tile: th)
+            band(.blue, w: w, tile: th)
+            luckyBand(w: w, h: luckyH)
+            bottomBar(w: w, h: bottomH)
         }
     }
 
-    private var totalsRow: some View {
-        HStack {
-            if game.penalties > 0 {
-                Text("Penalties −\(game.penaltyPoints)")
-                    .font(.caption.bold())
-                    .foregroundStyle(.red)
+    /// One full-width colour band: a direction chevron, the eleven number tiles,
+    /// the lock, and that colour's running score — all reusable Core components.
+    private func band(_ color: GameColor, w: CGFloat, tile th: CGFloat) -> some View {
+        HStack(spacing: tileGap) {
+            BandChevron(w: w, h: th)
+            ForEach(0..<11, id: \.self) { i in
+                let marked = game.row(for: color).marks.contains(i)
+                let undoable = marked && game.isLastColorMark(color, i)
+                NumberTile("\(color.numbers[i])", tint: color.tint,
+                           marked: marked, legal: game.canMarkColor(color, i),
+                           undoable: undoable, w: w, h: th) {
+                    if undoable { game.undo() } else { game.markColor(color, i) }
+                }
+                .accessibilityLabel("\(color.displayName) \(color.numbers[i])")
             }
-            Spacer()
+            LockTile(tint: color.tint, locked: game.row(for: color).locked, w: w, h: th)
+                .accessibilityLabel("\(color.displayName) lock")
+            ScoreTile(game.points(for: color), w: w, h: th)
+        }
+        .colourBand(tint: color.tint, hPad: bandPad, vPad: th * 0.09, corner: min(w, th) * 0.3)
+    }
+
+    /// The orange Lucky 15 bonus track: four diamond-value fields crossed
+    /// strictly left → right. Only the next uncrossed field is legal; the
+    /// right-most crossed field is the tap-to-undo cell.
+    private func luckyBand(w: CGFloat, h: CGFloat) -> some View {
+        HStack(spacing: tileGap) {
+            BandChevron(w: w, h: h)
+            ForEach(Array(Lucky15Track.values.enumerated()), id: \.offset) { idx, value in
+                let marked = idx < game.lucky.crossed
+                let isNext = idx == game.lucky.crossed && game.canMarkLucky()
+                let undoable = marked && idx == game.lucky.crossed - 1 && game.isLastLuckyMark()
+                NumberTile("\(value)", tint: Self.luckyTint,
+                           marked: marked, legal: isNext,
+                           undoable: undoable, w: w, h: h) {
+                    if undoable { game.undo() } else { game.markLucky() }
+                }
+                .accessibilityLabel("Lucky 15 field \(value)")
+            }
+            // Pad out the remaining columns so the track aligns under the rows.
+            Color.clear.frame(width: w * 7 + tileGap * 7, height: h)
+            ScoreTile(game.luckyPoints, w: w, h: h)
+                .accessibilityLabel("Lucky 15 bonus")
+        }
+        .colourBand(tint: Self.luckyTint, hPad: bandPad, vPad: h * 0.09, corner: min(w, h) * 0.3)
+    }
+
+    /// Controls (undo, new game) on the left, penalties + running total on the
+    /// right — echoing the corner buttons on the printed card.
+    private func bottomBar(w: CGFloat, h: CGFloat) -> some View {
+        let b = min(h, 64)
+        return HStack(spacing: tileGap) {
+            BoardControlButton("arrow.uturn.backward", size: b) { game.undo() }
+                .disabled(!game.canUndo)
+                .opacity(game.canUndo ? 1 : 0.4)
+            BoardControlButton("trash", size: b) { confirmReset = true }
+            Spacer(minLength: w * 0.1)
+            ForEach(0..<Lucky15State.maxPenalties, id: \.self) { i in
+                let isNext = i == game.penalties && game.canAddPenalty()
+                PenaltyBox(
+                    filled: i < game.penalties,
+                    isNext: isNext,
+                    undoable: i == game.penalties - 1 && game.isLastPenalty(),
+                    size: b
+                ) {
+                    if isNext { game.addPenalty() } else { game.undo() }
+                }
+                .accessibilityLabel("Penalty \(i + 1)")
+            }
+            if game.isGameOver {
+                Image(systemName: "flag.checkered").foregroundStyle(.secondary)
+            }
             Text("Total")
-                .font(.subheadline.weight(.semibold))
+                .font(.system(size: b * 0.34, weight: .semibold))
                 .foregroundStyle(.secondary)
             Text("\(game.totalScore)")
-                .font(.title3.bold().monospacedDigit())
+                .font(.system(size: b * 0.55, weight: .heavy, design: .rounded).monospacedDigit())
         }
-    }
-
-    // MARK: - Colour rows
-
-    private func colorRow(_ color: GameColor, cell: CGFloat) -> some View {
-        let row = game.row(for: color)
-        return HStack(spacing: spacing) {
-            ForEach(0..<11, id: \.self) { i in
-                MarkableCell(
-                    label: "\(color.numbers[i])",
-                    tint: color.tint,
-                    textColor: color.textColor,
-                    isMarked: row.marks.contains(i),
-                    isLegal: game.canMarkColor(color, i),
-                    isInteractive: true,
-                    shape: .square
-                ) { game.markColor(color, i) }
-                .frame(width: cell, height: cell)
-            }
-            lockCell(color: color, locked: row.locked)
-                .frame(width: cell, height: cell)
-        }
-    }
-
-    private func lockCell(color: GameColor, locked: Bool) -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(color.tint)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .strokeBorder(.black.opacity(0.18), lineWidth: 1)
-                )
-            Image(systemName: locked ? "lock.fill" : "lock.open")
-                .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(color.textColor)
-        }
-        .opacity(locked ? 1 : 0.45)
-        .accessibilityLabel("\(color.displayName) lock")
-        .accessibilityValue(locked ? "locked" : "open")
-    }
-
-    // MARK: - Lucky 15 track
-
-    private static let luckyTint = Color(red: 0.93, green: 0.45, blue: 0.13)
-
-    private func luckyTrack(cell: CGFloat) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Lucky 15")
-                .font(.caption.weight(.heavy))
-                .foregroundStyle(Self.luckyTint)
-            HStack(spacing: spacing + 4) {
-                ForEach(Array(Lucky15Track.values.enumerated()), id: \.offset) { idx, value in
-                    let isMarked = idx < game.lucky.crossed
-                    // The next legal field is the left-most uncrossed one.
-                    let isNext = idx == game.lucky.crossed && game.canMarkLucky()
-                    MarkableCell(
-                        label: "\(value)",
-                        tint: Self.luckyTint,
-                        textColor: .white,
-                        isMarked: isMarked,
-                        isLegal: isNext,
-                        isInteractive: true,
-                        shape: .square
-                    ) { game.markLucky() }
-                    .frame(width: cell + 4, height: cell + 4)
-                }
-                Spacer(minLength: 0)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    // MARK: - Penalties
-
-    private var penaltiesRow: some View {
-        HStack {
-            Text("Penalties")
-                .font(.subheadline.weight(.semibold))
-            Spacer()
-            HStack(spacing: 6) {
-                ForEach(0..<Lucky15State.maxPenalties, id: \.self) { i in
-                    penaltyBox(i)
-                }
-            }
-        }
-    }
-
-    private func penaltyBox(_ i: Int) -> some View {
-        let filled = i < game.penalties
-        let isNext = i == game.penalties && game.canAddPenalty()
-        return ZStack {
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .strokeBorder(.red, lineWidth: 2)
-                .background(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(filled ? Color.red.opacity(0.85) : .clear)
-                )
-            if filled {
-                Image(systemName: "xmark").font(.system(size: 16, weight: .black)).foregroundStyle(.white)
-            } else {
-                Text("−5").font(.caption2.bold()).foregroundStyle(.red)
-            }
-        }
-        .frame(width: 34, height: 34)
-        .opacity(filled || isNext ? 1 : 0.4)
-        .onTapGesture { if isNext { game.addPenalty() } }
-        .accessibilityLabel("Penalty \(i + 1)")
-        .accessibilityValue(filled ? "taken" : "empty")
-    }
-
-    // MARK: - Scoring legend
-
-    private var scoringLegend: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Points per crosses")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-            Text("1·1  2·3  3·6  4·10  5·15  6·21  7·28  8·36  9·45  10·55  11·66  12·78")
-                .font(.system(size: 11, design: .rounded).monospacedDigit())
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-            Text("Lucky 15 bonus = value of the highest crossed field (5 · 11 · 18 · 25).")
-                .font(.system(size: 11, design: .rounded))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.top, 4)
+        .frame(maxWidth: .infinity)
+        .frame(height: h)
+        .padding(.horizontal, bandPad)
     }
 }
 
 // MARK: - Variant owner
 //
 // Owns its own `Lucky15Game` via the `@StateObject` property-default pattern and
-// renders the scorecard.
+// renders the board wrapped in the shared `ScorecardScaffold` (header, landscape
+// lock, rules sheet).
 
 /// Qwixx Lucky15: four classic colour rows (cap 12) plus the Lucky 15 track.
 public struct QwixxLucky15ScorecardView: View {
@@ -263,6 +168,10 @@ public struct QwixxLucky15ScorecardView: View {
     public init(rules: RulesDocument) { self.rules = rules }
 
     public var body: some View {
-        Lucky15ScorecardView(game: game, rules: rules)
+        ScorecardScaffold(
+            title: "Qwixx Lucky15",
+            rules: rules,
+            board: { Lucky15BoardView(game: game) }
+        )
     }
 }

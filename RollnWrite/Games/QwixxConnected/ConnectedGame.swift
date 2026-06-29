@@ -154,6 +154,23 @@ public final class ConnectedGame: ObservableObject, Scoreboard {
 
     public var canUndo: Bool { !state.history.isEmpty }
 
+    // MARK: - Tap-to-undo
+    //
+    // Tapping your most-recent mark un-checks it. Undo is strictly LIFO, so only
+    // the *last* action is reversible this way. A deliberate chain cross and its
+    // forced partner co-mark are ONE action, so only the deliberately-crossed
+    // cell is tap-undoable; tapping it reverses both crosses together.
+
+    public func isLastColorMark(_ color: GameColor, _ index: Int) -> Bool {
+        if case let .color(c, i, _, _) = state.history.last { return c == color && i == index }
+        return false
+    }
+
+    public func isLastPenalty() -> Bool {
+        if case .penalty = state.history.last { return true }
+        return false
+    }
+
     /// Reverse the most recent action. Strictly LIFO so an automatic partner
     /// cross is always undone together with the deliberate mark that caused it.
     public func undo() {

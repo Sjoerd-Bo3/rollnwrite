@@ -5,13 +5,23 @@
 //  Interactive "That's Pretty Clever" scorecard. Presentation + touch only; all
 //  rules and scoring live in `CleverGame`.
 //
+//  Styled to mimic the official LIGHT printed score sheet: a cream board, dark
+//  text, the area colours as on the card. Fullscreen + landscape (no system nav
+//  bar) with a compact in-board header carrying Clever's controls, exactly like
+//  the Qwixx scorecard. Tapping the most-recent mark un-checks it (LIFO undo).
+//
 
 import SwiftUI
+
+/// Cream "paper" background of the printed sheet.
+private let cleverPaper = Color(red: 0.97, green: 0.96, blue: 0.93)
+private let cleverInk = Color(red: 0.13, green: 0.13, blue: 0.15)
 
 public struct CleverScorecardView: View {
     @StateObject private var game = CleverGame()
     let rules: RulesDocument
 
+    @Environment(\.dismiss) private var dismiss
     @State private var showRules = false
     @State private var showColors = false
     @State private var confirmNewGame = false
@@ -24,37 +34,16 @@ public struct CleverScorecardView: View {
     }
 
     public var body: some View {
-        GeometryReader { geo in
-            let contentWidth = min(geo.size.width, 720)
-            let cell = max(22, (contentWidth - 24 - spacing * 10) / 11)
-            ScrollView {
-                VStack(spacing: 12) {
-                    summary
-                    bonusBanner
-                    roundTrack(cell: cell)
-                    actionBars(cell: cell)
-                    yellowAndBlue(cell: cell)
-                    greenRow(cell: cell)
-                    orangeRow(cell: cell)
-                    purpleRow(cell: cell)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .frame(maxWidth: contentWidth)
-                .frame(maxWidth: .infinity)
-            }
+        VStack(spacing: 0) {
+            header
+            board
         }
-        .navigationTitle("That's Pretty Clever")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                Button { game.undo() } label: { Image(systemName: "arrow.uturn.backward") }
-                    .disabled(!game.canUndo)
-                Button { showColors = true } label: { Image(systemName: "paintpalette") }
-                Button { showRules = true } label: { Image(systemName: "info.circle") }
-                Button(role: .destructive) { confirmNewGame = true } label: { Image(systemName: "trash") }
-            }
-        }
+        .background(cleverPaper.ignoresSafeArea())
+        .preferredColorScheme(.light)
+        .tint(Color(red: 0.55, green: 0.28, blue: 0.72))
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
+        .landscapeLockediPhone(when: true)
         .sheet(isPresented: $showRules) { RulesView(document: rules) }
         .sheet(isPresented: $showColors) { CleverColorSettingsView(game: game) }
         .confirmationDialog("Start a new game?", isPresented: $confirmNewGame, titleVisibility: .visible) {
@@ -72,6 +61,84 @@ public struct CleverScorecardView: View {
                 Button("\(v)") { entry?.commit(v); entry = nil }
             }
             Button("Cancel", role: .cancel) { entry = nil }
+        }
+    }
+
+    // MARK: - Compact header (replaces the system nav bar)
+
+    private var header: some View {
+        HStack(spacing: 14) {
+            Button { dismiss() } label: { Image(systemName: "chevron.left") }
+            Text("That's Pretty Clever")
+                .font(.headline).lineLimit(1).minimumScaleFactor(0.7)
+            Spacer(minLength: 8)
+            Button { game.undo() } label: { Image(systemName: "arrow.uturn.backward") }
+                .disabled(!game.canUndo)
+                .opacity(game.canUndo ? 1 : 0.4)
+            Button { showColors = true } label: { Image(systemName: "paintpalette") }
+            Button { showRules = true } label: { Image(systemName: "info.circle") }
+            Button(role: .destructive) { confirmNewGame = true } label: { Image(systemName: "trash") }
+        }
+        .font(.title3)
+        .foregroundStyle(cleverInk)
+        .padding(.horizontal, 14)
+        .padding(.top, 4)
+        .padding(.bottom, 6)
+    }
+
+    // MARK: - Board (fills the screen; landscape two-column when wide)
+
+    private var board: some View {
+        GeometryReader { geo in
+            // Two-column layout when there's enough width (landscape / iPad):
+            // grids on the left, the linear rows on the right. Otherwise stack.
+            let wide = geo.size.width > geo.size.height && geo.size.width > 640
+            // Cell size is derived so the densest column (the 11-wide green/
+            // orange/purple rows) fills its share of the width with no scroll.
+            let rowsW = wide ? geo.size.width * 0.5 : geo.size.width
+            let cell = max(20, min(40, (rowsW - 24 - spacing * 10) / 11))
+
+            Group {
+                if wide {
+                    HStack(alignment: .top, spacing: 14) {
+                        VStack(spacing: 10) {
+                            summary
+                            bonusBanner
+                            roundTrack(cell: cell)
+                            actionBars(cell: cell)
+                            yellowAndBlue(cell: cell)
+                            Spacer(minLength: 0)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .top)
+                        VStack(spacing: 10) {
+                            greenRow(cell: cell)
+                            orangeRow(cell: cell)
+                            purpleRow(cell: cell)
+                            Spacer(minLength: 0)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .top)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                } else {
+                    ScrollView {
+                        VStack(spacing: 12) {
+                            summary
+                            bonusBanner
+                            roundTrack(cell: cell)
+                            actionBars(cell: cell)
+                            yellowAndBlue(cell: cell)
+                            greenRow(cell: cell)
+                            orangeRow(cell: cell)
+                            purpleRow(cell: cell)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .frame(maxWidth: .infinity)
+                    }
+                }
+            }
         }
     }
 
@@ -95,7 +162,7 @@ public struct CleverScorecardView: View {
                     .foregroundStyle(.secondary)
                 Spacer()
                 Text("Total").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
-                Text("\(game.totalScore)").font(.title3.bold().monospacedDigit())
+                Text("\(game.totalScore)").font(.title3.bold().monospacedDigit()).foregroundStyle(cleverInk)
             }
         }
     }
@@ -110,7 +177,7 @@ public struct CleverScorecardView: View {
                     .foregroundStyle(.tint)
                 VStack(alignment: .leading, spacing: 2) {
                     ForEach(Array(game.earnedBonuses.suffix(4).enumerated()), id: \.offset) { _, msg in
-                        Text(msg).font(.caption.weight(.medium))
+                        Text(msg).font(.caption.weight(.medium)).foregroundStyle(cleverInk)
                     }
                 }
                 Spacer(minLength: 0)
@@ -123,7 +190,10 @@ public struct CleverScorecardView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+            .background(Color.white.opacity(0.7), in: RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12).strokeBorder(.black.opacity(0.08), lineWidth: 1)
+            )
             .frame(maxWidth: .infinity)
         }
     }
@@ -135,7 +205,7 @@ public struct CleverScorecardView: View {
             Text("Rounds").font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
             ForEach(0..<6, id: \.self) { r in
                 VStack(spacing: 1) {
-                    Text("\(r + 1)").font(.caption2.bold())
+                    Text("\(r + 1)").font(.caption2.bold()).foregroundStyle(cleverInk)
                     if let b = CleverLayout.roundBonuses[r] {
                         BonusBadge(icon: b, game: game, size: 16)
                     } else {
@@ -164,6 +234,7 @@ public struct CleverScorecardView: View {
             Label(title, systemImage: system)
                 .font(.caption2.weight(.semibold))
                 .labelStyle(.titleAndIcon)
+                .foregroundStyle(cleverInk)
                 .frame(width: 88, alignment: .leading)
             ForEach(0..<slots, id: \.self) { s in
                 Circle()
@@ -177,7 +248,7 @@ public struct CleverScorecardView: View {
         }
     }
 
-    // MARK: - Yellow + Blue (side by side when wide, else stacked)
+    // MARK: - Yellow + Blue
 
     private func yellowAndBlue(cell: CGFloat) -> some View {
         VStack(spacing: 12) {
@@ -191,7 +262,7 @@ public struct CleverScorecardView: View {
     private func areaHeader(_ area: CleverArea) -> some View {
         HStack(spacing: 6) {
             RoundedRectangle(cornerRadius: 3).fill(game.color(area).color).frame(width: 14, height: 14)
-            Text(area.title).font(.subheadline.weight(.semibold))
+            Text(area.title).font(.subheadline.weight(.semibold)).foregroundStyle(cleverInk)
             Spacer()
             Text("\(game.score(for: area)) pts").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
         }
@@ -216,7 +287,7 @@ public struct CleverScorecardView: View {
                             .font(.caption.bold().monospacedDigit())
                             .frame(width: cell, height: 18)
                             .background(done ? tint.color.opacity(0.35) : .clear, in: Capsule())
-                            .foregroundStyle(done ? .primary : .secondary)
+                            .foregroundStyle(done ? cleverInk : .secondary)
                     }
                 }
             }
@@ -234,6 +305,7 @@ public struct CleverScorecardView: View {
     private func yellowCell(_ idx: Int, tint: ThemeColor, size: CGFloat) -> some View {
         let free = game.isYellowFree(idx)
         let crossed = game.state.yellowCrossed.contains(idx)
+        let undoable = crossed && game.isLastYellow(idx)
         return ZStack {
             RoundedRectangle(cornerRadius: 6).fill(tint.color)
                 .opacity(free || crossed ? 1 : 0.85)
@@ -245,8 +317,9 @@ public struct CleverScorecardView: View {
             }
         }
         .frame(width: size, height: size)
+        .overlay(undoRing(undoable, size: size))
         .opacity(game.canMarkYellow(idx) || crossed || free ? 1 : 0.5)
-        .onTapGesture { game.markYellow(idx) }
+        .onTapGesture { if undoable { game.undo() } else { game.markYellow(idx) } }
     }
 
     private func blueGrid(cell: CGFloat) -> some View {
@@ -284,6 +357,7 @@ public struct CleverScorecardView: View {
 
     private func blueCell(_ value: Int?, tint: ThemeColor, size: CGFloat) -> some View {
         let crossed = value != nil && game.state.blueCrossed.contains(value!)
+        let undoable = value != nil && game.isLastBlue(value!)
         return ZStack {
             RoundedRectangle(cornerRadius: 6).fill(value == nil ? Color.gray.opacity(0.4) : tint.color)
             if let v = value {
@@ -296,8 +370,9 @@ public struct CleverScorecardView: View {
             }
         }
         .frame(width: size, height: size)
+        .overlay(undoRing(undoable, size: size))
         .opacity(value == nil ? 0.8 : (game.canMarkBlue(value!) || crossed ? 1 : 0.5))
-        .onTapGesture { if let v = value { game.markBlue(v) } }
+        .onTapGesture { if let v = value { if undoable { game.undo() } else { game.markBlue(v) } } }
     }
 
     // MARK: - Green / Orange / Purple rows
@@ -310,6 +385,7 @@ public struct CleverScorecardView: View {
                 ForEach(0..<11, id: \.self) { i in
                     let marked = i < game.state.greenCount
                     let isNext = i == game.state.greenCount
+                    let undoable = game.lastGreenIndex == i
                     VStack(spacing: 1) {
                         Text("\(CleverLayout.greenScale[i])").font(.system(size: 9, weight: .bold)).foregroundStyle(.secondary)
                         ZStack {
@@ -318,8 +394,12 @@ public struct CleverScorecardView: View {
                             if marked { Image(systemName: "xmark").font(.system(size: 16, weight: .black)).foregroundStyle(tint.textColor) }
                         }
                         .frame(width: cell, height: cell)
+                        .overlay(undoRing(undoable, size: cell))
                         .opacity(marked || isNext ? 1 : 0.5)
-                        .onTapGesture { if isNext { game.markGreen() } }
+                        .onTapGesture {
+                            if undoable { game.undo() }
+                            else if isNext { game.markGreen() }
+                        }
                         bonusSlot(CleverLayout.greenBonus[i])
                     }
                 }
@@ -336,6 +416,7 @@ public struct CleverScorecardView: View {
                     let value = game.state.orange[i]
                     let mult = CleverLayout.orangeMultipliers[i]
                     let isNext = game.orangeNextIndex == i
+                    let undoable = value != nil && game.isLastOrange(i)
                     VStack(spacing: 1) {
                         Text(mult > 1 ? "×\(mult)" : " ").font(.system(size: 9, weight: .bold)).foregroundStyle(.orange)
                         ZStack {
@@ -347,9 +428,12 @@ public struct CleverScorecardView: View {
                             }
                         }
                         .frame(width: cell, height: cell)
+                        .overlay(undoRing(undoable, size: cell))
                         .opacity(value != nil || isNext ? 1 : 0.5)
                         .onTapGesture {
-                            if isNext {
+                            if undoable {
+                                game.undo()
+                            } else if isNext {
                                 entry = ValueEntry(title: "Orange die value", allowed: game.allowedOrangeValues()) { game.fillOrange($0) }
                             }
                         }
@@ -368,6 +452,7 @@ public struct CleverScorecardView: View {
                 ForEach(0..<11, id: \.self) { i in
                     let value = game.state.purple[i]
                     let isNext = game.purpleNextIndex == i
+                    let undoable = value != nil && game.isLastPurple(i)
                     VStack(spacing: 1) {
                         Text(i == 0 ? " " : "<").font(.system(size: 9, weight: .bold)).foregroundStyle(.secondary)
                         ZStack {
@@ -379,9 +464,12 @@ public struct CleverScorecardView: View {
                             }
                         }
                         .frame(width: cell, height: cell)
+                        .overlay(undoRing(undoable, size: cell))
                         .opacity(value != nil || isNext ? 1 : 0.5)
                         .onTapGesture {
-                            if isNext {
+                            if undoable {
+                                game.undo()
+                            } else if isNext {
                                 let allowed = game.allowedPurpleValues()
                                 if !allowed.isEmpty {
                                     entry = ValueEntry(title: "Purple die value (> previous)", allowed: allowed) { game.fillPurple($0) }
@@ -398,6 +486,15 @@ public struct CleverScorecardView: View {
     @ViewBuilder private func bonusSlot(_ icon: BonusIcon?) -> some View {
         if let icon { BonusBadge(icon: icon, game: game, size: 16) }
         else { Color.clear.frame(width: 16, height: 16) }
+    }
+
+    /// A ring drawn around the most-recent mark to signal it is tap-undoable.
+    @ViewBuilder private func undoRing(_ active: Bool, size: CGFloat) -> some View {
+        if active {
+            RoundedRectangle(cornerRadius: 6)
+                .strokeBorder(cleverInk, lineWidth: 2)
+                .frame(width: size, height: size)
+        }
     }
 }
 
@@ -427,7 +524,7 @@ private struct BonusBadge: View {
 
     private var background: Color {
         switch icon {
-        case .reroll, .plusOne, .fox: return .black
+        case .reroll, .plusOne, .fox: return cleverInk
         case let .mark(area): return game.color(area).color
         case let .number(area, _): return game.color(area).color
         }

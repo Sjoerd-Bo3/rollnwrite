@@ -14,20 +14,22 @@ struct RootView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Games") {
-                    ForEach(GameRegistry.playable, id: \.id) { game in
-                        NavigationLink {
-                            game.makeScorecardView()
-                        } label: {
-                            GameRow(game: game)
-                        }
-                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                            Button {
-                                rulesToShow = IdentifiedRules(document: game.rules)
+                ForEach(families, id: \.name) { group in
+                    Section(group.name) {
+                        ForEach(group.games, id: \.id) { game in
+                            NavigationLink {
+                                game.makeScorecardView()
                             } label: {
-                                Label("Rules", systemImage: "info.circle")
+                                GameRow(game: game)
                             }
-                            .tint(.indigo)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                Button {
+                                    rulesToShow = IdentifiedRules(document: game.rules)
+                                } label: {
+                                    Label("Rules", systemImage: "info.circle")
+                                }
+                                .tint(.indigo)
+                            }
                         }
                     }
                 }
@@ -46,6 +48,24 @@ struct RootView: View {
                 RulesView(document: wrapper.document)
             }
         }
+    }
+
+    /// Playable games grouped by family (Qwixx, Clever) so the catalogue stays
+    /// tidy as variants are added. Families appear in a fixed order; any others
+    /// fall through to the end alphabetically.
+    private var families: [(name: String, games: [GameDefinition])] {
+        let order = ["Qwixx", "Clever"]
+        let grouped = Dictionary(grouping: GameRegistry.playable, by: Self.family)
+        let known = order.compactMap { key in grouped[key].map { (name: key, games: $0) } }
+        let extra = grouped.keys
+            .filter { !order.contains($0) }
+            .sorted()
+            .map { (name: $0, games: grouped[$0]!) }
+        return known + extra
+    }
+
+    private static func family(_ game: GameDefinition) -> String {
+        game.id.hasPrefix("qwixx") ? "Qwixx" : "Clever"
     }
 }
 
