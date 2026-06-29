@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roll'n Write — scorecards for roll-and-write dice games</title>
+<meta name="description" content="A clean, automatic digital scorecard for roll-and-write dice games. iPhone & iPad. No accounts, no ads, no tracking.">
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body { font: 18px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+         margin: 0; color: #1c1c1e; background: #fff; }
+  @media (prefers-color-scheme: dark) { body { background: #000; color: #e5e5ea; } .card { background:#1c1c1e; } a { color:#0a84ff; } }
+  a { color: #007aff; text-decoration: none; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 3rem 1.25rem 4rem; }
+  header { text-align: center; margin-bottom: 2.5rem; }
+  h1 { font-size: 2.4rem; margin: .2rem 0; }
+  .tag { color: #8e8e93; font-size: 1.15rem; }
+  .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); margin: 2rem 0; }
+  .card { background: #f2f2f7; border-radius: 14px; padding: 1.1rem 1.2rem; }
+  .card h3 { margin: 0 0 .3rem; font-size: 1.05rem; }
+  .card p { margin: 0; color: #6c6c70; font-size: .95rem; }
+  @media (prefers-color-scheme: dark){ .card p{ color:#aeaeb2; } }
+  .cta { text-align:center; margin-top: 2.5rem; }
+  .btn { display:inline-block; background:#007aff; color:#fff; padding:.7rem 1.4rem; border-radius:10px; margin:.3rem; font-weight:600; }
+  footer { text-align:center; color:#8e8e93; font-size:.85rem; margin-top:3rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Roll&rsquo;n Write</h1>
+    <p class="tag">A clean, automatic scorecard for roll-and-write dice games.<br>iPhone &amp; iPad.</p>
+  </header>
+
+  <p>Tap to cross out spaces &mdash; the app enforces the official rules strictly
+  and computes your score automatically. It&rsquo;s a pure scorecard: you bring
+  your own dice and game, it handles the bookkeeping.</p>
+
+  <div class="grid">
+    <div class="card"><h3>Strict rules</h3><p>Illegal moves are blocked; locks, penalties, and game-end are enforced for you.</p></div>
+    <div class="card"><h3>Automatic scoring</h3><p>Every row and bonus is totted up live &mdash; no maths, no mistakes.</p></div>
+    <div class="card"><h3>Tap to undo</h3><p>Tap your last mark to take it back, or use the undo button.</p></div>
+    <div class="card"><h3>Two players</h3><p>A mirrored second board for the player across the table.</p></div>
+    <div class="card"><h3>Rules included</h3><p>The official rules for each game, right in the app.</p></div>
+    <div class="card"><h3>Private by design</h3><p>No accounts, no ads, no tracking. Everything stays on your device.</p></div>
+  </div>
+
+  <p style="text-align:center; color:#8e8e93;">More roll-and-write games are on the way.</p>
+
+  <div class="cta">
+    <a class="btn" href="https://github.com/Sjoerd-Bo3/rollnwrite">View on GitHub</a>
+    <a class="btn" href="./privacy.html">Privacy Policy</a>
+  </div>
+
+  <footer>
+    <p>Unofficial fan project &mdash; not affiliated with, endorsed by, or sponsored by any game publisher.
+    All game names and trademarks belong to their respective owners.</p>
+  </footer>
+</div>
+</body>
+</html>
