@@ -148,6 +148,21 @@ public final class MixxGame: ObservableObject, Scoreboard {
 
     public var canUndo: Bool { !state.history.isEmpty }
 
+    // MARK: - Tap-to-undo (strictly LIFO: only the most-recent action qualifies)
+
+    /// `true` if the most-recent action is crossing `index` in row `rowIndex`,
+    /// so tapping that cell un-checks it (a second way to undo).
+    public func isLastMark(_ rowIndex: Int, _ index: Int) -> Bool {
+        if case let .mark(r, i, _) = state.history.last { return r == rowIndex && i == index }
+        return false
+    }
+
+    /// `true` if the most-recent action is the last penalty, so tapping it undoes it.
+    public func isLastPenalty() -> Bool {
+        if case .penalty = state.history.last { return true }
+        return false
+    }
+
     /// Reverse the most recent action on the current board. Strictly LIFO.
     public func undo() {
         var s = state

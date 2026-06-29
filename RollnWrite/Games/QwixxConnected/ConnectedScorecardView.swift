@@ -6,71 +6,53 @@
 //  scoring are delegated to `ConnectedGame`; this file is presentation + touch
 //  handling only.
 //
-//  View bodies are kept small and extracted, and the game is owned by the
-//  `@StateObject` property-default pattern (no closure-injection init), to stay
-//  clear of strict-concurrency init isolation issues.
+//  Built on the shared scorecard framework: a pure `ConnectedBoardView` rendered
+//  fullscreen edge-to-edge with `BoardMetrics` + the Core board components, plus a
+//  thin `QwixxConnectedScorecardView` wrapper that adds the compact header,
+//  landscape lock, and rules sheet via `ScorecardScaffold`. Mirrors
+//  `QwixxBoardView` / `QwixxScorecardView`.
 //
-//  Chain spaces are rendered as the underlying colour cell wearing a dashed ring
-//  (matching the printed circled chain fields). Crossing one chain space
-//  automatically crosses its partner — handled entirely by the engine.
+//  Chain spaces are rendered as the underlying colour `NumberTile` wearing a
+//  dashed ring (matching the printed circled chain fields). Crossing one chain
+//  space automatically crosses its partner — handled entirely by the engine.
 //
 
 import SwiftUI
 
-public struct ConnectedScorecardView: View {
+/// The pure banded Connected board for one player — no navigation chrome, so it
+/// can be hosted on its own (or, in future, two-up mirrored). Per-board controls
+/// (undo, new game) live in its bottom bar, like the physical card's corners.
+struct ConnectedBoardView: View {
     @ObservedObject var game: ConnectedGame
-    let rules: RulesDocument
+    @State private var confirmReset = false
 
-    @State private var showRules = false
-    @State private var confirmNewGame = false
+    private let tileGap: CGFloat = 4
+    private let rowGap: CGFloat = 4
+    private let outerPad: CGFloat = 4   // gap to the safe-area edge
+    private let bandPad: CGFloat = 4    // coloured border inside each band
+    // chevron + 11 numbers + lock + per-row score
+    private let columns: CGFloat = 14
 
-    private let spacing: CGFloat = 3
-    private let columns = 12  // 11 numbers + lock
-
-    public init(game: ConnectedGame, rules: RulesDocument) {
+    init(game: ConnectedGame) {
         _game = ObservedObject(wrappedValue: game)
-        self.rules = rules
     }
 
-    public var body: some View {
+    var body: some View {
         GeometryReader { geo in
-            // Cap the card width so cells stay a comfortable touch size and the
-            // layout stays centered rather than stretching edge-to-edge.
-            let contentWidth = min(geo.size.width, 700)
-            let cell = max(24, (contentWidth - 24 - spacing * CGFloat(columns - 1)) / CGFloat(columns))
-            ScrollView {
-                VStack(spacing: 10) {
-                    summary
-
-                    VStack(spacing: spacing) {
-                        colorRow(.red, cell: cell)
-                        colorRow(.yellow, cell: cell)
-                        Divider().padding(.vertical, 3)
-                        colorRow(.green, cell: cell)
-                        colorRow(.blue, cell: cell)
-                    }
-
-                    penaltiesRow
-                    scoringLegend
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .frame(maxWidth: contentWidth)
-                .frame(maxWidth: .infinity) // center within the available width
-            }
+            let t = BoardMetrics.tile(
+                in: geo.size,
+                columns: columns,
+                rowUnits: 4 + 0.95,   // 4 colour bands + bottom bar
+                rowCount: 5,
+                gap: rowGap,
+                pad: outerPad
+            )
+            boardStack(w: t.w, h: t.h)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(outerPad)
         }
-        .navigationTitle("Qwixx Connected")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                Button { game.undo() } label: { Image(systemName: "arrow.uturn.backward") }
-                    .disabled(!game.canUndo)
-                Button { showRules = true } label: { Image(systemName: "info.circle") }
-                Button(role: .destructive) { confirmNewGame = true } label: { Image(systemName: "trash") }
-            }
-        }
-        .sheet(isPresented: $showRules) { RulesView(document: rules) }
-        .confirmationDialog("Start a new game?", isPresented: $confirmNewGame, titleVisibility: .visible) {
+        .ignoresSafeArea(.container, edges: .bottom)
+        .confirmationDialog("Start a new game?", isPresented: $confirmReset, titleVisibility: .visible) {
             Button("New game", role: .destructive) { game.reset() }
             Button("Cancel", role: .cancel) {}
         } message: {
@@ -78,169 +60,111 @@ public struct ConnectedScorecardView: View {
         }
     }
 
-    // MARK: - Summary
+    // MARK: - Board
 
-    private var summary: some View {
-        VStack(spacing: 8) {
-            if game.isGameOver {
-                Label("Game over — final score \(game.totalScore)", systemImage: "flag.checkered")
-                    .font(.subheadline.bold())
-                    .frame(maxWidth: .infinity)
-                    .padding(8)
-                    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10))
-            }
-            HStack(spacing: 6) {
-                ForEach(GameColor.allCases) { color in
-                    ScoreChip(
-                        title: "\(min(game.crosses(for: color), 12))×",
-                        value: "\(game.points(for: color))",
-                        tint: color.tint
-                    )
-                }
-            }
-            totalsRow
+    private func boardStack(w: CGFloat, h: CGFloat) -> some View {
+        let th = h
+        let bottomH = th * 1.05
+        return VStack(spacing: rowGap) {
+            band(.red, w: w, tile: th)
+            band(.yellow, w: w, tile: th)
+            band(.green, w: w, tile: th)
+            band(.blue, w: w, tile: th)
+            bottomBar(w: w, h: bottomH)
         }
     }
 
-    private var totalsRow: some View {
-        HStack {
-            if game.penalties > 0 {
-                Text("Penalties −\(game.penaltyPoints)")
-                    .font(.caption.bold())
-                    .foregroundStyle(.red)
-            }
-            Spacer()
-            Text("Total")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.secondary)
-            Text("\(game.totalScore)")
-                .font(.title3.bold().monospacedDigit())
-        }
-    }
-
-    // MARK: - Colour rows
-
-    private func colorRow(_ color: GameColor, cell: CGFloat) -> some View {
-        let row = game.row(for: color)
-        return HStack(spacing: spacing) {
+    /// One full-width colour band: a direction chevron, the eleven number tiles
+    /// (chain spaces ringed), the lock, and that colour's running score — all
+    /// reusable Core components.
+    private func band(_ color: GameColor, w: CGFloat, tile th: CGFloat) -> some View {
+        HStack(spacing: tileGap) {
+            BandChevron(w: w, h: th)
             ForEach(0..<11, id: \.self) { i in
-                numberCell(color: color, index: i, row: row, cell: cell)
+                numberTile(color, index: i, w: w, th: th)
             }
-            lockCell(color: color, locked: row.locked)
-                .frame(width: cell, height: cell)
+            LockTile(tint: color.tint, locked: game.row(for: color).locked, w: w, h: th)
+                .accessibilityLabel("\(color.displayName) lock")
+            ScoreTile(game.points(for: color), w: w, h: th)
         }
+        .colourBand(tint: color.tint, hPad: bandPad, vPad: th * 0.09, corner: min(w, th) * 0.3)
     }
 
+    /// A single number tile, with the dashed chain ring overlaid for circled
+    /// chain spaces. The deliberately-crossed cell is tap-undoable; a forced
+    /// partner co-mark is undone together with it, so only the deliberate cell
+    /// shows the undo ring.
     @ViewBuilder
-    private func numberCell(color: GameColor, index i: Int, row: ColorRow, cell: CGFloat) -> some View {
+    private func numberTile(_ color: GameColor, index i: Int, w: CGFloat, th: CGFloat) -> some View {
+        let marked = game.isMarked(color, i)
+        let undoable = marked && game.isLastColorMark(color, i)
         let isChain = game.isChainSpace(color, i)
         ZStack {
-            MarkableCell(
-                label: "\(color.numbers[i])",
-                tint: color.tint,
-                textColor: color.textColor,
-                isMarked: row.marks.contains(i),
-                isLegal: game.canMarkColor(color, i),
-                isInteractive: true,
-                shape: .square
-            ) { game.markColor(color, i) }
+            NumberTile("\(color.numbers[i])", tint: color.tint,
+                       marked: marked, legal: game.canMarkColor(color, i),
+                       undoable: undoable, w: w, h: th) {
+                if undoable { game.undo() } else { game.markColor(color, i) }
+            }
+            .accessibilityLabel("\(color.displayName) \(color.numbers[i])")
+            .accessibilityHint(isChain ? "Chain field — crossing it also crosses its partner" : "")
 
-            // Chain spaces wear a dashed ring, matching the printed circled
-            // fields. Crossing one auto-crosses its partner (engine-handled).
             if isChain {
                 Circle()
                     .strokeBorder(
                         color.textColor.opacity(0.9),
                         style: StrokeStyle(lineWidth: 2, dash: [3, 2.5])
                     )
+                    .frame(width: min(w, th), height: min(w, th))
                     .padding(2)
                     .allowsHitTesting(false)
             }
         }
-        .frame(width: cell, height: cell)
-        .accessibilityHint(isChain ? "Chain field — crossing it also crosses its partner" : "")
+        .frame(width: w, height: th)
     }
 
-    private func lockCell(color: GameColor, locked: Bool) -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(color.tint)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .strokeBorder(.black.opacity(0.18), lineWidth: 1)
-                )
-            Image(systemName: locked ? "lock.fill" : "lock.open")
-                .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(color.textColor)
-        }
-        .opacity(locked ? 1 : 0.45)
-        .accessibilityLabel("\(color.displayName) lock")
-        .accessibilityValue(locked ? "locked" : "open")
-    }
-
-    // MARK: - Penalties
-
-    private var penaltiesRow: some View {
-        HStack {
-            Text("Penalties")
-                .font(.subheadline.weight(.semibold))
-            Spacer()
-            HStack(spacing: 6) {
-                ForEach(0..<ConnectedState.maxPenalties, id: \.self) { i in
-                    penaltyBox(i)
+    /// Controls (undo, new game) on the left, penalties + running total on the
+    /// right — echoing the corner buttons on the printed card.
+    private func bottomBar(w: CGFloat, h: CGFloat) -> some View {
+        let b = min(h, 64)
+        return HStack(spacing: tileGap) {
+            BoardControlButton("arrow.uturn.backward", size: b) { game.undo() }
+                .disabled(!game.canUndo)
+                .opacity(game.canUndo ? 1 : 0.4)
+            BoardControlButton("trash", size: b) { confirmReset = true }
+            Spacer(minLength: w * 0.1)
+            ForEach(0..<ConnectedState.maxPenalties, id: \.self) { i in
+                let isNext = i == game.penalties && game.canAddPenalty()
+                PenaltyBox(
+                    filled: i < game.penalties,
+                    isNext: isNext,
+                    undoable: i == game.penalties - 1 && game.isLastPenalty(),
+                    size: b
+                ) {
+                    if isNext { game.addPenalty() } else { game.undo() }
                 }
+                .accessibilityLabel("Penalty \(i + 1)")
             }
-        }
-    }
-
-    private func penaltyBox(_ i: Int) -> some View {
-        let filled = i < game.penalties
-        let isNext = i == game.penalties && game.canAddPenalty()
-        return ZStack {
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .strokeBorder(.red, lineWidth: 2)
-                .background(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(filled ? Color.red.opacity(0.85) : .clear)
-                )
-            if filled {
-                Image(systemName: "xmark").font(.system(size: 16, weight: .black)).foregroundStyle(.white)
-            } else {
-                Text("−5").font(.caption2.bold()).foregroundStyle(.red)
+            if game.isGameOver {
+                Image(systemName: "flag.checkered").foregroundStyle(.secondary)
             }
+            Text("Total")
+                .font(.system(size: b * 0.34, weight: .semibold))
+                .foregroundStyle(.secondary)
+            Text("\(game.totalScore)")
+                .font(.system(size: b * 0.55, weight: .heavy, design: .rounded).monospacedDigit())
         }
-        .frame(width: 34, height: 34)
-        .opacity(filled || isNext ? 1 : 0.4)
-        .onTapGesture { if isNext { game.addPenalty() } }
-        .accessibilityLabel("Penalty \(i + 1)")
-        .accessibilityValue(filled ? "taken" : "empty")
-    }
-
-    // MARK: - Scoring legend
-
-    private var scoringLegend: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Points per crosses")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-            Text("1·1  2·3  3·6  4·10  5·15  6·21  7·28  8·36  9·45  10·55  11·66  12·78")
-                .font(.system(size: 11, design: .rounded).monospacedDigit())
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-            Text("Chain (dashed) spaces are linked in pairs. Crossing one automatically crosses its partner — even past it, or in a locked row. Each chained cross simply counts in its own colour row.")
-                .font(.system(size: 11, design: .rounded))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.top, 4)
+        .frame(maxWidth: .infinity)
+        .frame(height: h)
+        .padding(.horizontal, bandPad)
     }
 }
 
 // MARK: - Variant owner
 //
 // Owns its own `ConnectedGame` via the `@StateObject` property-default pattern
-// and renders the scorecard.
+// (which stays clear of strict-concurrency init isolation issues) and renders the
+// pure board inside the shared `ScorecardScaffold` (header, landscape lock,
+// rules sheet).
 
 /// Qwixx Connected (The Chain): four classic colour rows (cap 12) with linked
 /// chain spaces that auto-cross their partner.
@@ -251,6 +175,10 @@ public struct QwixxConnectedScorecardView: View {
     public init(rules: RulesDocument) { self.rules = rules }
 
     public var body: some View {
-        ConnectedScorecardView(game: game, rules: rules)
+        ScorecardScaffold(
+            title: "Qwixx Connected",
+            rules: rules,
+            board: { ConnectedBoardView(game: game) }
+        )
     }
 }

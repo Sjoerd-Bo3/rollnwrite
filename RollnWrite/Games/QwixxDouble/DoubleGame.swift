@@ -151,6 +151,30 @@ public final class DoubleGame: ObservableObject, Scoreboard {
 
     public var canUndo: Bool { !state.history.isEmpty }
 
+    // MARK: - Tap-to-undo helpers
+    //
+    // These report whether a given mark is the single most-recent action, so the
+    // view can ring it and let a tap un-check it (LIFO undo). Only the very last
+    // action is tap-undoable.
+
+    /// Whether the most recent action was a *first* cross on `index` in `color`.
+    public func isLastColorMark(_ color: GameColor, _ index: Int) -> Bool {
+        if case let .mark(c, i, _) = state.history.last { return c == color && i == index }
+        return false
+    }
+
+    /// Whether the most recent action was a *second* cross on `index` in `color`.
+    public func isLastDoubleMark(_ color: GameColor, _ index: Int) -> Bool {
+        if case let .double(c, i) = state.history.last { return c == color && i == index }
+        return false
+    }
+
+    /// Whether the most recent action was taking a penalty.
+    public func isLastPenalty() -> Bool {
+        if case .penalty = state.history.last { return true }
+        return false
+    }
+
     /// Reverse the most recent action. Strictly LIFO, which guarantees a second
     /// cross is always undone before the first cross that authorised it.
     public func undo() {

@@ -144,6 +144,30 @@ public final class XChangeGame: ObservableObject, Scoreboard {
 
     public var canUndo: Bool { !state.history.isEmpty }
 
+    // MARK: - Tap-to-undo helpers
+    //
+    // The most-recent action is the only tap-undoable one (undo is strictly
+    // LIFO). These let the view ring the last-marked cell and route its tap to
+    // `undo()` — see CLAUDE.md → tap-to-undo.
+
+    /// Whether marking `index` in `color` was the most recent action.
+    public func isLastColorMark(_ color: GameColor, _ index: Int) -> Bool {
+        if case let .color(c, i, _)? = state.history.last { return c == color && i == index }
+        return false
+    }
+
+    /// Whether crossing X-Change field `index` was the most recent action.
+    public func isLastXChangeMark(_ index: Int) -> Bool {
+        if case let .xchange(i)? = state.history.last { return i == index }
+        return false
+    }
+
+    /// Whether the most recent action was taking the last penalty.
+    public func isLastPenalty() -> Bool {
+        if case .penalty? = state.history.last { return true }
+        return false
+    }
+
     /// Reverse the most recent action. Strictly LIFO.
     public func undo() {
         guard let last = state.history.popLast() else { return }

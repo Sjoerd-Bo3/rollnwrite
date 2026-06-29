@@ -149,6 +149,26 @@ public final class Connect15Game: ObservableObject, Scoreboard {
 
     public var canUndo: Bool { !state.history.isEmpty }
 
+    // MARK: - Tap-to-undo helpers
+    //
+    // Mirror `QwixxGame`: report whether a given mark is the single most-recent
+    // action, so the view can ring it and let a tap un-check it (strictly LIFO).
+
+    public func isLastColorMark(_ color: GameColor, _ index: Int) -> Bool {
+        if case let .color(c, i, _) = state.history.last { return c == color && i == index }
+        return false
+    }
+
+    public func isLastConnectionMark(_ color: GameColor) -> Bool {
+        if case let .connection(c) = state.history.last { return c == color }
+        return false
+    }
+
+    public func isLastPenalty() -> Bool {
+        if case .penalty = state.history.last { return true }
+        return false
+    }
+
     /// Reverse the most recent action. Strictly LIFO.
     public func undo() {
         guard let last = state.history.popLast() else { return }
