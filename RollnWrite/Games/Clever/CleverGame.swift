@@ -381,6 +381,40 @@ public final class CleverGame: ObservableObject, Scoreboard {
 
     public var canUndo: Bool { !state.history.isEmpty }
 
+    // MARK: - Tap-to-undo helpers
+    //
+    // The most-recent action is the only tap-undoable one (undo is strictly
+    // LIFO). Views ring that cell and route its tap to `undo()`. Note: bonuses
+    // that auto-apply extra marks push further actions, so only the *final*
+    // resulting mark is tap-undoable — consistent with the undo button.
+
+    public func isLastYellow(_ index: Int) -> Bool {
+        if case let .yellow(i) = state.history.last { return i == index }
+        return false
+    }
+
+    public func isLastBlue(_ value: Int) -> Bool {
+        if case let .blue(v) = state.history.last { return v == value }
+        return false
+    }
+
+    /// The green column index (0-based) that the most recent green mark filled,
+    /// or `nil` if the last action wasn't a green mark.
+    public var lastGreenIndex: Int? {
+        if case .green = state.history.last { return state.greenCount - 1 }
+        return nil
+    }
+
+    public func isLastOrange(_ index: Int) -> Bool {
+        if case let .orange(i, _) = state.history.last { return i == index }
+        return false
+    }
+
+    public func isLastPurple(_ index: Int) -> Bool {
+        if case let .purple(i, _) = state.history.last { return i == index }
+        return false
+    }
+
     public func undo() {
         guard let last = state.history.popLast() else { return }
         switch last {
