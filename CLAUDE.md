@@ -97,34 +97,48 @@ game list, and a **LIFO command history** for exact, dependency-safe undo.
 - Universal: iPhone (all sizes) and iPad.
 - Deployment target: iOS 17.
 
-### Scorecard layout requirements (non-negotiable)
+### Scorecard layout & interaction requirements (non-negotiable)
 
-These are explicit product requirements — every scorecard must follow them:
+These are explicit product requirements. **Every** scorecard — Qwixx Big
+Points, classic, all Qwixx variants, and all Clever games — must follow them.
+`Games/Qwixx/QwixxScorecardView.swift` is the canonical reference; new and
+existing games should mirror its approach.
 
 - **Always fullscreen, edge-to-edge.** The board fills the entire available
   space with no empty margins and no scrolling. Tiles fill the full width
   edge-to-edge; tile **width and height are decoupled** (a `GeometryReader`
-  computes `w` from the available width and `h` from the available height), so
-  tiles go slightly rectangular on tall boards rather than leaving gaps. Do not
-  cap the card width or centre it with side margins.
+  computes `w` from the available width and a row height from the available
+  height). Do not cap the card width or centre it with side margins.
+- **Tile height: fill, capped at square, floored at a min.** A tile's height
+  fills its row but never exceeds its width (square is the MAX — never tall
+  skinny tiles) and never drops below a readable MIN. Leftover height centres
+  the board. So cramped boards (Big Points, 8 rows) go rectangular and fill;
+  roomy boards stay square.
+- **No system nav bar.** Replace it with a compact in-board header (back,
+  title, optional 2-player toggle, info) via `.toolbar(.hidden, for:
+  .navigationBar)`, so the board gets the full height.
 - **Orientation is per-screen.** The catalogue (menu) rotates freely. A
-  single-player scorecard pins iPhone to landscape via `.landscapeLockediPhone`
-  (an `AppDelegate` + `OrientationGate` mask in `App/OrientationLock.swift`);
-  Info.plist still *allows* portrait so other screens can rotate. Two-player
-  mode frees rotation so the mirrored boards can stack in portrait on iPhone.
-- **Use the leftover space wisely.** If a board can't fill an axis with square
-  tiles, fill it with content (rectangular tiles, an inline per-row score, a
-  bottom/side bar) rather than dead space.
+  single-player scorecard pins iPhone to landscape via
+  `.landscapeLockediPhone(when:)` (an `AppDelegate` + `OrientationGate` mask in
+  `App/OrientationLock.swift`); Info.plist still *allows* portrait so other
+  screens can rotate.
 - **Style like the real game.** Match the official card: full-width colour
   bands with light number tiles, a direction chevron per row, inline lock, and
   per-row scores — not a generic grid. Study the official scorecard art.
-- **iPad two-player (mirrored).** On iPad (regular width) a board may offer a
-  "2 players" toggle that shows a second, independent board mirrored
-  (`rotationEffect(180°)`) above the first, for players across a table. See
+- **Tap-to-undo.** Tapping the player's most-recent mark (number, bonus, or
+  penalty) un-checks it — a second way to undo alongside the undo button. Undo
+  stays strictly LIFO, so only the *last* action is tap-undoable; ring that
+  cell. Engines expose `isLast…` helpers (see `QwixxGame`).
+- **Two-player (mirrored).** A board may offer a "2 players" toggle that shows
+  a second, independent engine's board mirrored (`rotationEffect(180°)`) above
+  the first — for players across a table. Works on iPad and on iPhone in
+  portrait (the two boards stack; two-player frees rotation). See
   `QwixxBoardView` (pure board) + `QwixxScorecardView` (nav + optional mirror).
 
-Reference: `Games/Qwixx/QwixxScorecardView.swift` is the canonical implementation
-of all of the above; new games should mirror its approach.
+**Architecture pattern:** split each game into a pure board view (no nav, takes
+the engine) plus a thin wrapper that adds the header, orientation lock, rules
+sheet, and optional 2-player mirror — exactly like `QwixxBoardView` /
+`QwixxScorecardView`. This makes the mirror and fullscreen behaviour reusable.
 
 ## Build & CI
 
