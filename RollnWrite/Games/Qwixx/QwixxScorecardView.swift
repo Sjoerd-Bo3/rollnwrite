@@ -113,9 +113,10 @@ struct QwixxBoardView: View {
     private func numberTile(_ color: GameColor, _ i: Int, w: CGFloat, h: CGFloat) -> some View {
         let marked = game.row(for: color).marks.contains(i)
         let legal = game.canMarkColor(color, i)
+        let undoable = marked && game.isLastColorMark(color, i)
         let s = min(w, h)
         return Button {
-            game.markColor(color, i)
+            if undoable { game.undo() } else { game.markColor(color, i) }
         } label: {
             ZStack {
                 RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
@@ -132,12 +133,18 @@ struct QwixxBoardView: View {
                 }
             }
             .frame(width: w, height: h)
+            // Ring the last mark so it's clear it can be tapped to un-check.
+            .overlay(
+                RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
+                    .strokeBorder(color.tint, lineWidth: undoable ? 2.5 : 0)
+            )
         }
         .buttonStyle(.plain)
-        .disabled(marked || !legal)
+        .disabled(!(legal || undoable))
         .opacity(marked || legal ? 1 : 0.4)
         .accessibilityLabel("\(color.displayName) \(color.numbers[i])")
         .accessibilityValue(marked ? "crossed" : (legal ? "available" : "blocked"))
+        .accessibilityHint(undoable ? "Tap to undo" : "")
     }
 
     private func lockTile(_ color: GameColor, w: CGFloat, h: CGFloat) -> some View {
@@ -178,12 +185,14 @@ struct QwixxBoardView: View {
         return HStack(spacing: tileGap) {
             Color.clear.frame(width: w, height: h) // chevron column
             ForEach(0..<11, id: \.self) { i in
+                let undoable = bonus.marks.contains(i) && game.isLastBonusMark(id, i)
                 BonusCell(
                     label: "\(bonus.numbers[i])",
                     colorA: a, colorB: b,
                     isMarked: bonus.marks.contains(i),
-                    isLegal: game.canMarkBonus(id, i)
-                ) { game.markBonus(id, i) }
+                    isLegal: game.canMarkBonus(id, i),
+                    isUndoable: undoable
+                ) { if undoable { game.undo() } else { game.markBonus(id, i) } }
                 .frame(width: w, height: h)
             }
             Color.clear.frame(width: w * 2 + tileGap, height: h) // lock + score columns
@@ -222,12 +231,13 @@ struct QwixxBoardView: View {
     private func penaltyBox(_ i: Int, size h: CGFloat) -> some View {
         let filled = i < game.penalties
         let isNext = i == game.penalties && game.canAddPenalty()
+        let undoable = filled && i == game.penalties - 1 && game.isLastPenalty()
         return ZStack {
             RoundedRectangle(cornerRadius: h * 0.2, style: .continuous)
                 .fill(filled ? Color.red.opacity(0.85) : Color.gray.opacity(0.28))
                 .overlay(
                     RoundedRectangle(cornerRadius: h * 0.2, style: .continuous)
-                        .strokeBorder(.red.opacity(0.7), lineWidth: 1.5)
+                        .strokeBorder(undoable ? .white : .red.opacity(0.7), lineWidth: undoable ? 2.5 : 1.5)
                 )
             if filled {
                 Image(systemName: "xmark").font(.system(size: h * 0.5, weight: .black)).foregroundStyle(.white)
@@ -237,8 +247,12 @@ struct QwixxBoardView: View {
         }
         .frame(width: h, height: h)
         .opacity(filled || isNext ? 1 : 0.5)
-        .onTapGesture { if isNext { game.addPenalty() } }
+        .onTapGesture {
+            if isNext { game.addPenalty() }
+            else if undoable { game.undo() }
+        }
         .accessibilityLabel("Penalty \(i + 1)")
+        .accessibilityHint(undoable ? "Tap to undo" : "")
     }
 
     private func boardButton(_ icon: String, size h: CGFloat, action: @escaping () -> Void) -> some View {
@@ -334,6 +348,7 @@ private struct BonusCell: View {
     let colorB: GameColor
     let isMarked: Bool
     let isLegal: Bool
+    var isUndoable: Bool = false
     var onTap: () -> Void
 
     private var dimmed: Bool { !isMarked && !isLegal }
@@ -356,6 +371,7 @@ private struct BonusCell: View {
                         )
                 )
                 .overlay(Circle().strokeBorder(.black.opacity(0.18), lineWidth: 1))
+                .overlay(Circle().strokeBorder(.white, lineWidth: isUndoable ? 2.5 : 0))
             Text(label)
                 .font(.system(size: 13, weight: .bold, design: .rounded))
                 .minimumScaleFactor(0.4)
@@ -368,9 +384,10 @@ private struct BonusCell: View {
         }
         .opacity(dimmed ? 0.3 : 1)
         .contentShape(Circle())
-        .onTapGesture { if isLegal && !isMarked { onTap() } }
+        .onTapGesture { if (isLegal && !isMarked) || isUndoable { onTap() } }
         .accessibilityLabel("Bonus \(label)")
         .accessibilityValue(isMarked ? "marked" : (isLegal ? "available" : "blocked"))
+        .accessibilityHint(isUndoable ? "Tap to undo" : "")
     }
 }
 

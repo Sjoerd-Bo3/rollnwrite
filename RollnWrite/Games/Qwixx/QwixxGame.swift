@@ -154,6 +154,27 @@ public final class QwixxGame: ObservableObject, Scoreboard {
 
     public var canUndo: Bool { !state.history.isEmpty }
 
+    // MARK: - Tap-to-undo
+    //
+    // Tapping your most-recent mark un-checks it. Undo is strictly LIFO, so only
+    // the *last* action is reversible this way — these tell the view which cell
+    // that is.
+
+    public func isLastColorMark(_ color: GameColor, _ index: Int) -> Bool {
+        if case let .color(c, i, _) = state.history.last { return c == color && i == index }
+        return false
+    }
+
+    public func isLastBonusMark(_ id: BonusRowID, _ index: Int) -> Bool {
+        if case let .bonus(b, i) = state.history.last { return b == id && i == index }
+        return false
+    }
+
+    public func isLastPenalty() -> Bool {
+        if case .penalty = state.history.last { return true }
+        return false
+    }
+
     /// Reverse the most recent action. Strictly LIFO so a bonus mark is always
     /// undone before the colour mark that authorised it — state stays legal.
     public func undo() {
