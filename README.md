@@ -1,8 +1,16 @@
 # Roll'n Write
 
+[![TestFlight](https://github.com/Sjoerd-Bo3/rollnwrite/actions/workflows/testflight.yml/badge.svg)](https://github.com/Sjoerd-Bo3/rollnwrite/actions/workflows/testflight.yml)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-iOS%2017%2B-lightgrey.svg)](#)
+
 A SwiftUI **scorecard** app for roll-and-write dice games (Qwixx, *That's Pretty
 Clever*, …), built so new games slot in cleanly. Universal — iPhone (all sizes)
 and iPad — touch-driven, with the official rules included in-app.
+
+It is a *pure scorecard*: you tap to cross out spaces, the engine enforces the
+official rules strictly, and scores are computed automatically. No dice are
+rolled in-app.
 
 ## First game: Qwixx Big Points
 
@@ -47,12 +55,52 @@ only — scoring is unchanged).
 ## Running it
 
 - **Xcode:** open `RollnWrite.xcodeproj` (Xcode 16+) and run on a simulator or
-  device.
-- **Xcode Cloud:** a shared `RollnWrite` scheme is included — see
-  [`docs/XCODE_CLOUD.md`](docs/XCODE_CLOUD.md).
+  device. Deployment target is iOS 17.
+
+## Building & releasing — no Mac required
+
+The whole release pipeline runs on GitHub-hosted macOS runners, so you can ship
+to TestFlight entirely from a browser:
+
+- **`.github/workflows/testflight.yml`** (`2. TestFlight`) builds, signs, and
+  uploads to TestFlight via [fastlane](fastlane/Fastfile). It runs on every push
+  to `main` (and on demand from the Actions tab).
+- Code signing uses **fastlane match** — the distribution certificate and
+  provisioning profile are stored encrypted in a separate private repo, so CI
+  never mints a throwaway cert per run. The build is **self-healing**: if the
+  distribution certificate has expired, it auto-renews (revoke + recreate) and
+  carries on, so cert maintenance is hands-off.
+- **`.github/workflows/ios.yml`** (`3. iOS Build`) is a manual, signing-free
+  compile check.
+
+Required repository secrets are documented at the top of the TestFlight
+workflow. See also [`docs/`](docs) for the setup notes.
+
+## Roadmap
+
+- ✅ TestFlight (internal testing)
+- ⏳ App Store release
+- More Qwixx variants and roll-and-write titles, slotting into the same
+  framework.
 
 ## Architecture
 
 Protocol-oriented and SOLID, organised so adding a game means adding a folder and
 registering one `GameDefinition` — no edits to existing code. See
 [`CLAUDE.md`](CLAUDE.md) for the full design and the "add a new game" recipe.
+
+## License
+
+Licensed under the **GNU General Public License v3.0** — see [`LICENSE`](LICENSE).
+You may use, study, share, and modify the source, but derivative works must also
+be released under the GPL-3.0.
+
+## Disclaimer
+
+This is an unofficial, fan-made scorecard app and is **not affiliated with,
+endorsed by, or sponsored by** the publishers or designers of the games it
+supports. *Qwixx* is a trademark of Nürnberger-Spielkarten-Verlag (NSV); the
+*Clever* series (*Ganz schön clever*, *Doppelt so clever*, *Clever hoch Drei*,
+*Clever 4ever*) are by Wolfgang Warsch, published by Schmidt Spiele. All game
+names, rules, and trademarks belong to their respective owners. This app provides
+only a digital scorecard — you supply your own physical dice and game.
