@@ -14,6 +14,7 @@ import SwiftUI
 struct QwixxBoardView: View {
     @ObservedObject var game: QwixxGame
     @State private var confirmReset = false
+    @State private var showResults = false
 
     private let tileGap: CGFloat = 4
     private let rowGap: CGFloat = 4
@@ -39,6 +40,28 @@ struct QwixxBoardView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("This clears the current scorecard.")
+        }
+        .overlay {
+            if showResults {
+                GameOverCard(
+                    lines: GameColor.allCases.map {
+                        GameOverCard.Line(label: $0.displayName, value: game.points(for: $0), tint: $0.tint)
+                    } + (game.penaltyPoints > 0
+                         ? [GameOverCard.Line(label: "Penalties", value: -game.penaltyPoints, tint: .red)]
+                         : []),
+                    total: game.totalScore,
+                    onNewGame: { game.reset(); showResults = false },
+                    onDismiss: { withAnimation { showResults = false } }
+                )
+                .transition(.opacity.combined(with: .scale(scale: 0.92)))
+            }
+        }
+        .onChange(of: game.isGameOver) { _, isOver in
+            if isOver {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) { showResults = true }
+            } else {
+                showResults = false
+            }
         }
     }
 
