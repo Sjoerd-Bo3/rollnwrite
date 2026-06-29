@@ -102,9 +102,11 @@ jobs:
           # match: reuse the existing encrypted certs repo (shared with Trio).
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_GIT_URL: https://github.com/Sjoerd-Bo3/Match-Secrets.git
-          # Optional: set the MATCH_GIT_BRANCH secret if that repo's default
-          # branch isn't what match expects.
-          MATCH_GIT_BRANCH: ${{ secrets.MATCH_GIT_BRANCH }}
+          # NOTE: do NOT pass MATCH_GIT_BRANCH here. fastlane's match action
+          # auto-reads it from the environment, and an unset secret arrives as
+          # an empty string — which overrides match's default branch ("master")
+          # with "", causing `fatal: '' is not a valid branch name`. Leaving it
+          # unset lets match use the certs repo's default branch.
 
       - name: Upload build artifacts
         if: always()
