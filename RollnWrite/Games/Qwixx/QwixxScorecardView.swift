@@ -270,18 +270,14 @@ struct QwixxBoardView: View {
     }
 }
 
-/// Hosts one Qwixx board with navigation. When an `opponent` is supplied and
-/// there's room (iPad / regular width), a "2 players" toggle shows the
-/// opponent's board mirrored above — for two people sitting across a table.
+/// Hosts one Qwixx board, wrapping it in the shared `ScorecardScaffold` (header,
+/// landscape lock, rules, optional two-player mirror). All the chrome is reused
+/// from Core — this is just the Qwixx-specific wiring of board + opponent.
 public struct QwixxScorecardView: View {
     @ObservedObject var game: QwixxGame
     private let opponent: QwixxGame?
     let rules: RulesDocument
     let navigationTitle: String
-
-    @Environment(\.dismiss) private var dismiss
-    @State private var showRules = false
-    @State private var twoPlayer = false
 
     public init(game: QwixxGame, opponent: QwixxGame? = nil, rules: RulesDocument, navigationTitle: String) {
         _game = ObservedObject(wrappedValue: game)
@@ -290,54 +286,13 @@ public struct QwixxScorecardView: View {
         self.navigationTitle = navigationTitle
     }
 
-    // Two-player mirror is available wherever a second engine is supplied —
-    // iPad, or iPhone in portrait (the two boards stack).
-    private var canMirror: Bool { opponent != nil }
-
     public var body: some View {
-        VStack(spacing: 0) {
-            header
-            content
-        }
-        .navigationBarBackButtonHidden(true)
-        .toolbar(.hidden, for: .navigationBar)
-        .sheet(isPresented: $showRules) { RulesView(document: rules) }
-        // Single player is pinned to landscape on iPhone; two-player frees
-        // rotation so it can stack vertically in portrait.
-        .landscapeLockediPhone(when: !twoPlayer)
-    }
-
-    @ViewBuilder private var content: some View {
-        if canMirror, twoPlayer, let opponent {
-            VStack(spacing: 6) {
-                QwixxBoardView(game: opponent).rotationEffect(.degrees(180))
-                QwixxBoardView(game: game)
-            }
-        } else {
-            QwixxBoardView(game: game)
-        }
-    }
-
-    /// Compact header replacing the system nav bar, so the board gets the full
-    /// screen height.
-    private var header: some View {
-        HStack(spacing: 16) {
-            Button { dismiss() } label: { Image(systemName: "chevron.left") }
-            Text(navigationTitle).font(.headline).lineLimit(1).minimumScaleFactor(0.7)
-            Spacer()
-            if canMirror {
-                Button { twoPlayer.toggle() } label: {
-                    Image(systemName: twoPlayer ? "person.fill" : "person.2.fill")
-                }
-                .accessibilityLabel(twoPlayer ? "Single player" : "Two players")
-            }
-            Button { showRules = true } label: { Image(systemName: "info.circle") }
-        }
-        .font(.title3)
-        .foregroundStyle(.primary)
-        .padding(.horizontal, 16)
-        .padding(.top, 4)
-        .padding(.bottom, 6)
+        ScorecardScaffold(
+            title: navigationTitle,
+            rules: rules,
+            board: { QwixxBoardView(game: game) },
+            opponent: opponent.map { opp in { QwixxBoardView(game: opp) } }
+        )
     }
 }
 
