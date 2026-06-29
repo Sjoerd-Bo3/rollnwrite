@@ -1,18 +1,12 @@
 name: 3. iOS Build
 
-# Builds the app on a GitHub-hosted macOS runner — no local Mac required.
-# Compiles every Swift file for the iOS Simulator SDK (no signing needed), so
-# this verifies the project builds on each push / PR.
+# Compile-only check on a macOS runner (no signing). MANUAL ONLY — to conserve
+# Actions minutes it no longer runs on every push/PR; trigger it from the
+# Actions tab when you want a standalone compile verification. (Pushing to main
+# already compiles via the TestFlight archive.)
 
 on:
-  push:
-    branches: ["**"]
-  pull_request:
   workflow_dispatch:
-
-concurrency:
-  group: ios-build-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   build:
