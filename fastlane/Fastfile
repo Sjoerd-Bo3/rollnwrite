@@ -159,18 +159,34 @@ platform :ios do
     # git, so CI never mints a fresh cert per run (which exhausts Apple's
     # certificate cap). match authenticates to the developer portal with the same
     # App Store Connect API key — no Apple ID password needed.
-    match_options = {
+    sign_base = {
       type: "appstore",
       app_identifier: bundle_id,
       api_key: key,
       team_id: team_id,
       storage_mode: "git",
-      git_url: ENV.fetch("MATCH_GIT_URL"),
-      readonly: false
+      git_url: ENV.fetch("MATCH_GIT_URL")
     }
     # Only pin a branch if asked; otherwise use the certs repo's default branch.
-    match_options[:git_branch] = ENV["MATCH_GIT_BRANCH"] unless ENV["MATCH_GIT_BRANCH"].to_s.strip.empty?
-    match(match_options)
+    sign_base[:git_branch] = ENV["MATCH_GIT_BRANCH"] unless ENV["MATCH_GIT_BRANCH"].to_s.strip.empty?
+
+    # Self-healing signing. Normally this just installs the stored cert +
+    # profile. But a distribution certificate expires after a year, and match
+    # refuses to silently replace an existing-but-invalid cert — it raises
+    # "… is not valid, please … renew it". Rather than make that a manual chore,
+    # auto-renew in place (revoke the dead cert + recreate) and retry, so a
+    # build never needs hands-on cert maintenance. ONLY the expired/revoked-cert
+    # error triggers the nuke; any other match failure re-raises untouched so a
+    # transient error can't destroy the cert store. The distribution cert is
+    # team-wide, so this also keeps Trio signing.
+    begin
+      match(sign_base.merge(readonly: false))
+    rescue => e
+      raise unless e.message =~ /not valid|expired|renew it|revoked/i
+      UI.important("🔁 Distribution certificate is invalid/expired — auto-renewing (nuke + recreate)…")
+      match_nuke(sign_base.merge(skip_confirmation: true))
+      match(sign_base.merge(readonly: false))
+    end
 
     profile = "match AppStore #{bundle_id}"
     build_app(
