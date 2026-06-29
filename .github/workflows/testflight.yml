@@ -50,9 +50,9 @@ jobs:
           ruby-version: "3.3"
           bundler-cache: true
 
-      - name: Configure match git auth (PAT for the separate Match-Secrets repo)
+      - name: Configure match git auth (GH_PAT for the Match-Secrets repo)
         run: |
-          AUTH=$(printf '%s' "x-access-token:${{ secrets.MATCH_GIT_PAT }}" | base64 | tr -d '\n')
+          AUTH=$(printf '%s' "x-access-token:${{ secrets.GH_PAT }}" | base64 | tr -d '\n')
           echo "::add-mask::$AUTH"
           echo "MATCH_GIT_BASIC_AUTHORIZATION=$AUTH" >> "$GITHUB_ENV"
 
