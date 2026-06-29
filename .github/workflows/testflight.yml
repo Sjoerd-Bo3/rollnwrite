@@ -61,6 +61,36 @@ jobs:
           echo "::add-mask::$AUTH"
           echo "MATCH_GIT_BASIC_AUTHORIZATION=$AUTH" >> "$GITHUB_ENV"
 
+      - name: Diagnose Match-Secrets access (safe — prints no secret values)
+        # match keeps failing with "Repository not found" (a 404 GitHub returns
+        # for a private repo the token can't see). This probe isolates the cause
+        # WITHOUT leaking the token: it prints only the token's length+kind, the
+        # account it authenticates as, and the HTTP status for the certs repo.
+        #   /user 401          → GH_PAT is invalid/expired/mis-pasted
+        #   repo 404 (200 user)→ token is valid but lacks access to Match-Secrets
+        #                        (fine-grained: repo not selected / Contents perm
+        #                        missing) OR the owner/name is wrong
+        #   repo 200           → access is fine; the failure is elsewhere
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          set +e
+          echo "GH_PAT length: ${#GH_PAT}"
+          case "$GH_PAT" in
+            ghp_*)         echo "GH_PAT kind: classic (ghp_)";;
+            github_pat_*)  echo "GH_PAT kind: fine-grained (github_pat_)";;
+            gho_*|ghs_*)   echo "GH_PAT kind: oauth/app token";;
+            "")            echo "GH_PAT kind: EMPTY — secret not reaching the runner";;
+            *)             echo "GH_PAT kind: unknown prefix";;
+          esac
+          echo "Authenticates as:"
+          curl -s -H "Authorization: Bearer $GH_PAT" https://api.github.com/user \
+            -w '  http=%{http_code}\n' | grep -E '"login"|http='
+          echo "Access to Sjoerd-Bo3/Match-Secrets:"
+          curl -s -o /dev/null -w '  http=%{http_code}\n' \
+            -H "Authorization: Bearer $GH_PAT" \
+            https://api.github.com/repos/Sjoerd-Bo3/Match-Secrets
+
       - name: Build & upload to TestFlight
         run: bundle exec fastlane ios beta
         env:
