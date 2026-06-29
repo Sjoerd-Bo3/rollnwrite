@@ -1,0 +1,51 @@
+name: 4. Renew Certs (manual)
+
+# One-off maintenance: revoke the EXPIRED distribution certificate stored in
+# Match-Secrets and mint a fresh one (fastlane lane `renew_certs`, which runs
+# match_nuke + match). The distribution cert is team-wide and shared with Trio,
+# so this also repairs Trio. MANUAL ONLY — never runs on push. After it
+# succeeds, run "2. TestFlight" to build & upload with the new cert.
+#
+# Requires the same repository secrets as the TestFlight workflow. The App
+# Store Connect API key (ASC_KEY_*) must have a role that can revoke/create
+# certificates — Admin or App Manager (a Developer-role key cannot).
+on:
+  workflow_dispatch:
+
+jobs:
+  renew:
+    name: Renew distribution certificate
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select latest stable Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Set up Ruby + fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+
+      - name: Configure match git auth (GH_PAT for the Match-Secrets repo)
+        # Same as the TestFlight workflow: basic-auth the certs-repo push as
+        # "<owner>:<PAT>". match_nuke needs write access to commit the deletion.
+        run: |
+          AUTH=$(printf '%s' "${{ github.repository_owner }}:${{ secrets.GH_PAT }}" | base64 | tr -d '\n')
+          echo "::add-mask::$AUTH"
+          echo "MATCH_GIT_BASIC_AUTHORIZATION=$AUTH" >> "$GITHUB_ENV"
+
+      - name: Renew certificate (nuke + recreate)
+        run: bundle exec fastlane ios renew_certs
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APP_BUNDLE_ID: ${{ secrets.APP_BUNDLE_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_URL: https://github.com/Sjoerd-Bo3/Match-Secrets.git
