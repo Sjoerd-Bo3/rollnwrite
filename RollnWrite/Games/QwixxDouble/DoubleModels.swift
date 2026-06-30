@@ -64,8 +64,13 @@ public struct DoubleColorRow: Codable, Equatable {
     public var maxMarkedIndex: Int { marks.max() ?? -1 }
 
     /// Total crosses written in the row: first crosses + second crosses, plus
-    /// the lock bonus cross.
-    public var crossCount: Int { marks.count + doubles.count + (locked ? 1 : 0) }
+    /// the lock bonus cross — but the lock bonus is earned only if YOU crossed
+    /// the right-most number. A conceded row (closed because another player
+    /// locked the colour) is `locked` yet scores no bonus, because its lock
+    /// number was never crossed.
+    public var crossCount: Int {
+        marks.count + doubles.count + (marks.contains(DoubleColorRow.lockIndex) ? 1 : 0)
+    }
 }
 
 /// A reversible user action, recorded so `undo()` is exact and strictly LIFO.
@@ -75,6 +80,10 @@ public enum DoubleAction: Codable {
     /// A *second* cross on the most-recent space `index`.
     case double(GameColor, index: Int)
     case penalty
+    /// Conceded a colour (closed the row for free after another player locked it).
+    case concede(GameColor)
+    /// Ended the game manually.
+    case finish
 }
 
 /// Full serialisable snapshot of a Qwixx Double game (persisted to `UserDefaults`).
@@ -84,10 +93,31 @@ public struct DoubleState: Codable {
     public var green = DoubleColorRow(color: .green)
     public var blue = DoubleColorRow(color: .blue)
     public var penalties = 0
+    /// Set when the player ends the game manually (e.g. another player crossed
+    /// the final lock).
+    public var manuallyFinished = false
     public var history: [DoubleAction] = []
 
     public init() {}
 
     /// Maximum penalties allowed (the 4th ends the game).
     public static let maxPenalties = 4
+
+    private enum CodingKeys: String, CodingKey {
+        case red, yellow, green, blue
+        case penalties, manuallyFinished, history
+    }
+
+    // Tolerant decode so saved games from earlier builds (which lack newer
+    // fields like `manuallyFinished`) still load instead of resetting.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        red = try c.decodeIfPresent(DoubleColorRow.self, forKey: .red) ?? DoubleColorRow(color: .red)
+        yellow = try c.decodeIfPresent(DoubleColorRow.self, forKey: .yellow) ?? DoubleColorRow(color: .yellow)
+        green = try c.decodeIfPresent(DoubleColorRow.self, forKey: .green) ?? DoubleColorRow(color: .green)
+        blue = try c.decodeIfPresent(DoubleColorRow.self, forKey: .blue) ?? DoubleColorRow(color: .blue)
+        penalties = try c.decodeIfPresent(Int.self, forKey: .penalties) ?? 0
+        manuallyFinished = try c.decodeIfPresent(Bool.self, forKey: .manuallyFinished) ?? false
+        history = try c.decodeIfPresent([DoubleAction].self, forKey: .history) ?? []
+    }
 }

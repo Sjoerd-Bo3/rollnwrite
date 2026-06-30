@@ -202,6 +202,10 @@ public struct MixxRow: Codable, Equatable {
 public enum MixxAction: Codable {
     case mark(row: Int, index: Int, didLock: Bool)
     case penalty
+    /// Conceded a row (closed it for free after another player locked the colour).
+    case concede(row: Int)
+    /// Ended the game manually.
+    case finish
 }
 
 /// Full serialisable snapshot of a Mixx game on one board.
@@ -209,10 +213,27 @@ public struct MixxState: Codable {
     /// The four rows, indexed 0…3 in printed top-to-bottom order.
     public var rows: [MixxRow] = [MixxRow(), MixxRow(), MixxRow(), MixxRow()]
     public var penalties = 0
+    /// Set when the player ends the game manually (e.g. another player crossed
+    /// the final lock).
+    public var manuallyFinished = false
     public var history: [MixxAction] = []
 
     public init() {}
 
     /// Maximum penalties allowed (the 4th ends the game).
     public static let maxPenalties = 4
+
+    private enum CodingKeys: String, CodingKey {
+        case rows, penalties, manuallyFinished, history
+    }
+
+    // Tolerant decode so saved games from earlier builds (which lack newer
+    // fields like `manuallyFinished`) still load instead of resetting.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        rows = try c.decodeIfPresent([MixxRow].self, forKey: .rows) ?? [MixxRow(), MixxRow(), MixxRow(), MixxRow()]
+        penalties = try c.decodeIfPresent(Int.self, forKey: .penalties) ?? 0
+        manuallyFinished = try c.decodeIfPresent(Bool.self, forKey: .manuallyFinished) ?? false
+        history = try c.decodeIfPresent([MixxAction].self, forKey: .history) ?? []
+    }
 }

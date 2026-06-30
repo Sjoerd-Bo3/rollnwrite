@@ -124,6 +124,41 @@ public final class MixxGame: ObservableObject, Scoreboard {
         save()
     }
 
+    // MARK: - Concede a colour / finish manually
+
+    /// You may close (concede) a row whose colour another player locked: the row
+    /// closes for you, but you score no lock bonus — you never crossed its final
+    /// cell. Allowed on any still-open row while the game is live.
+    public func canConcedeRow(_ rowIndex: Int) -> Bool {
+        !isGameOver && !state.rows[rowIndex].locked
+    }
+
+    public func concedeRow(_ rowIndex: Int) {
+        guard canConcedeRow(rowIndex) else { return }
+        var s = state
+        s.rows[rowIndex].locked = true
+        s.history.append(.concede(row: rowIndex))
+        state = s
+        save()
+    }
+
+    public func isLastConcede(_ rowIndex: Int) -> Bool {
+        if case let .concede(r) = state.history.last { return r == rowIndex }
+        return false
+    }
+
+    /// End the game by hand — e.g. another player crossed the final lock.
+    public var canFinishManually: Bool { !isGameOver }
+
+    public func finishGame() {
+        guard canFinishManually else { return }
+        var s = state
+        s.manuallyFinished = true
+        s.history.append(.finish)
+        state = s
+        save()
+    }
+
     // MARK: - Scoreboard
 
     /// Crosses counted toward a row's score: its own marks plus the lock.
@@ -141,9 +176,10 @@ public final class MixxGame: ObservableObject, Scoreboard {
         (0..<state.rows.count).reduce(0) { $0 + points($1) } - penaltyPoints
     }
 
-    /// Ends when two rows are locked, or the 4th penalty is taken.
+    /// Ends when two rows are locked, the 4th penalty is taken, or the player
+    /// ends it by hand.
     public var isGameOver: Bool {
-        lockedRowCount >= 2 || state.penalties >= MixxState.maxPenalties
+        state.manuallyFinished || lockedRowCount >= 2 || state.penalties >= MixxState.maxPenalties
     }
 
     public var canUndo: Bool { !state.history.isEmpty }
@@ -175,6 +211,10 @@ public final class MixxGame: ObservableObject, Scoreboard {
             s.rows[rowIndex] = r
         case .penalty:
             s.penalties = max(0, s.penalties - 1)
+        case let .concede(rowIndex):
+            s.rows[rowIndex].locked = false
+        case .finish:
+            s.manuallyFinished = false
         }
         state = s
         save()

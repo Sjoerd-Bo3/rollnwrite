@@ -106,6 +106,10 @@ public enum ConnectedLayout {
 public enum ConnectedAction: Codable {
     case color(GameColor, index: Int, didLock: Bool, auto: ChainEnd?)
     case penalty
+    /// Conceded a colour (closed the row for free after another player locked it).
+    case concede(GameColor)
+    /// Ended the game manually.
+    case finish
 }
 
 /// Full serialisable snapshot of a Connected game (persisted to `UserDefaults`).
@@ -115,10 +119,31 @@ public struct ConnectedState: Codable {
     public var green = ColorRow(color: .green)
     public var blue = ColorRow(color: .blue)
     public var penalties = 0
+    /// Set when the player ends the game manually (e.g. another player crossed
+    /// the final lock).
+    public var manuallyFinished = false
     public var history: [ConnectedAction] = []
 
     public init() {}
 
     /// Maximum penalties allowed (the 4th ends the game).
     public static let maxPenalties = 4
+
+    private enum CodingKeys: String, CodingKey {
+        case red, yellow, green, blue
+        case penalties, manuallyFinished, history
+    }
+
+    // Tolerant decode so saved games from earlier builds (which lack newer
+    // fields like `manuallyFinished`) still load instead of resetting.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        red = try c.decodeIfPresent(ColorRow.self, forKey: .red) ?? ColorRow(color: .red)
+        yellow = try c.decodeIfPresent(ColorRow.self, forKey: .yellow) ?? ColorRow(color: .yellow)
+        green = try c.decodeIfPresent(ColorRow.self, forKey: .green) ?? ColorRow(color: .green)
+        blue = try c.decodeIfPresent(ColorRow.self, forKey: .blue) ?? ColorRow(color: .blue)
+        penalties = try c.decodeIfPresent(Int.self, forKey: .penalties) ?? 0
+        manuallyFinished = try c.decodeIfPresent(Bool.self, forKey: .manuallyFinished) ?? false
+        history = try c.decodeIfPresent([ConnectedAction].self, forKey: .history) ?? []
+    }
 }

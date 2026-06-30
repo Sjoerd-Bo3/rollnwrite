@@ -27,7 +27,12 @@ import SwiftUI
 /// printed card's toggle and corner buttons.
 struct MixxBoardView: View {
     @ObservedObject var game: MixxGame
+    let scoreTitle: String
     @State private var confirmReset = false
+    @State private var showResults = false
+    @State private var confirmConcede: Int?
+    @State private var confirmFinish = false
+    @State private var newBest = false
 
     private let tileGap: CGFloat = 4
     private let rowGap: CGFloat = 4
@@ -38,8 +43,9 @@ struct MixxBoardView: View {
     // 4 colour bands + bottom bar; the picker sits in a fixed-height strip above.
     private let pickerHeight: CGFloat = 36
 
-    init(game: MixxGame) {
+    init(game: MixxGame, scoreTitle: String) {
         _game = ObservedObject(wrappedValue: game)
+        self.scoreTitle = scoreTitle
     }
 
     var body: some View {
@@ -66,6 +72,54 @@ struct MixxBoardView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("This clears the \(game.board.displayName) scorecard.")
+        }
+        .confirmationDialog("Finish the game?", isPresented: $confirmFinish, titleVisibility: .visible) {
+            Button("Finish", role: .destructive) { game.finishGame() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("End the game now and show the final score.")
+        }
+        .confirmationDialog(
+            "Close this colour?",
+            isPresented: Binding(get: { confirmConcede != nil },
+                                 set: { if !$0 { confirmConcede = nil } }),
+            titleVisibility: .visible,
+            presenting: confirmConcede
+        ) { rowIndex in
+            let name = game.rowLayout(rowIndex).lockColor.displayName
+            Button("Close \(name) — no points", role: .destructive) {
+                game.concedeRow(rowIndex); confirmConcede = nil
+            }
+            Button("Cancel", role: .cancel) { confirmConcede = nil }
+        } message: { rowIndex in
+            let name = game.rowLayout(rowIndex).lockColor.displayName
+            Text("Use this when another player locked \(name). The row closes but you score no lock bonus.")
+        }
+        .overlay {
+            if showResults {
+                GameOverCard(
+                    lines: (0..<4).map { rowIndex in
+                        let lock = game.rowLayout(rowIndex).lockColor
+                        return GameOverCard.Line(label: lock.displayName, value: game.points(rowIndex), tint: lock.tint)
+                    } + (game.penaltyPoints > 0
+                         ? [GameOverCard.Line(label: "Penalties", value: -game.penaltyPoints, tint: .red)]
+                         : []),
+                    total: game.totalScore,
+                    best: HighScores.best(for: scoreTitle),
+                    isNewBest: newBest,
+                    onNewGame: { game.reset(); showResults = false },
+                    onDismiss: { withAnimation { showResults = false } }
+                )
+                .transition(.opacity.combined(with: .scale(scale: 0.92)))
+            }
+        }
+        .onChange(of: game.isGameOver) { _, isOver in
+            if isOver {
+                newBest = HighScores.record(game.totalScore, for: scoreTitle)
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) { showResults = true }
+            } else {
+                showResults = false
+            }
         }
     }
 
@@ -115,8 +169,12 @@ struct MixxBoardView: View {
                 }
                 .accessibilityLabel("\(lock.displayName) row \(cell.color.displayName) \(cell.number)")
             }
-            LockTile(tint: lock.tint, locked: row.locked, w: w, h: th)
-                .accessibilityLabel("\(lock.displayName) lock")
+            LockTile(tint: lock.tint, locked: row.locked,
+                     undoable: row.locked && game.isLastConcede(rowIndex),
+                     w: w, h: th) {
+                tapLock(rowIndex)
+            }
+            .accessibilityLabel("\(lock.displayName) lock")
             ScoreTile(game.points(rowIndex), w: w, h: th)
         }
         .colourBand(tint: lock.tint, hPad: bandPad, vPad: th * 0.09, corner: min(w, th) * 0.3)
@@ -131,6 +189,9 @@ struct MixxBoardView: View {
                 .disabled(!game.canUndo)
                 .opacity(game.canUndo ? 1 : 0.4)
             BoardControlButton("trash", size: b) { confirmReset = true }
+            BoardControlButton("flag.checkered", size: b) { confirmFinish = true }
+                .disabled(game.isGameOver)
+                .opacity(game.isGameOver ? 0.4 : 1)
             Spacer(minLength: w * 0.1)
             ForEach(0..<MixxState.maxPenalties, id: \.self) { i in
                 let isNext = i == game.penalties && game.canAddPenalty()
@@ -157,6 +218,18 @@ struct MixxBoardView: View {
         .frame(height: h)
         .padding(.horizontal, bandPad)
     }
+
+    /// Tapping the padlock concedes the row — closes it for no points after
+    /// another player locked the colour — behind a confirmation, or undoes a
+    /// just-made concession. A self-locked row's padlock is inert (undo its
+    /// number instead).
+    private func tapLock(_ rowIndex: Int) {
+        if game.isLastConcede(rowIndex) {
+            game.undo()
+        } else if game.canConcedeRow(rowIndex) {
+            confirmConcede = rowIndex
+        }
+    }
 }
 
 // MARK: - Variant owner
@@ -177,7 +250,7 @@ public struct QwixxMixxScorecardView: View {
         ScorecardScaffold(
             title: "Qwixx Mixx",
             rules: rules,
-            board: { MixxBoardView(game: game) }
+            board: { MixxBoardView(game: game, scoreTitle: "Qwixx Mixx") }
         )
     }
 }
