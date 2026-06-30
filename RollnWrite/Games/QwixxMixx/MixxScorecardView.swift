@@ -150,12 +150,19 @@ struct MixxBoardView: View {
 
     /// One full-width Mixx row: a direction chevron, the eleven per-cell-tinted
     /// number tiles, the lock (row's lock colour) and the running score. The band
-    /// background uses the row's lock colour; each `NumberTile` keeps its own
-    /// cell colour so the scrambled segment colours are preserved exactly.
+    /// background is **segmented** to match the official sheet — each number cell's
+    /// colour shows on the bar itself, so Variant A's coloured segments read on the
+    /// row, not only on the tiles. The chevron, lock and score columns take the
+    /// row's lock colour. (Variant B's cells are all the row colour, so the bar is
+    /// uniform there.)
     private func band(_ rowIndex: Int, w: CGFloat, tile th: CGFloat) -> some View {
         let layout = game.rowLayout(rowIndex)
         let row = game.rowState(rowIndex)
         let lock = layout.lockColor
+        // One colour per band column, in order: chevron · 11 numbers · lock · score.
+        let segments: [Color] = [lock.tint]
+            + layout.cells.map { $0.color.tint }
+            + [lock.tint, lock.tint]
         return HStack(spacing: tileGap) {
             BandChevron(w: w, h: th)
             ForEach(0..<11, id: \.self) { i in
@@ -177,7 +184,8 @@ struct MixxBoardView: View {
             .accessibilityLabel("\(lock.displayName) lock")
             ScoreTile(game.points(rowIndex), w: w, h: th)
         }
-        .colourBand(tint: lock.tint, hPad: bandPad, vPad: th * 0.09, corner: min(w, th) * 0.3)
+        .segmentedColourBand(columns: segments, columnWidth: w, gap: tileGap,
+                             hPad: bandPad, vPad: th * 0.09, corner: min(w, th) * 0.3)
     }
 
     /// Controls (undo, new game) on the left, penalties + running total on the

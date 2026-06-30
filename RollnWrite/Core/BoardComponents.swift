@@ -305,4 +305,40 @@ public extension View {
                     .strokeBorder(.white.opacity(0.15), lineWidth: 1)
             )
     }
+
+    /// A horizontally **segmented** band background: one colour per column slot,
+    /// in band order (chevron, the number cells, lock, score). This lets a row
+    /// whose cells span several colours — e.g. Qwixx Mixx Variant A — show those
+    /// colour segments on the *bar itself*, not just on the number tiles.
+    ///
+    /// `columnWidth`/`gap` must match the band's foreground `HStack` (same `w` per
+    /// column, same spacing). Each interior segment bleeds into its trailing gap
+    /// so runs of the same colour read as one continuous segment; the first and
+    /// last segments absorb the horizontal padding so the strip reaches the band
+    /// edges. With a uniform `columns` array this renders identically to
+    /// `colourBand`. The content is leading-pinned so the segments line up exactly
+    /// with the tiles above them.
+    func segmentedColourBand(columns: [Color], columnWidth w: CGFloat, gap: CGFloat,
+                             hPad: CGFloat, vPad: CGFloat, corner: CGFloat) -> some View {
+        self
+            .padding(.horizontal, hPad)
+            .padding(.vertical, vPad)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(alignment: .leading) {
+                HStack(spacing: 0) {
+                    ForEach(Array(columns.enumerated()), id: \.offset) { idx, color in
+                        let width: CGFloat = idx == 0
+                            ? hPad + w + gap                       // leading pad + slot + gap
+                            : (idx == columns.count - 1 ? w + hPad // slot + trailing pad
+                                                        : w + gap) // slot + gap
+                        Rectangle().fill(color).frame(width: width)
+                    }
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .strokeBorder(.white.opacity(0.15), lineWidth: 1)
+            )
+    }
 }
