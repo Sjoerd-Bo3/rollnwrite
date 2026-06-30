@@ -41,6 +41,7 @@ enum AppearanceMode: String, CaseIterable, Identifiable {
 struct SettingsView: View {
     @AppStorage(AppearanceMode.storageKey) private var appearanceRaw = AppearanceMode.system.rawValue
     @Environment(\.dismiss) private var dismiss
+    @State private var scores: [(name: String, best: Int)] = []
 
     private var appearance: Binding<AppearanceMode> {
         Binding(
@@ -67,6 +68,18 @@ struct SettingsView: View {
                     .pickerStyle(.segmented)
                 }
 
+                if !scores.isEmpty {
+                    Section("High scores") {
+                        ForEach(scores, id: \.name) { entry in
+                            LabeledContent(entry.name, value: "\(entry.best)")
+                        }
+                        Button("Reset high scores", role: .destructive) {
+                            HighScores.reset()
+                            scores = []
+                        }
+                    }
+                }
+
                 Section {
                     LabeledContent("App", value: "Roll'n Write")
                     LabeledContent("Build", value: versionString)
@@ -76,6 +89,7 @@ struct SettingsView: View {
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear { scores = HighScores.all() }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }

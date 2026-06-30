@@ -27,14 +27,17 @@ public struct GameOverCard: View {
     let subtitle: String?
     let lines: [Line]
     let total: Int
+    let best: Int?
+    let isNewBest: Bool
     let onNewGame: () -> Void
     let onDismiss: () -> Void
 
     public init(title: String = "Game over", subtitle: String? = nil,
-                lines: [Line], total: Int,
+                lines: [Line], total: Int, best: Int? = nil, isNewBest: Bool = false,
                 onNewGame: @escaping () -> Void, onDismiss: @escaping () -> Void) {
         self.title = title; self.subtitle = subtitle
         self.lines = lines; self.total = total
+        self.best = best; self.isNewBest = isNewBest
         self.onNewGame = onNewGame; self.onDismiss = onDismiss
     }
 
@@ -53,6 +56,16 @@ public struct GameOverCard: View {
                     if let subtitle {
                         Text(subtitle)
                             .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                    if isNewBest {
+                        Label("New best!", systemImage: "trophy.fill")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(.orange)
+                            .padding(.top, 2)
+                    } else if let best {
+                        Text("Best: \(best)")
+                            .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(.secondary)
                     }
                 }
