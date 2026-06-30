@@ -96,11 +96,15 @@ public struct ScoreTile: View {
 public struct LockTile: View {
     let tint: Color
     let locked: Bool
+    let undoable: Bool
     let w: CGFloat
     let h: CGFloat
+    let onTap: (() -> Void)?
 
-    public init(tint: Color, locked: Bool, w: CGFloat, h: CGFloat) {
-        self.tint = tint; self.locked = locked; self.w = w; self.h = h
+    public init(tint: Color, locked: Bool, undoable: Bool = false,
+                w: CGFloat, h: CGFloat, onTap: (() -> Void)? = nil) {
+        self.tint = tint; self.locked = locked; self.undoable = undoable
+        self.w = w; self.h = h; self.onTap = onTap
     }
 
     public var body: some View {
@@ -108,6 +112,10 @@ public struct LockTile: View {
         return ZStack {
             RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
                 .fill(Color.white.opacity(locked ? 0.95 : 0.42))
+                .overlay(
+                    RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
+                        .strokeBorder(tint, lineWidth: undoable ? 2.5 : 0)
+                )
             Image(systemName: locked ? "lock.fill" : "lock.open")
                 .font(.system(size: s * 0.5, weight: .bold))
                 .foregroundStyle(tint)
@@ -115,7 +123,10 @@ public struct LockTile: View {
         }
         .frame(width: w, height: h)
         .animation(.snappy, value: locked)
+        .contentShape(Rectangle())
+        .onTapGesture { onTap?() }
         .accessibilityValue(locked ? "locked" : "open")
+        .accessibilityHint(onTap != nil ? "Tap to close this row without scoring" : "")
     }
 }
 
