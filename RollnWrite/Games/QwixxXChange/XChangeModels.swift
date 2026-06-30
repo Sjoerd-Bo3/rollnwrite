@@ -31,12 +31,13 @@ import Foundation
 /// The "X-Change" row: nine diamond fields, each a (top, bottom) number pair.
 /// Crossed strictly left → right (skipping allowed, skipped fields lost). The row
 /// scores no points — it is a swap tool — so its state is just the set of crossed
-/// field indices plus the printed pairs (the source of truth, transcribed from the
-/// official sheet B, art. 4290).
+/// field indices plus the printed pairs (the source of truth, read from the
+/// official NSV Qwixx X-Change scoresheet PDF).
 public struct XChangeRow: Codable, Equatable {
-    /// Printed (top, bottom) number pairs, left → right (official sheet B).
+    /// Printed (top, bottom) number pairs, left → right, from the official NSV
+    /// Qwixx X-Change scoresheet (QwixxXChange_EN.pdf).
     public static let pairs: [[Int]] = [
-        [9, 3], [8, 6], [7, 4], [10, 5], [11, 9], [8, 3], [7, 5], [11, 6], [10, 4],
+        [8, 5], [9, 7], [11, 3], [7, 4], [10, 3], [8, 6], [10, 5], [11, 9], [6, 4],
     ]
 
     /// Indices (0…8) of crossed diamond fields.
@@ -65,6 +66,10 @@ public enum XChangeAction: Codable {
     case color(GameColor, index: Int, didLock: Bool)
     case xchange(index: Int)
     case penalty
+    /// Conceded a colour (closed the row for free after another player locked it).
+    case concede(GameColor)
+    /// Ended the game manually.
+    case finish
 }
 
 /// Full serialisable snapshot of an X-Change game (persisted to `UserDefaults`).
@@ -75,10 +80,32 @@ public struct XChangeState: Codable {
     public var blue = ColorRow(color: .blue)
     public var xchange = XChangeRow()
     public var penalties = 0
+    /// Set when the player ends the game manually (e.g. another player crossed
+    /// the final lock).
+    public var manuallyFinished = false
     public var history: [XChangeAction] = []
 
     public init() {}
 
     /// Maximum penalties allowed (the 4th ends the game).
     public static let maxPenalties = 4
+
+    private enum CodingKeys: String, CodingKey {
+        case red, yellow, green, blue, xchange
+        case penalties, manuallyFinished, history
+    }
+
+    // Tolerant decode so saved games from earlier builds (which lack newer
+    // fields like `manuallyFinished`) still load instead of resetting.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        red = try c.decodeIfPresent(ColorRow.self, forKey: .red) ?? ColorRow(color: .red)
+        yellow = try c.decodeIfPresent(ColorRow.self, forKey: .yellow) ?? ColorRow(color: .yellow)
+        green = try c.decodeIfPresent(ColorRow.self, forKey: .green) ?? ColorRow(color: .green)
+        blue = try c.decodeIfPresent(ColorRow.self, forKey: .blue) ?? ColorRow(color: .blue)
+        xchange = try c.decodeIfPresent(XChangeRow.self, forKey: .xchange) ?? XChangeRow()
+        penalties = try c.decodeIfPresent(Int.self, forKey: .penalties) ?? 0
+        manuallyFinished = try c.decodeIfPresent(Bool.self, forKey: .manuallyFinished) ?? false
+        history = try c.decodeIfPresent([XChangeAction].self, forKey: .history) ?? []
+    }
 }

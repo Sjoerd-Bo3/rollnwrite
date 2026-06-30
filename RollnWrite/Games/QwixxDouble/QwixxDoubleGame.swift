@@ -17,7 +17,7 @@ public struct QwixxDoubleGame: GameDefinition {
     public init() {}
 
     public let id = "qwixx-double"
-    public let title = "Qwixx Unlabeled-1"
+    public let title = "Qwixx Double"
     public let subtitle = "Classic rows · double the most-recent cross"
     public let iconSystemName = "xmark.square.fill"
     public let accent = Color(red: 0.86, green: 0.18, blue: 0.18)

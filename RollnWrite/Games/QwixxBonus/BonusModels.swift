@@ -94,6 +94,10 @@ public struct BonusBar: Codable, Equatable {
 public enum BonusAction: Codable {
     case color(GameColor, index: Int, didLock: Bool, advancedBar: Bool)
     case penalty
+    /// Conceded a colour (closed the row for free after another player locked it).
+    case concede(GameColor)
+    /// Ended the game manually.
+    case finish
 }
 
 /// Full serialisable snapshot of a Qwixx Bonus (version A) game.
@@ -104,10 +108,34 @@ public struct BonusState: Codable {
     public var blue = ColorRow(color: .blue)
     public var bar = BonusBar()
     public var penalties = 0
+    /// Set when the player ends the game manually (e.g. another player crossed
+    /// the final lock).
+    public var manuallyFinished = false
     public var history: [BonusAction] = []
 
     public init() {}
 
     /// Maximum penalties allowed (the 4th ends the game).
     public static let maxPenalties = 4
+
+    private enum CodingKeys: String, CodingKey {
+        case red, yellow, green, blue, bar
+        case penalties, manuallyFinished, history
+    }
+
+    // Tolerant decode so saved games from earlier builds (which lack newer
+    // fields like `manuallyFinished`) still load instead of resetting. Swift's
+    // synthesized decode throws on any missing key, so every stored field is
+    // decoded with `decodeIfPresent(...) ?? default`.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        red = try c.decodeIfPresent(ColorRow.self, forKey: .red) ?? ColorRow(color: .red)
+        yellow = try c.decodeIfPresent(ColorRow.self, forKey: .yellow) ?? ColorRow(color: .yellow)
+        green = try c.decodeIfPresent(ColorRow.self, forKey: .green) ?? ColorRow(color: .green)
+        blue = try c.decodeIfPresent(ColorRow.self, forKey: .blue) ?? ColorRow(color: .blue)
+        bar = try c.decodeIfPresent(BonusBar.self, forKey: .bar) ?? BonusBar()
+        penalties = try c.decodeIfPresent(Int.self, forKey: .penalties) ?? 0
+        manuallyFinished = try c.decodeIfPresent(Bool.self, forKey: .manuallyFinished) ?? false
+        history = try c.decodeIfPresent([BonusAction].self, forKey: .history) ?? []
+    }
 }

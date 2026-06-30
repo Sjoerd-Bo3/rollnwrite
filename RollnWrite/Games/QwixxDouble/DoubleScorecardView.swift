@@ -22,7 +22,12 @@ import SwiftUI
 /// corner buttons.
 struct DoubleBoardView: View {
     @ObservedObject var game: DoubleGame
+    let scoreTitle: String
     @State private var confirmReset = false
+    @State private var showResults = false
+    @State private var confirmConcede: GameColor?
+    @State private var confirmFinish = false
+    @State private var newBest = false
 
     private let tileGap: CGFloat = 4
     private let rowGap: CGFloat = 4
@@ -31,8 +36,9 @@ struct DoubleBoardView: View {
     // chevron + 11 numbers + lock + per-row score
     private let columns: CGFloat = 14
 
-    init(game: DoubleGame) {
+    init(game: DoubleGame, scoreTitle: String) {
         _game = ObservedObject(wrappedValue: game)
+        self.scoreTitle = scoreTitle
     }
 
     var body: some View {
@@ -58,6 +64,51 @@ struct DoubleBoardView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("This clears the current scorecard.")
+        }
+        .confirmationDialog("Finish the game?", isPresented: $confirmFinish, titleVisibility: .visible) {
+            Button("Finish", role: .destructive) { game.finishGame() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("End the game now and show the final score.")
+        }
+        .confirmationDialog(
+            "Close this colour?",
+            isPresented: Binding(get: { confirmConcede != nil },
+                                 set: { if !$0 { confirmConcede = nil } }),
+            titleVisibility: .visible,
+            presenting: confirmConcede
+        ) { color in
+            Button("Close \(color.displayName) — no points", role: .destructive) {
+                game.concedeRow(color); confirmConcede = nil
+            }
+            Button("Cancel", role: .cancel) { confirmConcede = nil }
+        } message: { color in
+            Text("Use this when another player locked \(color.displayName). The row closes but you score no lock bonus.")
+        }
+        .overlay {
+            if showResults {
+                GameOverCard(
+                    lines: GameColor.allCases.map {
+                        GameOverCard.Line(label: $0.displayName, value: game.points(for: $0), tint: $0.tint)
+                    } + (game.penaltyPoints > 0
+                         ? [GameOverCard.Line(label: "Penalties", value: -game.penaltyPoints, tint: .red)]
+                         : []),
+                    total: game.totalScore,
+                    best: HighScores.best(for: scoreTitle),
+                    isNewBest: newBest,
+                    onNewGame: { game.reset(); showResults = false },
+                    onDismiss: { withAnimation { showResults = false } }
+                )
+                .transition(.opacity.combined(with: .scale(scale: 0.92)))
+            }
+        }
+        .onChange(of: game.isGameOver) { _, isOver in
+            if isOver {
+                newBest = HighScores.record(game.totalScore, for: scoreTitle)
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) { showResults = true }
+            } else {
+                showResults = false
+            }
         }
     }
 
@@ -93,8 +144,12 @@ struct DoubleBoardView: View {
                     }
                     .accessibilityLabel("\(color.displayName) \(color.numbers[i])")
                 }
-                LockTile(tint: color.tint, locked: row.locked, w: w, h: th)
-                    .accessibilityLabel("\(color.displayName) lock")
+                LockTile(tint: color.tint, locked: row.locked,
+                         undoable: row.locked && game.isLastConcede(color),
+                         w: w, h: th) {
+                    tapLock(color)
+                }
+                .accessibilityLabel("\(color.displayName) lock")
                 ScoreTile(game.points(for: color), w: w, h: th)
             }
             // Second-cross strip: a thinner cell under each number. Only the
@@ -162,6 +217,9 @@ struct DoubleBoardView: View {
                 .disabled(!game.canUndo)
                 .opacity(game.canUndo ? 1 : 0.4)
             BoardControlButton("trash", size: b) { confirmReset = true }
+            BoardControlButton("flag.checkered", size: b) { confirmFinish = true }
+                .disabled(game.isGameOver)
+                .opacity(game.isGameOver ? 0.4 : 1)
             Spacer(minLength: w * 0.1)
             ForEach(0..<DoubleState.maxPenalties, id: \.self) { i in
                 let isNext = i == game.penalties && game.canAddPenalty()
@@ -188,6 +246,18 @@ struct DoubleBoardView: View {
         .frame(height: h)
         .padding(.horizontal, bandPad)
     }
+
+    /// Tapping the padlock concedes the colour — closes the row for no points
+    /// after another player locked it — behind a confirmation, or undoes a
+    /// just-made concession. A self-locked row's padlock is inert (undo its
+    /// number instead).
+    private func tapLock(_ color: GameColor) {
+        if game.isLastConcede(color) {
+            game.undo()
+        } else if game.canConcedeRow(color) {
+            confirmConcede = color
+        }
+    }
 }
 
 // MARK: - Wrapper + variant owner
@@ -207,7 +277,7 @@ public struct DoubleScorecardView: View {
         ScorecardScaffold(
             title: "Qwixx Double",
             rules: rules,
-            board: { DoubleBoardView(game: game) }
+            board: { DoubleBoardView(game: game, scoreTitle: "Qwixx Double") }
         )
     }
 }
