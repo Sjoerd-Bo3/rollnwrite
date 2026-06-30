@@ -54,6 +54,8 @@ public struct ScorecardScaffold<Board: View>: View {
         // Single player pins iPhone to landscape; two-player frees rotation so
         // the mirrored boards can stack in portrait.
         .landscapeLockediPhone(when: !twoPlayer)
+        // Don't let the screen auto-lock mid-game.
+        .keepsScreenAwake()
     }
 
     @ViewBuilder private var content: some View {
