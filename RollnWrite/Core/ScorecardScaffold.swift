@@ -15,11 +15,12 @@
 
 import SwiftUI
 
-public struct ScorecardScaffold<Board: View>: View {
+public struct ScorecardScaffold<Board: View, Accessory: View>: View {
     private let title: String
     private let rules: RulesDocument
     private let board: Board
     private let opponentBoard: Board?
+    private let accessory: Accessory
 
     @Environment(\.dismiss) private var dismiss
     @State private var showRules = false
@@ -29,16 +30,21 @@ public struct ScorecardScaffold<Board: View>: View {
     ///   - board: the player's pure board view (no nav chrome).
     ///   - opponent: an independent second board for the across-the-table
     ///     mirror; pass `nil` to disable two-player.
+    ///   - headerAccessory: an optional control shown centred in the header
+    ///     (e.g. Qwixx Mixx's A / B board switch), so per-board choices live in
+    ///     the chrome and the board keeps the full height.
     public init(
         title: String,
         rules: RulesDocument,
         @ViewBuilder board: () -> Board,
-        opponent: (() -> Board)? = nil
+        opponent: (() -> Board)? = nil,
+        @ViewBuilder headerAccessory: () -> Accessory
     ) {
         self.title = title
         self.rules = rules
         self.board = board()
         self.opponentBoard = opponent?()
+        self.accessory = headerAccessory()
     }
 
     private var canMirror: Bool { opponentBoard != nil }
@@ -90,7 +96,9 @@ public struct ScorecardScaffold<Board: View>: View {
         HStack(spacing: 16) {
             Button { dismiss() } label: { Image(systemName: "chevron.left") }
             Text(title).font(.headline).lineLimit(1).minimumScaleFactor(0.7)
-            Spacer()
+            Spacer(minLength: 12)
+            accessory
+            Spacer(minLength: 12)
             if canMirror {
                 Button { twoPlayer.toggle() } label: {
                     Image(systemName: twoPlayer ? "person.fill" : "person.2.fill")
@@ -104,6 +112,20 @@ public struct ScorecardScaffold<Board: View>: View {
         .padding(.horizontal, 16)
         .padding(.top, 4)
         .padding(.bottom, 6)
+    }
+}
+
+public extension ScorecardScaffold where Accessory == EmptyView {
+    /// Convenience initialiser for the common case with no header accessory —
+    /// keeps every existing game's call site unchanged.
+    init(
+        title: String,
+        rules: RulesDocument,
+        @ViewBuilder board: () -> Board,
+        opponent: (() -> Board)? = nil
+    ) {
+        self.init(title: title, rules: rules, board: board,
+                  opponent: opponent, headerAccessory: { EmptyView() })
     }
 }
 

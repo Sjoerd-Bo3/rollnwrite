@@ -312,8 +312,10 @@ public extension View {
     /// colour segments on the *bar itself*, not just on the number tiles.
     ///
     /// `columnWidth`/`gap` must match the band's foreground `HStack` (same `w` per
-    /// column, same spacing). Each interior segment bleeds into its trailing gap
-    /// so runs of the same colour read as one continuous segment; the first and
+    /// column, same spacing). Each interior segment spans its slot plus **half the
+    /// gap on each side**, so a colour boundary falls in the *middle* of the gap
+    /// between two differently-coloured tiles (not hard against one tile), and
+    /// runs of the same colour still read as one continuous segment. The first and
     /// last segments absorb the horizontal padding so the strip reaches the band
     /// edges. With a uniform `columns` array this renders identically to
     /// `colourBand`. The content is leading-pinned so the segments line up exactly
@@ -328,9 +330,9 @@ public extension View {
                 HStack(spacing: 0) {
                     ForEach(Array(columns.enumerated()), id: \.offset) { idx, color in
                         let width: CGFloat = idx == 0
-                            ? hPad + w + gap                       // leading pad + slot + gap
-                            : (idx == columns.count - 1 ? w + hPad // slot + trailing pad
-                                                        : w + gap) // slot + gap
+                            ? hPad + w + gap / 2                       // leading pad + slot + half gap
+                            : (idx == columns.count - 1 ? w + hPad + gap / 2 // half gap + slot + trailing pad
+                                                        : w + gap)           // half gap on each side
                         Rectangle().fill(color).frame(width: width)
                     }
                 }

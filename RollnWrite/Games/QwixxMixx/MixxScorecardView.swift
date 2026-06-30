@@ -40,8 +40,6 @@ struct MixxBoardView: View {
     private let bandPad: CGFloat = 4    // coloured border inside each band
     // chevron + 11 numbers + lock + per-row score
     private let columns: CGFloat = 14
-    // 4 colour bands + bottom bar; the picker sits in a fixed-height strip above.
-    private let pickerHeight: CGFloat = 36
 
     init(game: MixxGame, scoreTitle: String) {
         _game = ObservedObject(wrappedValue: game)
@@ -49,23 +47,19 @@ struct MixxBoardView: View {
     }
 
     var body: some View {
-        VStack(spacing: rowGap) {
-            boardPicker
-            GeometryReader { geo in
-                let t = BoardMetrics.tile(
-                    in: geo.size,
-                    columns: columns,
-                    rowUnits: 4 + 0.95,   // 4 colour bands + bottom bar (≈0.95)
-                    rowCount: 5,
-                    gap: rowGap,
-                    pad: outerPad
-                )
-                boardStack(w: t.w, h: t.h)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(outerPad)
-            }
+        GeometryReader { geo in
+            let t = BoardMetrics.tile(
+                in: geo.size,
+                columns: columns,
+                rowUnits: 4 + 0.95,   // 4 colour bands + bottom bar (≈0.95)
+                rowCount: 5,
+                gap: rowGap,
+                pad: outerPad
+            )
+            boardStack(w: t.w, h: t.h)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(outerPad)
         }
-        .padding(.top, 4)
         .ignoresSafeArea(.container, edges: .bottom)
         .confirmationDialog("Start a new game?", isPresented: $confirmReset, titleVisibility: .visible) {
             Button("New game", role: .destructive) { game.reset() }
@@ -121,19 +115,6 @@ struct MixxBoardView: View {
                 showResults = false
             }
         }
-    }
-
-    // MARK: - Board picker (switches the two independent A / B boards)
-
-    private var boardPicker: some View {
-        Picker("Board", selection: $game.board) {
-            ForEach(MixxBoard.allCases) { b in
-                Text(b.displayName).tag(b)
-            }
-        }
-        .pickerStyle(.segmented)
-        .frame(height: pickerHeight)
-        .padding(.horizontal, 16)
     }
 
     // MARK: - Board
@@ -258,7 +239,18 @@ public struct QwixxMixxScorecardView: View {
         ScorecardScaffold(
             title: "Qwixx Mixx",
             rules: rules,
-            board: { MixxBoardView(game: game, scoreTitle: "Qwixx Mixx") }
+            board: { MixxBoardView(game: game, scoreTitle: "Qwixx Mixx") },
+            headerAccessory: {
+                // The A / B board switch lives centred in the header so the board
+                // itself keeps the full height (no strip above it).
+                Picker("Board", selection: $game.board) {
+                    ForEach(MixxBoard.allCases) { b in
+                        Text(b.displayName).tag(b)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(maxWidth: 360)
+            }
         )
     }
 }
