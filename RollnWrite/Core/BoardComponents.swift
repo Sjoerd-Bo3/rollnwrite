@@ -36,8 +36,11 @@ public struct NumberTile: View {
         let s = min(w, h)
         return Button(action: onTap) {
             ZStack {
+                // Keep the tile a clean near-white even when crossed, so the ✗
+                // reads clearly on every colour band (the old 0.7 let the band
+                // bleed through and the same-colour ✗ vanished, worst on blue).
                 RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
-                    .fill(Color.white.opacity(marked ? 0.7 : 0.95))
+                    .fill(Color.white.opacity(0.95))
                 Text(text)
                     .font(.system(size: s * 0.5, weight: .heavy, design: .rounded))
                     .foregroundStyle(tint)
@@ -45,8 +48,9 @@ public struct NumberTile: View {
                     .lineLimit(1)
                 if marked {
                     Image(systemName: "xmark")
-                        .font(.system(size: s * 0.72, weight: .black))
+                        .font(.system(size: s * 0.74, weight: .black))
                         .foregroundStyle(tint)
+                        .shadow(color: .black.opacity(0.25), radius: 0.5)
                         .transition(.scale(scale: 0.4).combined(with: .opacity))
                 }
             }
@@ -96,11 +100,15 @@ public struct ScoreTile: View {
 public struct LockTile: View {
     let tint: Color
     let locked: Bool
+    let undoable: Bool
     let w: CGFloat
     let h: CGFloat
+    let onTap: (() -> Void)?
 
-    public init(tint: Color, locked: Bool, w: CGFloat, h: CGFloat) {
-        self.tint = tint; self.locked = locked; self.w = w; self.h = h
+    public init(tint: Color, locked: Bool, undoable: Bool = false,
+                w: CGFloat, h: CGFloat, onTap: (() -> Void)? = nil) {
+        self.tint = tint; self.locked = locked; self.undoable = undoable
+        self.w = w; self.h = h; self.onTap = onTap
     }
 
     public var body: some View {
@@ -108,6 +116,10 @@ public struct LockTile: View {
         return ZStack {
             RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
                 .fill(Color.white.opacity(locked ? 0.95 : 0.42))
+                .overlay(
+                    RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
+                        .strokeBorder(tint, lineWidth: undoable ? 2.5 : 0)
+                )
             Image(systemName: locked ? "lock.fill" : "lock.open")
                 .font(.system(size: s * 0.5, weight: .bold))
                 .foregroundStyle(tint)
@@ -115,7 +127,10 @@ public struct LockTile: View {
         }
         .frame(width: w, height: h)
         .animation(.snappy, value: locked)
+        .contentShape(Rectangle())
+        .onTapGesture { onTap?() }
         .accessibilityValue(locked ? "locked" : "open")
+        .accessibilityHint(onTap != nil ? "Tap to close this row without scoring" : "")
     }
 }
 

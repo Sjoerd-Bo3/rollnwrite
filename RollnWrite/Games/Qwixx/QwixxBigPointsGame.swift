@@ -40,7 +40,7 @@ public struct QwixxBigPointsGame: GameDefinition {
                 ]),
                 RulesSection(heading: "Bonus rows", body: [
                     "A bonus space may only be crossed once an adjacent same-number colour space has already been crossed.",
-                    "The left-to-right rule applies to bonus rows too — skipped bonus spaces are lost.",
+                    "Bonus spaces have no order of their own — cross any whose adjacent colour number is already crossed, in any order. (The colour rows still enforce their own left-to-right.)",
                     "Each crossed bonus space counts for BOTH adjacent colour rows when scoring.",
                 ]),
                 RulesSection(heading: "Locking a row", body: [
@@ -56,7 +56,8 @@ public struct QwixxBigPointsGame: GameDefinition {
                     "Total = red + yellow + green + blue − (5 × penalties).",
                 ]),
             ],
-            source: "Qwixx Big Points by Nürnberger-Spielkarten-Verlag (NSV); official scorecard & variant rules."
+            source: "Qwixx Big Points by Nürnberger-Spielkarten-Verlag (NSV); official scorecard & variant rules.",
+            officialRulesURL: URL(string: "https://www.nsv.de/wp-content/uploads/2024/04/QwixxBP_GB.pdf")
         )
     }
 }

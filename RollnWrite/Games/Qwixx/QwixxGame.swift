@@ -94,13 +94,17 @@ public final class QwixxGame: ObservableObject, Scoreboard {
 
     // MARK: - Rule enforcement (bonus rows)
 
-    /// A bonus space is legal when the game is live, it isn't already marked,
-    /// left-to-right is respected within the bonus row, and an adjacent
-    /// same-number colour space is already crossed (the activation rule).
+    /// A bonus space is legal when the game is live, it isn't already marked, and
+    /// an adjacent same-number colour space is already crossed (the activation
+    /// rule). There is **no** left-to-right order on the bonus row itself: each
+    /// space is gated only by the colour rows (which each enforce their own
+    /// order), and the two colours advance independently — so a lower bonus can
+    /// legitimately be crossed after a higher one (e.g. cross red 5, then yellow 2
+    /// → bonus 5 is available before bonus 2).
     public func canMarkBonus(_ id: BonusRowID, _ index: Int) -> Bool {
         guard hasBonusRows, !isGameOver else { return false }
         let b = bonus(id)
-        guard !b.marks.contains(index), index > b.maxMarkedIndex else { return false }
+        guard !b.marks.contains(index) else { return false }
         let (a, c) = id.colors
         return row(for: a).marks.contains(index) || row(for: c).marks.contains(index)
     }
@@ -127,6 +131,39 @@ public final class QwixxGame: ObservableObject, Scoreboard {
         save()
     }
 
+    // MARK: - Concede a colour / finish manually
+
+    /// You may close (concede) a colour that another player locked: the row
+    /// closes for you, but you score no lock bonus — you never crossed its final
+    /// number. Allowed on any still-open row while the game is live.
+    public func canConcedeRow(_ color: GameColor) -> Bool {
+        !isGameOver && !row(for: color).locked
+    }
+
+    public func concedeRow(_ color: GameColor) {
+        guard canConcedeRow(color) else { return }
+        var r = row(for: color)
+        r.locked = true
+        setRow(r)
+        state.history.append(.concede(color))
+        save()
+    }
+
+    public func isLastConcede(_ color: GameColor) -> Bool {
+        if case let .concede(c) = state.history.last { return c == color }
+        return false
+    }
+
+    /// End the game by hand — e.g. another player crossed the final lock.
+    public var canFinishManually: Bool { !isGameOver }
+
+    public func finishGame() {
+        guard canFinishManually else { return }
+        state.manuallyFinished = true
+        state.history.append(.finish)
+        save()
+    }
+
     // MARK: - Scoreboard
 
     /// Crosses counted toward a colour's score: its own marks, the lock bonus,
@@ -147,9 +184,10 @@ public final class QwixxGame: ObservableObject, Scoreboard {
         GameColor.allCases.reduce(0) { $0 + points(for: $1) } - penaltyPoints
     }
 
-    /// Ends when two rows are locked, or the 4th penalty is taken.
+    /// Ends when two rows are locked, the 4th penalty is taken, or the player
+    /// ends it by hand.
     public var isGameOver: Bool {
-        lockedRowCount >= 2 || state.penalties >= QwixxState.maxPenalties
+        state.manuallyFinished || lockedRowCount >= 2 || state.penalties >= QwixxState.maxPenalties
     }
 
     public var canUndo: Bool { !state.history.isEmpty }
@@ -191,6 +229,12 @@ public final class QwixxGame: ObservableObject, Scoreboard {
             setBonus(b)
         case .penalty:
             state.penalties = max(0, state.penalties - 1)
+        case let .concede(color):
+            var r = row(for: color)
+            r.locked = false
+            setRow(r)
+        case .finish:
+            state.manuallyFinished = false
         }
         save()
     }

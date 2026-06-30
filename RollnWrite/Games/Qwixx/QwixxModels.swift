@@ -14,7 +14,9 @@ public struct ColorRow: Codable, Equatable {
     public let color: GameColor
     /// Indices (0…10) that have been crossed out.
     public var marks: Set<Int> = []
-    /// `true` once the right-most number has been crossed (row + lock).
+    /// `true` once the row is closed — either you crossed the right-most number
+    /// (a *scored* lock) or you conceded it after another player locked the
+    /// colour (a *free* lock, no points).
     public var locked: Bool = false
 
     /// Index of the right-most number, whose crossing locks the row.
@@ -30,8 +32,13 @@ public struct ColorRow: Codable, Equatable {
     /// Highest crossed index, or -1 if none — used for the left-to-right rule.
     public var maxMarkedIndex: Int { marks.max() ?? -1 }
 
-    /// Crosses that count for scoring: marked numbers plus the lock bonus cross.
-    public var scoringCrosses: Int { marks.count + (locked ? 1 : 0) }
+    /// Crosses that count for scoring: the marked numbers plus the lock bonus —
+    /// but the lock bonus is earned only if YOU crossed the right-most number.
+    /// A conceded row (closed because another player locked the colour) is
+    /// `locked` yet scores no bonus, because its lock number was never crossed.
+    public var scoringCrosses: Int {
+        marks.count + (marks.contains(ColorRow.lockIndex) ? 1 : 0)
+    }
 }
 
 /// Identifies the two two-colour bonus rows of Big Points.
@@ -76,6 +83,10 @@ public enum GameAction: Codable {
     case color(GameColor, index: Int, didLock: Bool)
     case bonus(BonusRowID, index: Int)
     case penalty
+    /// Conceded a colour (closed the row for free after another player locked it).
+    case concede(GameColor)
+    /// Ended the game manually.
+    case finish
 }
 
 /// Full serialisable snapshot of a game (persisted to `UserDefaults`).
@@ -87,10 +98,33 @@ public struct QwixxState: Codable {
     public var redYellowBonus = BonusRow(id: .redYellow)
     public var greenBlueBonus = BonusRow(id: .greenBlue)
     public var penalties = 0
+    /// Set when the player ends the game manually (e.g. another player crossed
+    /// the final lock).
+    public var manuallyFinished = false
     public var history: [GameAction] = []
 
     public init() {}
 
     /// Maximum penalties allowed (the 4th ends the game).
     public static let maxPenalties = 4
+
+    private enum CodingKeys: String, CodingKey {
+        case red, yellow, green, blue, redYellowBonus, greenBlueBonus
+        case penalties, manuallyFinished, history
+    }
+
+    // Tolerant decode so saved games from earlier builds (which lack newer
+    // fields like `manuallyFinished`) still load instead of resetting.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        red = try c.decodeIfPresent(ColorRow.self, forKey: .red) ?? ColorRow(color: .red)
+        yellow = try c.decodeIfPresent(ColorRow.self, forKey: .yellow) ?? ColorRow(color: .yellow)
+        green = try c.decodeIfPresent(ColorRow.self, forKey: .green) ?? ColorRow(color: .green)
+        blue = try c.decodeIfPresent(ColorRow.self, forKey: .blue) ?? ColorRow(color: .blue)
+        redYellowBonus = try c.decodeIfPresent(BonusRow.self, forKey: .redYellowBonus) ?? BonusRow(id: .redYellow)
+        greenBlueBonus = try c.decodeIfPresent(BonusRow.self, forKey: .greenBlueBonus) ?? BonusRow(id: .greenBlue)
+        penalties = try c.decodeIfPresent(Int.self, forKey: .penalties) ?? 0
+        manuallyFinished = try c.decodeIfPresent(Bool.self, forKey: .manuallyFinished) ?? false
+        history = try c.decodeIfPresent([GameAction].self, forKey: .history) ?? []
+    }
 }

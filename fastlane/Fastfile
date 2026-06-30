@@ -37,6 +37,35 @@ def team_id
   env_or("APPLE_TEAM_ID", DEFAULT_TEAM_ID)
 end
 
+# Static beta "Test Information" description shown in TestFlight.
+BETA_APP_DESCRIPTION =
+  "Roll'n Write — a digital scorecard for roll-and-write dice games (Qwixx and " \
+  "more). Tap to cross out spaces; the official rules are enforced and scores " \
+  "are computed automatically. Please test: marking numbers, locking and " \
+  "conceding rows, penalties, two-player mode, the game-over screen, and " \
+  "Light/Dark in Settings.".freeze
+
+# Turn raw commit subjects into readable TestFlight "What to Test" notes: keep
+# the user-facing ones (feat/fix/perf), strip the conventional-commit prefixes,
+# de-duplicate, bullet them, and prepend a build/branch/sha header. Pure string
+# work (no fastlane actions), so it's safe to call from the lane.
+def format_release_notes(raw, build_number)
+  branch = ENV["GITHUB_REF_NAME"] || "local"
+  sha = (ENV["GITHUB_SHA"] || "")[0, 7]
+  header = "Build #{build_number} · #{branch} #{sha}".strip
+
+  items = raw.to_s.split("\n").map(&:strip).reject(&:empty?)
+    .select { |l| l =~ /^(feat|fix|perf)(\(|!|:)/i }
+    .map { |l| l.sub(/^(feat|fix|perf)(\([^)]*\))?!?:\s*/i, "") }
+    .map { |l| l.empty? ? l : l[0].upcase + l[1..-1].to_s }
+    .uniq
+    .first(15)
+
+  body = items.empty? ? "Improvements and fixes." : items.map { |l| "• #{l}" }.join("\n")
+  notes = "#{header}\n\n#{body}"
+  notes.length > 3900 ? notes[0, 3900] : notes
+end
+
 require "base64"
 require "openssl"
 require "tmpdir"
@@ -225,12 +254,29 @@ platform :ios do
       }
     )
 
-    changelog = "Build #{build_number} from #{ENV['GITHUB_REF_NAME'] || 'local'} (#{(ENV['GITHUB_SHA'] || '')[0, 7]})"
+    # Auto-generate the "What to Test" notes from recent commit messages
+    # (better than Trio, which only uses branch + hash). Any failure falls back
+    # to the simple build/sha line so the upload never breaks.
+    notes =
+      begin
+        raw_log = changelog_from_git_commits(
+          commits_count: 25,
+          pretty: "%s",
+          merge_commit_filtering: "exclude_merges"
+        )
+        format_release_notes(raw_log, build_number)
+      rescue StandardError => e
+        UI.important("Release-notes generation failed (#{e.message}); using fallback.")
+        "Build #{build_number} (#{(ENV['GITHUB_SHA'] || '')[0, 7]})"
+      end
+
     upload_to_testflight(
       api_key: key,
       app_identifier: bundle_id,
       skip_waiting_for_build_processing: true,
-      changelog: changelog
+      changelog: notes,
+      beta_app_description: BETA_APP_DESCRIPTION,
+      beta_app_feedback_email: "sjoerd.bozon@gmail.com"
     )
 
     UI.success("✅ Uploaded build #{build_number} to TestFlight. It will appear after Apple finishes processing.")
