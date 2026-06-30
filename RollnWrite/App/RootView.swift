@@ -10,6 +10,7 @@ import SwiftUI
 
 struct RootView: View {
     @State private var rulesToShow: IdentifiedRules?
+    @State private var showSettings = false
 
     var body: some View {
         NavigationStack {
@@ -44,8 +45,19 @@ struct RootView: View {
                 }
             }
             .navigationTitle("Roll'n Write")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { showSettings = true } label: {
+                        Image(systemName: "gearshape")
+                    }
+                    .accessibilityLabel("Settings")
+                }
+            }
             .sheet(item: $rulesToShow) { wrapper in
                 RulesView(document: wrapper.document)
+            }
+            .sheet(isPresented: $showSettings) {
+                SettingsView()
             }
         }
     }
