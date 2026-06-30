@@ -169,6 +169,8 @@ struct QwixxBoardView: View {
                 let undoable = bonus.marks.contains(i) && game.isLastBonusMark(id, i)
                 BonusTile("\(bonus.numbers[i])", tintA: a.tint, tintB: b.tint,
                           marked: bonus.marks.contains(i), legal: game.canMarkBonus(id, i),
+                          aActive: game.row(for: a).marks.contains(i),
+                          bActive: game.row(for: b).marks.contains(i),
                           undoable: undoable) {
                     if undoable { game.undo() } else { game.markBonus(id, i) }
                 }
