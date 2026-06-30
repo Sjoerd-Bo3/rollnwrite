@@ -38,6 +38,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Enough commit history for the auto-generated TestFlight notes
+          # (fastlane changelog_from_git_commits); the default checkout is shallow.
+          fetch-depth: 50
 
       - name: Select latest stable Xcode
         uses: maxim-lobanov/setup-xcode@v1
