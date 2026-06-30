@@ -47,6 +47,7 @@ public struct NumberTile: View {
                     Image(systemName: "xmark")
                         .font(.system(size: s * 0.72, weight: .black))
                         .foregroundStyle(tint)
+                        .transition(.scale(scale: 0.4).combined(with: .opacity))
                 }
             }
             .frame(width: w, height: h)
@@ -54,6 +55,7 @@ public struct NumberTile: View {
                 RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
                     .strokeBorder(tint, lineWidth: undoable ? 2.5 : 0)
             )
+            .animation(.spring(response: 0.26, dampingFraction: 0.6), value: marked)
         }
         .buttonStyle(.plain)
         .disabled(!(legal || undoable))
@@ -83,6 +85,8 @@ public struct ScoreTile: View {
                 .foregroundStyle(.white)
                 .minimumScaleFactor(0.3)
                 .lineLimit(1)
+                .contentTransition(.numericText())
+                .animation(.snappy, value: value)
         }
         .frame(width: w, height: h)
     }
@@ -107,8 +111,10 @@ public struct LockTile: View {
             Image(systemName: locked ? "lock.fill" : "lock.open")
                 .font(.system(size: s * 0.5, weight: .bold))
                 .foregroundStyle(tint)
+                .contentTransition(.symbolEffect(.replace))
         }
         .frame(width: w, height: h)
+        .animation(.snappy, value: locked)
         .accessibilityValue(locked ? "locked" : "open")
     }
 }
@@ -158,11 +164,13 @@ public struct BonusTile: View {
                 .shadow(radius: 0.5)
             if marked {
                 Image(systemName: "xmark").font(.system(size: 18, weight: .black)).foregroundStyle(.white)
+                    .transition(.scale(scale: 0.4).combined(with: .opacity))
             }
         }
         .opacity(dimmed ? 0.3 : 1)
         .contentShape(Circle())
         .onTapGesture { if (legal && !marked) || undoable { onTap() } }
+        .animation(.spring(response: 0.26, dampingFraction: 0.6), value: marked)
         .accessibilityLabel("Bonus \(text)")
         .accessibilityHint(undoable ? "Tap to undo" : "")
     }
@@ -192,6 +200,7 @@ public struct PenaltyBox: View {
                 )
             if filled {
                 Image(systemName: "xmark").font(.system(size: h * 0.5, weight: .black)).foregroundStyle(.white)
+                    .transition(.scale(scale: 0.4).combined(with: .opacity))
             } else {
                 Text("−5").font(.system(size: h * 0.32, weight: .bold)).foregroundStyle(.red)
             }
@@ -199,6 +208,7 @@ public struct PenaltyBox: View {
         .frame(width: h, height: h)
         .opacity(filled || isNext ? 1 : 0.5)
         .onTapGesture { if isNext || undoable { onTap() } }
+        .animation(.spring(response: 0.28, dampingFraction: 0.62), value: filled)
         .accessibilityHint(undoable ? "Tap to undo" : "")
     }
 }
