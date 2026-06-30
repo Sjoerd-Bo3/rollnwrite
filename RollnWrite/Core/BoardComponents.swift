@@ -141,36 +141,36 @@ public struct BonusTile: View {
     let tintB: Color
     let marked: Bool
     let legal: Bool
+    /// Whether colour A / colour B can reach this number (its same-number space
+    /// is crossed) — drives which half lights up.
+    let aActive: Bool
+    let bActive: Bool
     let undoable: Bool
     let onTap: () -> Void
 
     public init(_ text: String, tintA: Color, tintB: Color, marked: Bool, legal: Bool,
+                aActive: Bool = false, bActive: Bool = false,
                 undoable: Bool = false, onTap: @escaping () -> Void) {
         self.text = text; self.tintA = tintA; self.tintB = tintB
-        self.marked = marked; self.legal = legal; self.undoable = undoable; self.onTap = onTap
+        self.marked = marked; self.legal = legal
+        self.aActive = aActive; self.bActive = bActive
+        self.undoable = undoable; self.onTap = onTap
     }
 
-    private var dimmed: Bool { !marked && !legal }
+    // A half lights up when its colour can reach this number (or it's crossed);
+    // the colour that can't stays dim, so you can see which side makes the bonus
+    // available.
+    private var aOpacity: Double { (marked || aActive) ? 1 : 0.22 }
+    private var bOpacity: Double { (marked || bActive) ? 1 : 0.22 }
 
     public var body: some View {
         ZStack {
-            Circle()
-                .fill(tintA)
-                .overlay(
-                    Circle().fill(tintB)
-                        .mask(
-                            GeometryReader { g in
-                                Path { p in
-                                    p.move(to: CGPoint(x: g.size.width, y: 0))
-                                    p.addLine(to: CGPoint(x: g.size.width, y: g.size.height))
-                                    p.addLine(to: CGPoint(x: 0, y: g.size.height))
-                                    p.closeSubpath()
-                                }
-                            }
-                        )
-                )
-                .overlay(Circle().strokeBorder(.black.opacity(0.18), lineWidth: 1))
-                .overlay(Circle().strokeBorder(.white, lineWidth: undoable ? 2.5 : 0))
+            // Upper-left half = colour A, lower-right half = colour B; each is lit
+            // or dimmed independently to show which side enables the bonus.
+            Circle().fill(tintA.opacity(aOpacity)).mask(DiagonalHalf(upperLeft: true))
+            Circle().fill(tintB.opacity(bOpacity)).mask(DiagonalHalf(upperLeft: false))
+            Circle().strokeBorder(.black.opacity(0.18), lineWidth: 1)
+            Circle().strokeBorder(.white, lineWidth: undoable ? 2.5 : 0)
             Text(text)
                 .font(.system(size: 13, weight: .bold, design: .rounded))
                 .minimumScaleFactor(0.4)
@@ -182,12 +182,35 @@ public struct BonusTile: View {
                     .transition(.scale(scale: 0.4).combined(with: .opacity))
             }
         }
-        .opacity(dimmed ? 0.3 : 1)
         .contentShape(Circle())
         .onTapGesture { if (legal && !marked) || undoable { onTap() } }
         .animation(.spring(response: 0.26, dampingFraction: 0.6), value: marked)
+        .animation(.snappy, value: aActive)
+        .animation(.snappy, value: bActive)
         .accessibilityLabel("Bonus \(text)")
+        .accessibilityValue(marked ? "crossed" : (legal ? "available" : "not available"))
         .accessibilityHint(undoable ? "Tap to undo" : "")
+    }
+}
+
+/// Half of a circle split along the top-right → bottom-left diagonal — the upper-
+/// left or the lower-right triangle. Used to colour the two halves of a bonus
+/// space independently.
+private struct DiagonalHalf: Shape {
+    let upperLeft: Bool
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        if upperLeft {
+            p.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            p.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+            p.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+        } else {
+            p.move(to: CGPoint(x: rect.maxX, y: rect.minY))
+            p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+            p.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+        }
+        p.closeSubpath()
+        return p
     }
 }
 
