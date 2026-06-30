@@ -36,8 +36,11 @@ public struct NumberTile: View {
         let s = min(w, h)
         return Button(action: onTap) {
             ZStack {
+                // Keep the tile a clean near-white even when crossed, so the ✗
+                // reads clearly on every colour band (the old 0.7 let the band
+                // bleed through and the same-colour ✗ vanished, worst on blue).
                 RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
-                    .fill(Color.white.opacity(marked ? 0.7 : 0.95))
+                    .fill(Color.white.opacity(0.95))
                 Text(text)
                     .font(.system(size: s * 0.5, weight: .heavy, design: .rounded))
                     .foregroundStyle(tint)
@@ -45,8 +48,9 @@ public struct NumberTile: View {
                     .lineLimit(1)
                 if marked {
                     Image(systemName: "xmark")
-                        .font(.system(size: s * 0.72, weight: .black))
+                        .font(.system(size: s * 0.74, weight: .black))
                         .foregroundStyle(tint)
+                        .shadow(color: .black.opacity(0.25), radius: 0.5)
                         .transition(.scale(scale: 0.4).combined(with: .opacity))
                 }
             }
