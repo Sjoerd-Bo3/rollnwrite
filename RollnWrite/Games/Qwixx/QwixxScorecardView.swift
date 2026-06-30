@@ -13,10 +13,12 @@ import SwiftUI
 /// new game) live in its bottom bar, like the physical card's corner buttons.
 struct QwixxBoardView: View {
     @ObservedObject var game: QwixxGame
+    let scoreTitle: String
     @State private var confirmReset = false
     @State private var showResults = false
     @State private var confirmConcede: GameColor?
     @State private var confirmFinish = false
+    @State private var newBest = false
 
     private let tileGap: CGFloat = 4
     private let rowGap: CGFloat = 4
@@ -25,8 +27,9 @@ struct QwixxBoardView: View {
     // chevron + 11 numbers + lock + per-row score
     private let columns: CGFloat = 14
 
-    init(game: QwixxGame) {
+    init(game: QwixxGame, scoreTitle: String) {
         _game = ObservedObject(wrappedValue: game)
+        self.scoreTitle = scoreTitle
     }
 
     var body: some View {
@@ -72,6 +75,8 @@ struct QwixxBoardView: View {
                          ? [GameOverCard.Line(label: "Penalties", value: -game.penaltyPoints, tint: .red)]
                          : []),
                     total: game.totalScore,
+                    best: HighScores.best(for: scoreTitle),
+                    isNewBest: newBest,
                     onNewGame: { game.reset(); showResults = false },
                     onDismiss: { withAnimation { showResults = false } }
                 )
@@ -80,6 +85,7 @@ struct QwixxBoardView: View {
         }
         .onChange(of: game.isGameOver) { _, isOver in
             if isOver {
+                newBest = HighScores.record(game.totalScore, for: scoreTitle)
                 withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) { showResults = true }
             } else {
                 showResults = false
@@ -256,8 +262,8 @@ public struct QwixxScorecardView: View {
         ScorecardScaffold(
             title: navigationTitle,
             rules: rules,
-            board: { QwixxBoardView(game: game) },
-            opponent: opponent.map { opp in { QwixxBoardView(game: opp) } }
+            board: { QwixxBoardView(game: game, scoreTitle: navigationTitle) },
+            opponent: opponent.map { opp in { QwixxBoardView(game: opp, scoreTitle: navigationTitle) } }
         )
     }
 }
