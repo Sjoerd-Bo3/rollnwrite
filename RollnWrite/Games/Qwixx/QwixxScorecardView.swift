@@ -184,6 +184,8 @@ struct QwixxBoardView: View {
                 .foregroundStyle(.secondary)
             Text("\(game.totalScore)")
                 .font(.system(size: b * 0.55, weight: .heavy, design: .rounded).monospacedDigit())
+                .contentTransition(.numericText())
+                .animation(.snappy, value: game.totalScore)
         }
         .frame(maxWidth: .infinity)
         .frame(height: h)
