@@ -31,12 +31,13 @@ import Foundation
 /// The "X-Change" row: nine diamond fields, each a (top, bottom) number pair.
 /// Crossed strictly left → right (skipping allowed, skipped fields lost). The row
 /// scores no points — it is a swap tool — so its state is just the set of crossed
-/// field indices plus the printed pairs (the source of truth, transcribed from the
-/// official sheet B, art. 4290).
+/// field indices plus the printed pairs (the source of truth, read from the
+/// official NSV Qwixx X-Change scoresheet PDF).
 public struct XChangeRow: Codable, Equatable {
-    /// Printed (top, bottom) number pairs, left → right (official sheet B).
+    /// Printed (top, bottom) number pairs, left → right, from the official NSV
+    /// Qwixx X-Change scoresheet (QwixxXChange_EN.pdf).
     public static let pairs: [[Int]] = [
-        [9, 3], [8, 6], [7, 4], [10, 5], [11, 9], [8, 3], [7, 5], [11, 6], [10, 4],
+        [8, 5], [9, 7], [11, 3], [7, 4], [10, 3], [8, 6], [10, 5], [11, 9], [6, 4],
     ]
 
     /// Indices (0…8) of crossed diamond fields.

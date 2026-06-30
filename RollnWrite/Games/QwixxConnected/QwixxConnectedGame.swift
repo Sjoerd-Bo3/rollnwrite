@@ -7,7 +7,7 @@
 //  plus one line in `GameRegistry` (OCP).
 //
 //  This implements the "Die Kette" / "The Chain" Connected score sheet
-//  (version A), which is the layout on the supplied scorecard.
+//  (version B), which is the layout on the supplied scorecard.
 //
 
 import SwiftUI
@@ -16,7 +16,7 @@ public struct QwixxConnectedGame: GameDefinition {
     public init() {}
 
     public let id = "qwixx-connected"
-    public let title = "Qwixx Unlabeled-2"
+    public let title = "Qwixx Connected"
     public let subtitle = "Connected — Chain · linked spaces auto-cross"
     public let iconSystemName = "link"
     public let accent = Color(red: 0.20, green: 0.55, blue: 0.85)
@@ -29,14 +29,14 @@ public struct QwixxConnectedGame: GameDefinition {
     public var rules: RulesDocument {
         RulesDocument(
             title: "Qwixx — Connected (The Chain)",
-            subtitle: "Official rules for the Connected \u{201E}Kette\u{201C} sheet (version A)",
+            subtitle: "Official rules for the Connected \u{201E}Kette\u{201C} sheet (version B)",
             sections: [
                 RulesSection(heading: "Goal", body: [
                     "Play classic Qwixx, but certain circled spaces are linked in pairs by a printed line. Crossing one space of a chain forces you to cross its partner too.",
                 ]),
                 RulesSection(heading: "The card", body: [
                     "Red and yellow rows run 2 → 12 (left to right). Green and blue rows run 12 → 2.",
-                    "Several spaces are circled and joined to a partner in a neighbouring row by a short line. On this sheet (version A) the chains are: red 6 ↔ yellow 6, red 11 ↔ yellow 11, yellow 3 ↔ green 11, yellow 8 ↔ green 6, green 9 ↔ blue 9, and green 4 ↔ blue 4.",
+                    "Several spaces are circled and joined to a partner in a neighbouring row by a short line. On this sheet the chains are: red 6 ↔ yellow 6, red 11 ↔ yellow 11, yellow 3 ↔ green 11, yellow 8 ↔ green 6, and green 4 ↔ blue 4.",
                     "Each sheet (A–E) places the chains differently.",
                 ]),
                 RulesSection(heading: "Crossing out numbers", body: [
@@ -61,7 +61,7 @@ public struct QwixxConnectedGame: GameDefinition {
                     "Total = red + yellow + green + blue − (5 × penalties).",
                 ]),
             ],
-            source: "Qwixx Connected (\u{201E}Die Kette\u{201C} / The Chain, version A) by Steffen Benndorf, Nürnberger-Spielkarten-Verlag (NSV); art. 088 19900030; official scorecard & rules (nsv.de)."
+            source: "Qwixx Connected (\u{201E}Die Kette\u{201C} / The Chain, version B) by Steffen Benndorf, Nürnberger-Spielkarten-Verlag (NSV); art. 088 19900030; official scorecard & rules (nsv.de)."
         )
     }
 }

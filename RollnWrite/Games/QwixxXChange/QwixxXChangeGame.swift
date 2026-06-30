@@ -13,7 +13,7 @@ public struct QwixxXChangeGame: GameDefinition {
     public init() {}
 
     public let id = "qwixx-xchange"
-    public let title = "Qwixx X-change"
+    public let title = "Qwixx X-Change"
     public let subtitle = "Classic rows · X-Change swap row"
     public let iconSystemName = "arrow.triangle.2.circlepath"
     public let accent = Color(red: 0.55, green: 0.10, blue: 0.42)
@@ -33,7 +33,7 @@ public struct QwixxXChangeGame: GameDefinition {
                 ]),
                 RulesSection(heading: "The card", body: [
                     "Red and yellow rows run 2 → 12 (left to right). Green and blue rows run 12 → 2.",
-                    "Below the colour rows sits the X-Change row: nine diamonds, each showing two numbers with a swap arrow (9/3, 8/6, 7/4, 10/5, 11/9, 8/3, 7/5, 11/6, 10/4).",
+                    "Below the colour rows sits the X-Change row: nine diamonds, each showing two numbers with a swap arrow (8/5, 9/7, 11/3, 7/4, 10/3, 8/6, 10/5, 11/9, 6/4).",
                 ]),
                 RulesSection(heading: "Crossing out numbers", body: [
                     "Within every row you must cross out from left to right. You may skip numbers, but skipped numbers can never be crossed later.",
