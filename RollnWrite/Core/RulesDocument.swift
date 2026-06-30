@@ -30,12 +30,18 @@ public struct RulesDocument {
     public let sections: [RulesSection]
     /// Attribution so we always credit the official rules/scorecard source.
     public let source: String
+    /// Optional link to the publisher's official rules. Opened in the system
+    /// browser, so we *link* to their PDF rather than redistribute the
+    /// copyrighted file.
+    public let officialRulesURL: URL?
 
-    public init(title: String, subtitle: String, sections: [RulesSection], source: String) {
+    public init(title: String, subtitle: String, sections: [RulesSection],
+                source: String, officialRulesURL: URL? = nil) {
         self.title = title
         self.subtitle = subtitle
         self.sections = sections
         self.source = source
+        self.officialRulesURL = officialRulesURL
     }
 }
 
@@ -79,6 +85,13 @@ public struct RulesView: View {
                     Text("Source: \(document.source)")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
+                    if let url = document.officialRulesURL {
+                        Link(destination: url) {
+                            Label("Official rules (PDF)", systemImage: "doc.text")
+                                .font(.callout.weight(.semibold))
+                        }
+                        .padding(.top, 2)
+                    }
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
