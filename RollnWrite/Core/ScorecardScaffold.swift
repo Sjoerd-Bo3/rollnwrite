@@ -129,7 +129,10 @@ public enum BoardMetrics {
         let w = max(minTile, (size.width - 2 * pad - (columns - 1) * gap) / columns)
         let availH = size.height - 2 * pad
         let rowH = (availH - max(0, rowCount - 1) * gap) / max(1, rowUnits)
-        let h = max(minTile, min(rowH * 0.86, w))
+        // Fill the full height (square is the MAX, readable MIN the floor) so the
+        // board reaches edge-to-edge like the canonical Big Points/classic board.
+        // Leftover height (when the square cap bites) centres the board.
+        let h = max(minTile, min(rowH, w))
         return (w, h)
     }
 }
