@@ -12,8 +12,10 @@
 //  - LSP: conforms to the generic `Scoreboard` protocol used by host UI.
 //
 //  The colour-row rules are identical to classic Qwixx. The variant-specific
-//  twist is the bonus bar: crossing a boxed number automatically advances the
-//  bar one field, whose colour tells the player which free extra cross to make.
+//  twist is the bonus bar: crossing a boxed number automatically earns the next
+//  free bar field, whose colour tells the player which free extra cross to make.
+//  When a colour is completed (self-lock or concede) its remaining bar fields
+//  are forfeited at once and skipped from then on (official forfeit rule).
 //  The bar awards no points itself (version A scores like classic Qwixx).
 //
 
@@ -88,14 +90,24 @@ public final class BonusGame: ObservableObject, Scoreboard {
         }
         setRow(r)
 
-        // Boxed numbers advance the bonus bar (if it still has room).
-        var advancedBar = false
-        if isBoxed(color, index), state.bar.hasRoomLeft {
-            state.bar.crossed += 1
-            advancedBar = true
+        // Boxed numbers earn the next bar field: the lowest-index field that is
+        // neither earned nor forfeited (forfeited fields are simply skipped).
+        // The field's colour drives the reward, so record exactly which one.
+        var barAdvance = BarAdvance.none
+        if isBoxed(color, index), let field = state.bar.nextEarnableIndex {
+            state.bar.earned.insert(field)
+            barAdvance = .earned(field)
         }
 
-        state.history.append(.color(color, index: index, didLock: didLock, advancedBar: advancedBar))
+        // Official rule: once a colour is completed, its remaining bonus-bar
+        // fields are immediately crossed out as forfeited — same action.
+        var forfeited: [Int] = []
+        if didLock {
+            forfeited = forfeitBarFields(for: color)
+        }
+
+        state.history.append(.color(color, index: index, didLock: didLock,
+                                     bar: barAdvance, forfeited: forfeited))
         save()
     }
 
@@ -126,12 +138,28 @@ public final class BonusGame: ObservableObject, Scoreboard {
         var r = row(for: color)
         r.locked = true
         setRow(r)
-        state.history.append(.concede(color))
+        // A conceded colour is completed too, so its remaining bonus-bar fields
+        // are forfeited immediately — same as a self-lock.
+        let forfeited = forfeitBarFields(for: color)
+        state.history.append(.concede(color, forfeited: forfeited))
         save()
     }
 
+    /// Official forfeit rule: cross out every still-unearned bonus-bar field of
+    /// a just-completed `color`. Those fields no longer count and are skipped by
+    /// future earned crosses. Returns the forfeited indices for exact undo.
+    private func forfeitBarFields(for color: GameColor) -> [Int] {
+        let indices = BonusLayout.barColors.indices.filter {
+            BonusLayout.barColors[$0] == color
+                && !state.bar.earned.contains($0)
+                && !state.bar.forfeited.contains($0)
+        }
+        state.bar.forfeited.formUnion(indices)
+        return indices
+    }
+
     public func isLastConcede(_ color: GameColor) -> Bool {
-        if case let .concede(c) = state.history.last { return c == color }
+        if case let .concede(c, _) = state.history.last { return c == color }
         return false
     }
 
@@ -175,7 +203,7 @@ public final class BonusGame: ObservableObject, Scoreboard {
 
     /// Whether the most-recent action was crossing `index` of `color`.
     public func isLastColorMark(_ color: GameColor, _ index: Int) -> Bool {
-        if case let .color(c, i, _, _) = state.history.last { return c == color && i == index }
+        if case let .color(c, i, _, _, _) = state.history.last { return c == color && i == index }
         return false
     }
 
@@ -189,20 +217,29 @@ public final class BonusGame: ObservableObject, Scoreboard {
     public func undo() {
         guard let last = state.history.popLast() else { return }
         switch last {
-        case let .color(color, index, didLock, advancedBar):
+        case let .color(color, index, didLock, bar, forfeited):
             var r = row(for: color)
             r.marks.remove(index)
             if didLock { r.locked = false }
             setRow(r)
-            if advancedBar {
-                state.bar.crossed = max(0, state.bar.crossed - 1)
+            switch bar {
+            case .none:
+                break
+            case let .earned(field):
+                state.bar.earned.remove(field)
+            case .legacy:
+                // Pre-forfeit saves filled the bar strictly left to right, so
+                // the newest cross is the highest earned index.
+                if let top = state.bar.earned.max() { state.bar.earned.remove(top) }
             }
+            state.bar.forfeited.subtract(forfeited)
         case .penalty:
             state.penalties = max(0, state.penalties - 1)
-        case let .concede(color):
+        case let .concede(color, forfeited):
             var r = row(for: color)
             r.locked = false
             setRow(r)
+            state.bar.forfeited.subtract(forfeited)
         case .finish:
             state.manuallyFinished = false
         }

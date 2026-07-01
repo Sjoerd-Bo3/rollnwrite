@@ -68,36 +68,154 @@ public enum BonusLayout {
     public static var barCount: Int { barColors.count }
 }
 
-/// The bonus bar: a left → right chain of coloured fields. A new field is
-/// crossed automatically every time a boxed number is crossed; the colour of the
-/// freshly crossed field tells the player which row earns the free extra cross.
+/// The bonus bar: a left → right chain of coloured fields. A field is *earned*
+/// automatically every time a boxed number is crossed; the colour of the freshly
+/// earned field tells the player which row gets the free extra cross.
+///
+/// Official forfeit rule: once a colour has been completed (locked), all its
+/// remaining fields in the bonus bar are immediately crossed out as *forfeited*.
+/// They no longer count and are simply skipped — future earned crosses land on
+/// the next non-forfeited free field, so every field is one of three states:
+/// unearned, earned, or forfeited (modelled as two disjoint index sets).
 public struct BonusBar: Codable, Equatable {
-    /// How many fields have been crossed so far (0…`BonusLayout.barCount`).
-    public var crossed: Int = 0
+    /// Indices of fields crossed as earned rewards (each granted an extra cross).
+    public var earned: Set<Int> = []
+    /// Indices crossed out as forfeited because their colour row was completed.
+    public var forfeited: Set<Int> = []
 
     public init() {}
 
-    /// Whether another field can still be crossed.
-    public var hasRoomLeft: Bool { crossed < BonusLayout.barCount }
+    /// How many fields have been earned so far (drives reward/score bookkeeping).
+    public var earnedCount: Int { earned.count }
 
-    /// The colour reward of the most recently crossed field, or `nil` if none.
-    public var lastRewardColor: GameColor? {
-        guard crossed > 0 else { return nil }
-        return BonusLayout.barColors[crossed - 1]
+    /// The lowest-index field that is neither earned nor forfeited — the field
+    /// the next boxed cross will earn — or `nil` if the bar is used up.
+    public var nextEarnableIndex: Int? {
+        (0..<BonusLayout.barCount).first { !earned.contains($0) && !forfeited.contains($0) }
     }
+
+    /// Whether another field can still be earned.
+    public var hasRoomLeft: Bool { nextEarnableIndex != nil }
+
+    private enum CodingKeys: String, CodingKey {
+        case earned, forfeited
+        /// Legacy key: earlier builds stored the bar as a bare left-to-right count.
+        case crossed
+    }
+
+    // Tolerant decode + migration: old saves encode `crossed: Int`. If the new
+    // per-field sets are absent, the first N fields become earned (exactly what
+    // a pure left-to-right count meant). Never throws on missing keys.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        if let e = try c.decodeIfPresent(Set<Int>.self, forKey: .earned) {
+            earned = e
+            forfeited = try c.decodeIfPresent(Set<Int>.self, forKey: .forfeited) ?? []
+        } else if let count = try c.decodeIfPresent(Int.self, forKey: .crossed) {
+            earned = Set(0..<min(max(count, 0), BonusLayout.barCount))
+            forfeited = []
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(earned, forKey: .earned)
+        try c.encode(forfeited, forKey: .forfeited)
+    }
+}
+
+/// How a colour mark advanced the bonus bar, recorded in history for exact undo.
+public enum BarAdvance: Codable, Equatable {
+    /// The mark was not boxed (or the bar was used up) — nothing earned.
+    case none
+    /// The mark earned exactly this bar field (forfeited fields were skipped).
+    case earned(Int)
+    /// Decoded from a pre-forfeit save that only stored "the bar advanced".
+    /// Back then the bar filled strictly left to right, so undo removes the
+    /// highest earned index — exact for any state such a save can reach.
+    case legacy
 }
 
 /// A reversible user action, recorded so `undo()` is exact and strictly LIFO.
 ///
-/// `advancedBar` records whether the colour mark also pushed the bonus bar on,
-/// so undo reverses both halves atomically.
+/// The `bar` payload records which field the mark earned, and `forfeited` which
+/// bar indices a locking action crossed out, so undo reverses the colour mark,
+/// the bar advance and any forfeiture atomically.
+///
+/// Custom Codable: the wire format mirrors Swift's synthesized enum encoding
+/// (case-name key + nested payload keys) so histories written by earlier builds
+/// — which had an `advancedBar: Bool` instead of `bar`/`forfeited` — still
+/// decode, and the format stays stable for future builds.
 public enum BonusAction: Codable {
-    case color(GameColor, index: Int, didLock: Bool, advancedBar: Bool)
+    case color(GameColor, index: Int, didLock: Bool, bar: BarAdvance, forfeited: [Int])
     case penalty
     /// Conceded a colour (closed the row for free after another player locked it).
-    case concede(GameColor)
+    case concede(GameColor, forfeited: [Int])
     /// Ended the game manually.
     case finish
+
+    private enum CodingKeys: String, CodingKey { case color, penalty, concede, finish }
+    private enum ColorKeys: String, CodingKey {
+        case color = "_0", index, didLock, bar, forfeited
+        /// Legacy key from pre-forfeit builds.
+        case advancedBar
+    }
+    private enum ConcedeKeys: String, CodingKey { case color = "_0", forfeited }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        if c.contains(.color) {
+            let n = try c.nestedContainer(keyedBy: ColorKeys.self, forKey: .color)
+            let color = try n.decode(GameColor.self, forKey: .color)
+            let index = try n.decodeIfPresent(Int.self, forKey: .index) ?? 0
+            let didLock = try n.decodeIfPresent(Bool.self, forKey: .didLock) ?? false
+            let bar: BarAdvance
+            if let advance = try n.decodeIfPresent(BarAdvance.self, forKey: .bar) {
+                bar = advance
+            } else if try n.decodeIfPresent(Bool.self, forKey: .advancedBar) == true {
+                bar = .legacy
+            } else {
+                bar = .none
+            }
+            let forfeited = try n.decodeIfPresent([Int].self, forKey: .forfeited) ?? []
+            self = .color(color, index: index, didLock: didLock, bar: bar, forfeited: forfeited)
+        } else if c.contains(.concede) {
+            let n = try c.nestedContainer(keyedBy: ConcedeKeys.self, forKey: .concede)
+            let color = try n.decode(GameColor.self, forKey: .color)
+            let forfeited = try n.decodeIfPresent([Int].self, forKey: .forfeited) ?? []
+            self = .concede(color, forfeited: forfeited)
+        } else if c.contains(.penalty) {
+            self = .penalty
+        } else if c.contains(.finish) {
+            self = .finish
+        } else {
+            throw DecodingError.dataCorrupted(.init(
+                codingPath: decoder.codingPath,
+                debugDescription: "Unknown BonusAction case"
+            ))
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case let .color(color, index, didLock, bar, forfeited):
+            var n = c.nestedContainer(keyedBy: ColorKeys.self, forKey: .color)
+            try n.encode(color, forKey: .color)
+            try n.encode(index, forKey: .index)
+            try n.encode(didLock, forKey: .didLock)
+            try n.encode(bar, forKey: .bar)
+            try n.encode(forfeited, forKey: .forfeited)
+        case .penalty:
+            _ = c.nestedContainer(keyedBy: ColorKeys.self, forKey: .penalty)
+        case let .concede(color, forfeited):
+            var n = c.nestedContainer(keyedBy: ConcedeKeys.self, forKey: .concede)
+            try n.encode(color, forKey: .color)
+            try n.encode(forfeited, forKey: .forfeited)
+        case .finish:
+            _ = c.nestedContainer(keyedBy: ColorKeys.self, forKey: .finish)
+        }
+    }
 }
 
 /// Full serialisable snapshot of a Qwixx Bonus (version A) game.
