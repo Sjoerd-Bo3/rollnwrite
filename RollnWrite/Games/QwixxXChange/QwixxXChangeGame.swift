@@ -40,9 +40,10 @@ public struct QwixxXChangeGame: GameDefinition {
                     "On a turn the white-dice total may be crossed in any one row; the active player may also add a white die to a colour die and cross that colour.",
                 ]),
                 RulesSection(heading: "The X-Change row", body: [
-                    "When the white-dice sum is announced you may instead cross the next available X-Change diamond whose number matches that sum, then EXCHANGE it for the diamond's other number.",
+                    "When the white-dice sum is announced you may instead cross an available X-Change diamond whose number matches that sum (skipping earlier diamonds if you wish), then EXCHANGE it for the diamond's other number.",
                     "Use the exchanged value exactly as if it were the white-dice sum: cross it in any one colour row (following that row's left-to-right rule).",
                     "The swap works in either direction — top to bottom or bottom to top (the diamond's double arrow).",
+                    "Any player may swap on their own sheet, not just the active player — but the swap applies only to you. The dice are not changed; everyone else still uses the announced sum.",
                     "The X-Change row is crossed strictly left to right. You may skip diamonds to reach the one you want, but every skipped diamond is then lost for the rest of the game.",
                 ]),
                 RulesSection(heading: "Locking a row", body: [
