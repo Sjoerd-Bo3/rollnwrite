@@ -33,19 +33,20 @@ public struct QwixxConnect15Game: GameDefinition {
                 ]),
                 RulesSection(heading: "The card", body: [
                     "Red and yellow rows run 2 → 12 (left to right). Green and blue rows run 12 → 2.",
-                    "Woven into each row are three connection fields. They carry no number and are shown with a link icon.",
+                    "Each row carries three small connection squares sitting between specific numbers: red between 3–4, 6–7 and 10–11; yellow between 5–6, 7–8 and 9–10; green between 10–9, 6–5 and 4–3; blue between 11–10, 8–7 and 5–4. They carry no number.",
                 ]),
                 RulesSection(heading: "Crossing out numbers", body: [
-                    "Within every row you must cross out from left to right. You may skip numbers, but skipped numbers can never be crossed later.",
+                    "Numbers and connection fields form one left-to-right sequence per row: every new cross must sit to the right of everything already crossed in that row. Skipped spaces — numbers and connection fields alike — can never be crossed later.",
+                    "So crossing a number to the right of an empty connection field forfeits that field.",
                     "On a turn the white dice total may be crossed in any one row; the active player may also add a white die to a colour die and cross that colour.",
                 ]),
                 RulesSection(heading: "Connection fields", body: [
-                    "Whenever the dice show a 1 and a 5 (in any colour), every player may cross the next free connection field of one of their rows.",
+                    "Whenever the dice show a 1 and a 5 (in any colour), every player may cross a connection field of one of their rows.",
                     "Which row: a colour die + a white die showing 1 and 5 → that colour’s row; two colour dice → either of those two colours; two white dice → any row.",
-                    "Connection fields are crossed strictly left to right and may be skipped, but a skipped field can never be crossed later. Locking a row also closes its remaining connection fields.",
+                    "The field crossed must lie to the right of the row’s right-most cross; crossing it forfeits every empty number and field to its left. Locking (or conceding) a row closes its remaining connection fields.",
                 ]),
                 RulesSection(heading: "Locking a row", body: [
-                    "To cross the right-most number (12 for red/yellow, 2 for green/blue) you must already have at least 5 crosses in that row.",
+                    "To cross the right-most number (12 for red/yellow, 2 for green/blue) you must already have at least 5 crossed numbers in that row — connection fields don’t count toward the five.",
                     "Crossing it locks the row and adds the lock as one extra cross.",
                 ]),
                 RulesSection(heading: "Penalties & game end", body: [

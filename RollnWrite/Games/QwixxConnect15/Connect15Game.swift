@@ -11,9 +11,13 @@
 //  - DIP: the scoring strategy is injected (Connect 15 cap 15 → up to 120).
 //  - LSP: conforms to the generic `Scoreboard` protocol used by host UI.
 //
-//  The colour-row rules are identical to classic Qwixx; the three connection
-//  fields per row are the variant-specific addition. They count as extra crosses
-//  toward each row's total (raising the cap from 12 to 15).
+//  The colour-row rules are classic Qwixx; the variant twist is that each row's
+//  three connection fields join the row's ONE left-to-right sequence. Legality
+//  of every mark — number or connection field — is "its interleaved position is
+//  right of the row's highest marked position" (`Connect15Layout` positions:
+//  number → 2·column, connection field → 2·column + 1). Skipped spaces of
+//  either kind are forfeited implicitly. Crossed connection fields count as
+//  extra crosses toward the row's total (raising the cap from 12 to 15).
 //
 
 import SwiftUI
@@ -63,17 +67,46 @@ public final class Connect15Game: ObservableObject, Scoreboard {
         GameColor.allCases.filter { row(for: $0).locked }.count
     }
 
+    // MARK: - The interleaved left-to-right rule
+
+    /// The row's highest marked interleaved position — numbers AND connection
+    /// fields combined (`Connect15Layout` doubled positions), or -1 if the row
+    /// is empty. Any new mark must sit strictly right of this.
+    public func maxMarkedPosition(_ color: GameColor) -> Int {
+        let numberMax = row(for: color).marks
+            .map { Connect15Layout.numberPosition(column: $0) }
+            .max() ?? -1
+        let columns = Connect15Layout.columns(for: color)
+        let fieldMax = connections(for: color).marks
+            .compactMap { field in
+                field < columns.count
+                    ? Connect15Layout.connectionPosition(afterColumn: columns[field])
+                    : nil
+            }
+            .max() ?? -1
+        return max(numberMax, fieldMax)
+    }
+
     // MARK: - Rule enforcement (colour rows)
 
-    /// Whether crossing `index` in `color` is a legal move right now.
+    /// Whether crossing number `index` in `color` is a legal move right now.
     ///
-    /// Enforces: game not over · row not locked · not already marked ·
-    /// left-to-right · the right-most number needs ≥5 earlier crosses to lock.
+    /// Enforces: game not over · row not locked · strictly right of the row's
+    /// highest marked position (numbers and connection fields form one
+    /// left-to-right sequence, so this also rejects already-marked numbers and
+    /// implicitly forfeits skipped connection fields) · the right-most number
+    /// needs ≥5 earlier number crosses to lock.
     public func canMarkColor(_ color: GameColor, _ index: Int) -> Bool {
         guard !isGameOver else { return false }
         let r = row(for: color)
-        guard !r.locked, !r.marks.contains(index), index > r.maxMarkedIndex else { return false }
+        guard !r.locked,
+              Connect15Layout.numberPosition(column: index) > maxMarkedPosition(color)
+        else { return false }
         if index == ColorRow.lockIndex {
+            // UNVERIFIED reading: the official Connect 15 leaflet isn't online,
+            // so we keep the conservative classic-Qwixx rule — locking needs at
+            // least 5 crossed NUMBERS in the row; crossed connection fields do
+            // not count toward the five.
             return r.marks.count >= 5
         }
         return true
@@ -95,19 +128,28 @@ public final class Connect15Game: ObservableObject, Scoreboard {
 
     // MARK: - Rule enforcement (connection fields)
 
-    /// A connection field of `color` is legal while the game is live, that row is
-    /// not locked, and the row still has a free connection field. (Locking a row
-    /// ends marking in it, including its connection fields.)
-    public func canMarkConnection(_ color: GameColor) -> Bool {
+    /// Whether crossing connection field `field` (0-based ordinal, left → right)
+    /// of `color` is legal: game live, row not locked (locking or conceding a
+    /// row closes its remaining connection fields), field not already marked,
+    /// and its interleaved position strictly right of the row's highest marked
+    /// position — crossing it forfeits every skipped space to its left, and any
+    /// field left of an existing mark is itself forfeited.
+    public func canMarkConnection(_ color: GameColor, field: Int) -> Bool {
         guard !isGameOver else { return false }
-        guard !row(for: color).locked else { return false }
-        return connections(for: color).hasRoomLeft
+        let columns = Connect15Layout.columns(for: color)
+        guard field >= 0, field < columns.count else { return false }
+        guard !row(for: color).locked,
+              !connections(for: color).marks.contains(field)
+        else { return false }
+        return Connect15Layout.connectionPosition(afterColumn: columns[field]) > maxMarkedPosition(color)
     }
 
-    public func markConnection(_ color: GameColor) {
-        guard canMarkConnection(color) else { return }
-        setConnections(for: color, connections(for: color).crossed + 1)
-        state.history.append(.connection(color))
+    public func markConnection(_ color: GameColor, field: Int) {
+        guard canMarkConnection(color, field: field) else { return }
+        var f = connections(for: color)
+        f.marks.insert(field)
+        setConnections(f, for: color)
+        state.history.append(.connection(color, field: field))
         save()
     }
 
@@ -162,7 +204,7 @@ public final class Connect15Game: ObservableObject, Scoreboard {
     /// Crosses counted toward a colour's score: its number marks, the lock cross,
     /// plus any crossed connection fields. Capped by the scoring strategy (15).
     public func crosses(for color: GameColor) -> Int {
-        row(for: color).scoringCrosses + connections(for: color).crossed
+        row(for: color).scoringCrosses + connections(for: color).marks.count
     }
 
     public func points(for color: GameColor) -> Int {
@@ -193,8 +235,8 @@ public final class Connect15Game: ObservableObject, Scoreboard {
         return false
     }
 
-    public func isLastConnectionMark(_ color: GameColor) -> Bool {
-        if case let .connection(c) = state.history.last { return c == color }
+    public func isLastConnectionMark(_ color: GameColor, _ field: Int) -> Bool {
+        if case let .connection(c, f) = state.history.last { return c == color && f == field }
         return false
     }
 
@@ -212,8 +254,10 @@ public final class Connect15Game: ObservableObject, Scoreboard {
             r.marks.remove(index)
             if didLock { r.locked = false }
             setRow(r)
-        case let .connection(color):
-            setConnections(for: color, max(0, connections(for: color).crossed - 1))
+        case let .connection(color, field):
+            var f = connections(for: color)
+            f.marks.remove(field)
+            setConnections(f, for: color)
         case .penalty:
             state.penalties = max(0, state.penalties - 1)
         case let .concede(color):
@@ -242,12 +286,12 @@ public final class Connect15Game: ObservableObject, Scoreboard {
         }
     }
 
-    private func setConnections(for color: GameColor, _ crossed: Int) {
+    private func setConnections(_ f: ConnectionFields, for color: GameColor) {
         switch color {
-        case .red:    state.redConnections.crossed = crossed
-        case .yellow: state.yellowConnections.crossed = crossed
-        case .green:  state.greenConnections.crossed = crossed
-        case .blue:   state.blueConnections.crossed = crossed
+        case .red:    state.redConnections = f
+        case .yellow: state.yellowConnections = f
+        case .green:  state.greenConnections = f
+        case .blue:   state.blueConnections = f
         }
     }
 
