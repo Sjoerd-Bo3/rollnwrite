@@ -39,9 +39,11 @@ public struct QwixxBigPointsGame: GameDefinition {
                     "On a turn the white dice total may be crossed in any one row; the active player may also add a white die to a colour die and cross that colour.",
                 ]),
                 RulesSection(heading: "Bonus rows", body: [
-                    "A bonus space may only be crossed once an adjacent same-number colour space has already been crossed.",
-                    "Bonus spaces have no order of their own — cross any whose adjacent colour number is already crossed, in any order. (The colour rows still enforce their own left-to-right.)",
-                    "Each crossed bonus space counts for BOTH adjacent colour rows when scoring.",
+                    "A bonus space may only be crossed once an adjacent same-number colour space (either colour) has already been crossed.",
+                    "The general rule applies to the bonus rows too: cross them from left to right — previously skipped bonus spaces may not be crossed later.",
+                    "Each crossed bonus space counts for BOTH adjacent colour rows when scoring, but bonus crosses do NOT count toward the 5 crosses required to lock a row.",
+                    "Bonus spaces next to an already-locked colour row can still be crossed (activated via the other colour) and still count for both rows.",
+                    "Crossing only a bonus space on your turn does not count as a failed throw — no penalty.",
                 ]),
                 RulesSection(heading: "Locking a row", body: [
                     "To cross the right-most number (12 for red/yellow, 2 for green/blue) you must already have at least 5 crosses in that row.",

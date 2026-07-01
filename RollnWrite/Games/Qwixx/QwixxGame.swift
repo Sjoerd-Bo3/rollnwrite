@@ -94,17 +94,18 @@ public final class QwixxGame: ObservableObject, Scoreboard {
 
     // MARK: - Rule enforcement (bonus rows)
 
-    /// A bonus space is legal when the game is live, it isn't already marked, and
-    /// an adjacent same-number colour space is already crossed (the activation
-    /// rule). There is **no** left-to-right order on the bonus row itself: each
-    /// space is gated only by the colour rows (which each enforce their own
-    /// order), and the two colours advance independently — so a lower bonus can
-    /// legitimately be crossed after a higher one (e.g. cross red 5, then yellow 2
-    /// → bonus 5 is available before bonus 2).
+    /// A bonus space is legal when the game is live, it isn't already marked, an
+    /// adjacent same-number colour space is already crossed (the activation
+    /// rule), AND it lies right of every existing bonus cross. The official rules
+    /// are explicit that the general ordering rule applies to the bonus rows too:
+    /// "For both of the bonus rows the general rule also applies: numbers must be
+    /// crossed out from left to right and previously skipped bonus fields may not
+    /// be crossed out later on." So a lower bonus stays available only until a
+    /// higher one is crossed — skipping past it forfeits it.
     public func canMarkBonus(_ id: BonusRowID, _ index: Int) -> Bool {
         guard hasBonusRows, !isGameOver else { return false }
         let b = bonus(id)
-        guard !b.marks.contains(index) else { return false }
+        guard !b.marks.contains(index), index > b.maxMarkedIndex else { return false }
         let (a, c) = id.colors
         return row(for: a).marks.contains(index) || row(for: c).marks.contains(index)
     }
