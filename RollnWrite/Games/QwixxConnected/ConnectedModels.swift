@@ -65,18 +65,21 @@ public struct Chain: Codable, Equatable {
 ///   • red 11 ↔ yellow 11  (column index 9)
 ///   • yellow 3  ↔ green 11 (column index 1)
 ///   • yellow 8  ↔ green 6  (column index 6)
+///   • green 9 ↔ blue 9    (column index 3)
 ///   • green 4 ↔ blue 4    (column index 8)
 ///
-/// Corrected from the image: the sheet shows exactly five chains. The previously
-/// assumed `green 9 ↔ blue 9` pair is NOT printed on this sheet and was removed.
-/// No space belongs to more than one chain, so an automatic co-mark never
-/// cascades into a third field.
+/// The sheet (slip A) shows exactly SIX chains. In earlier product photos an
+/// inset card covered the green 9 / blue 9 region, which led to that pair being
+/// wrongly removed; an unoccluded render and a photo of the physical sheet both
+/// show it dash-circled and connected. No space belongs to more than one chain,
+/// so an automatic co-mark never cascades into a third field.
 public enum ConnectedLayout {
     public static let chains: [Chain] = [
         Chain(ChainEnd(.red, 4),    ChainEnd(.yellow, 4)),   // red 6  ↔ yellow 6
         Chain(ChainEnd(.red, 9),    ChainEnd(.yellow, 9)),   // red 11 ↔ yellow 11
         Chain(ChainEnd(.yellow, 1), ChainEnd(.green, 1)),    // yellow 3 ↔ green 11
         Chain(ChainEnd(.yellow, 6), ChainEnd(.green, 6)),    // yellow 8 ↔ green 6
+        Chain(ChainEnd(.green, 3),  ChainEnd(.blue, 3)),     // green 9 ↔ blue 9
         Chain(ChainEnd(.green, 8),  ChainEnd(.blue, 8)),     // green 4 ↔ blue 4
     ]
 
