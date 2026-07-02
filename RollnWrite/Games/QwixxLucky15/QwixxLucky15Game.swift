@@ -33,7 +33,7 @@ public struct QwixxLucky15Game: GameDefinition {
                 ]),
                 RulesSection(heading: "The card", body: [
                     "Red and yellow rows run 2 → 12 (left to right). Green and blue rows run 12 → 2.",
-                    "Below the colour rows sits the orange Lucky 15 track with four fields worth 5, 11, 18 and 36 points.",
+                    "Below the colour rows sits the orange Lucky 15 track with four fields worth 5, 11, 18 and 25 points.",
                 ]),
                 RulesSection(heading: "Crossing out numbers", body: [
                     "Within every row you must cross out from left to right. You may skip numbers, but skipped numbers can never be crossed later.",
@@ -42,7 +42,7 @@ public struct QwixxLucky15Game: GameDefinition {
                 RulesSection(heading: "The Lucky 15 track", body: [
                     "Whenever the active player rolls exactly 15 with both white dice plus one coloured die, they may cross the next free field of the Lucky 15 track (active player only).",
                     "The Lucky 15 mark replaces BOTH usual actions — it is your only action that turn. It counts as a mark, so it also spares you a penalty.",
-                    "The track is crossed strictly left to right: 5, then 11, then 18, then 36.",
+                    "The track is crossed strictly left to right: 5, then 11, then 18, then 25.",
                 ]),
                 RulesSection(heading: "Locking a row", body: [
                     "To cross the right-most number (12 for red/yellow, 2 for green/blue) you must already have at least 5 crosses in that row.",
@@ -54,7 +54,7 @@ public struct QwixxLucky15Game: GameDefinition {
                 ]),
                 RulesSection(heading: "Scoring", body: [
                     "Per colour, count its crosses (its own numbers + the lock, max 12) and score 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78.",
-                    "The Lucky 15 bonus equals the value of the highest field you crossed (0 / 5 / 11 / 18 / 36).",
+                    "The Lucky 15 bonus equals the value of the highest field you crossed (0 / 5 / 11 / 18 / 25).",
                     "Total = red + yellow + green + blue + Lucky 15 bonus − (5 × penalties).",
                 ]),
             ],

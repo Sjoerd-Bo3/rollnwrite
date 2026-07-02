@@ -19,11 +19,11 @@
 import Foundation
 
 /// The orange "Lucky 15" track: four diamond fields, crossed left → right, each
-/// worth more than the last. Values are transcribed from the official score
-/// sheet (5, 11, 18, 36).
+/// worth more than the last. Values verified against a photo of the physical
+/// scorepad (5, 11, 18, 25) — a published review claiming 36 was wrong.
 public struct Lucky15Track: Codable, Equatable {
     /// Printed point values of the diamond fields, left → right.
-    public static let values = [5, 11, 18, 36]
+    public static let values = [5, 11, 18, 25]
 
     /// Number of fields crossed so far (0…`values.count`). Because the track is
     /// strictly left-to-right, a simple count fully describes its state.
