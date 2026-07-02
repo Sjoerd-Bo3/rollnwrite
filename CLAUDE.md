@@ -140,15 +140,26 @@ the engine) plus a thin wrapper that adds the header, orientation lock, rules
 sheet, and optional 2-player mirror — exactly like `QwixxBoardView` /
 `QwixxScorecardView`. This makes the mirror and fullscreen behaviour reusable.
 
-## Build & CI
+## Build & CI (no Mac anywhere in the loop)
 
-- Open `RollnWrite.xcodeproj` in Xcode 16+ and run, or build via **Xcode Cloud**
-  (shared scheme: `RollnWrite`). See `docs/XCODE_CLOUD.md`.
-- The project uses `objectVersion = 77` (file-system synchronized groups);
-  build with Xcode 16 or newer.
-- **CI without a Mac:** `.github/workflows/ios.yml` builds the app on a
-  GitHub-hosted macOS runner (iOS Simulator, no signing) on every push/PR. This
-  is the no-Mac way to verify the project compiles; check it after each change.
+- Open `RollnWrite.xcodeproj` in Xcode 16+ if a Mac is available; the project
+  uses `objectVersion = 77` (file-system synchronized groups — new files under
+  `RollnWrite/` compile with no `.pbxproj` edits).
+- **The only auto-running workflow is "2. TestFlight"**: every push to `main`
+  builds, signs (fastlane match) and uploads. This is the de-facto compile
+  check — there is no per-PR CI, by design (macOS minutes cost 10×).
+- Manual workflows (Actions tab): "1. Validate Secrets", "3. iOS Build"
+  (compile-only pre-merge check for risky branches), "4. Bump Version",
+  "4. Renew Certs", "5. App Store Release" (builds the selected branch with
+  the `QWIXX_ONLY` flag and uploads the store candidate).
+- **Releases:** `main` = full app → TestFlight; `release/1.0` = stability
+  branch for the App Store, built Qwixx-only via the `QWIXX_ONLY` compilation
+  condition (a build flag, never divergent code). Full checklist:
+  `docs/APP_STORE.md` §7. The whole pipeline is documented as a reusable
+  skill in `.claude/skills/ios-testflight-no-mac/`.
+- **Working loop for changes:** see `.claude/skills/rollnwrite-dev-loop/` —
+  how to verify Swift changes without a compiler, the PR/TestFlight cadence,
+  and the screenshot-driven design iteration used throughout this project.
 
 ## Game notes
 
@@ -206,9 +217,61 @@ bar 2…42 + circled 2/4/6 bonuses). Foxes are a manual stepper.
 Do not generalise the Clever engines prematurely — each Clever has a
 materially different board.
 
+## Clever layout system (the redesign)
+
+Clever boards do NOT use the Qwixx band metrics. They render as faithful
+miniatures of the printed sheet with these idioms (all in
+`Games/Clever/CleverSheetComponents.swift`, deliberately game-agnostic so
+Clever 2/3/4 adopt them verbatim when their redesign lands):
+
+- `ScaledSheet` — lays content out at a fixed design width, stretches HEIGHTS
+  by a clamped factor to consume the available aspect (never non-uniform
+  `scaleEffect` — that distorts glyphs), then applies one uniform scale,
+  top-aligned. `WidthScaledCard` is the width-only variant for scroll contexts.
+- **Design tokens**: `SheetRadius` (pill 10 / panel 14 / card 20; cells
+  0.2×cell) and `SheetStroke` (small 1.5 / medium 2.5). Qwixx's counterpart is
+  `BoardStroke` in `Core/BoardComponents.swift`. Use the tokens; don't invent
+  radii or line widths.
+- Clever 1 currently ships THREE layouts while the owner picks a winner: the
+  sheet miniature + paged editor modal (swipe cycles areas), a scrolling list
+  mode (header toggle), and a separate catalogue entry "(v3)" with a
+  landscape two-column reflow (portrait falls back to the sheet). v3 shares
+  the regular entry's persistence key — two lenses on one game. The verdict
+  decides the Clever 2/3/4 rollout; do not roll out before it.
+- Clever screens force a light colour scheme via `.environment(\.colorScheme,
+  .light)` (a nested `.preferredColorScheme` loses to the app root's).
+
+## Cross-game framework features
+
+- `ScorecardScaffold` (Core) hosts every game: header (back/title/accessory/
+  dice/2-player/rules), `locksLandscape:` opt-out (Clever rotates freely),
+  optional `headerAccessory` (e.g. Mixx's A/B switch), keep-awake, and the
+  optional dice-roller strip.
+- **Dice roller (issue #30)**: informational only — never touches engines.
+  `GameDefinition.diceSet` (default nil) declares a game's physical dice;
+  `makeScorecardView()` injects them via the `\.gameDiceSet` environment key;
+  the scaffold shows a header toggle (persisted per game, default off).
+  Clever dice resolve through `DiceTheme`.
+- **High scores** (`Core/HighScores.swift`): keyed by board display title —
+  keep those title strings stable. `GameOverCard` shows best/new-best.
+- **Feedback (issue #33)**: Settings → composer → prefilled GitHub new-issue
+  URL. Deliberately NO token in the binary; never embed one.
+- Localisation lives in `RollnWrite/Localizable.xcstrings` (en source,
+  nl + de translations). Every new user-facing string gets nl/de entries;
+  validate the JSON after editing.
+
 ## Conventions
 
 - Keep rule logic in engines, not views. Views ask `can…` and call mutators.
 - Keep `Core` free of game-specific code.
-- Persist game state via the engine (`UserDefaults` + `Codable`).
-- Always implement from the **official** rules/scorecard; if unavailable, ask.
+- Persist game state via the engine (`UserDefaults` + `Codable`). Any new
+  stored field REQUIRES a tolerant custom `init(from:)` (`decodeIfPresent`
+  with defaults for EVERY field) so existing players' saves survive updates.
+- Undo is strictly LIFO and exact. Derived values (foxes, earned re-rolls)
+  must be pure functions of state — never stored counters that undo can
+  desync. Bookkeeping toggles (rounds bar, track circles) stay OUT of the
+  history.
+- Always implement from the **official** rules/scorecard; if unavailable, ask
+  the owner (who owns several of the physical games and can photograph
+  sheets — photos of the real pad outrank web reviews). Fan-made content only
+  with explicit owner approval (precedent: issue #34).
