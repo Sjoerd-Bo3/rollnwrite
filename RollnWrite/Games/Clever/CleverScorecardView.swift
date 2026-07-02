@@ -20,11 +20,12 @@
 
 import SwiftUI
 
-/// Cream "paper" background behind the sheet.
-private let cleverPaper = Color(red: 0.97, green: 0.96, blue: 0.93)
-private let cleverInk = Color(red: 0.13, green: 0.13, blue: 0.15)
+/// Cream "paper" background behind the sheet. Internal (not `private`) so the
+/// v3 layout experiment (`CleverV3ScorecardView.swift`) shares the exact values.
+let cleverPaper = Color(red: 0.97, green: 0.96, blue: 0.93)
+let cleverInk = Color(red: 0.13, green: 0.13, blue: 0.15)
 /// The sheet's light-grey card colour.
-private let cleverSheetGrey = Color(white: 0.82)
+let cleverSheetGrey = Color(white: 0.82)
 
 // MARK: - Sheet sections
 
@@ -125,11 +126,18 @@ public struct CleverScorecardView: View {
 struct CleverSheetBoardView: View {
     @ObservedObject var game: CleverGame
     /// Observed so an open board recolours when Settings changes the palette.
-    @ObservedObject private var diceTheme = DiceTheme.shared
+    @ObservedObject var diceTheme = DiceTheme.shared
 
     @State private var editorSection: CleverSheetSection = .yellow
     @State private var showEditor = false
     @State private var entry: ValueEntry?
+
+    /// Explicit init: the private `@State`s above make the synthesized
+    /// memberwise init non-internal, and the v3 layout experiment (a separate
+    /// file) reuses this board as its portrait fallback.
+    init(game: CleverGame) {
+        self.game = game
+    }
 
     // Design-space constants (pre-scale points). The sheet is laid out at a
     // fixed "natural" WIDTH; `ScaledSheet` stretches its heights to consume
@@ -285,7 +293,7 @@ func cleverRoundBadge(_ round: Int, game: CleverGame, size: CGFloat) -> some Vie
 
 struct CleverYellowGrid: View {
     @ObservedObject var game: CleverGame
-    @ObservedObject private var diceTheme = DiceTheme.shared
+    @ObservedObject var diceTheme = DiceTheme.shared
     let cell: CGFloat
     /// Vertical stretch — multiplies cell heights and vertical gaps only.
     var stretch: CGFloat = 1
@@ -382,7 +390,7 @@ private struct CleverDiagonalDash: Shape {
 
 struct CleverBluePanel: View {
     @ObservedObject var game: CleverGame
-    @ObservedObject private var diceTheme = DiceTheme.shared
+    @ObservedObject var diceTheme = DiceTheme.shared
     let cell: CGFloat
     /// Show the cross-count under each scale badge (used in the big editor).
     var showCounts = false
@@ -502,7 +510,7 @@ struct CleverBluePanel: View {
 
 struct CleverGreenRow: View {
     @ObservedObject var game: CleverGame
-    @ObservedObject private var diceTheme = DiceTheme.shared
+    @ObservedObject var diceTheme = DiceTheme.shared
     let cell: CGFloat
     /// Wrap into two lines (6 + 5) — used by the big editor page.
     var split = false
@@ -555,7 +563,7 @@ struct CleverGreenRow: View {
 
 struct CleverOrangeRow: View {
     @ObservedObject var game: CleverGame
-    @ObservedObject private var diceTheme = DiceTheme.shared
+    @ObservedObject var diceTheme = DiceTheme.shared
     let cell: CGFloat
     var split = false
     /// Vertical stretch — multiplies cell heights and vertical gaps only.
@@ -612,7 +620,7 @@ struct CleverOrangeRow: View {
 
 struct CleverPurpleRow: View {
     @ObservedObject var game: CleverGame
-    @ObservedObject private var diceTheme = DiceTheme.shared
+    @ObservedObject var diceTheme = DiceTheme.shared
     let cell: CGFloat
     var split = false
     /// Vertical stretch — multiplies cell heights and vertical gaps only.
@@ -694,7 +702,7 @@ func cleverBonusSlot(_ icon: BonusIcon?, game: CleverGame, size: CGFloat) -> som
 struct CleverListBoardView: View {
     @ObservedObject var game: CleverGame
     /// Observed so an open board recolours when Settings changes the palette.
-    @ObservedObject private var diceTheme = DiceTheme.shared
+    @ObservedObject var diceTheme = DiceTheme.shared
     @State private var entry: ValueEntry?
 
     var body: some View {
@@ -786,7 +794,7 @@ struct CleverListBoardView: View {
 
 struct CleverEditorSheet: View {
     @ObservedObject var game: CleverGame
-    @ObservedObject private var diceTheme = DiceTheme.shared
+    @ObservedObject var diceTheme = DiceTheme.shared
     @Binding var selection: CleverSheetSection
 
     @State private var entry: ValueEntry?
@@ -981,7 +989,7 @@ struct BonusBadge: View {
     let icon: BonusIcon
     @ObservedObject var game: CleverGame
     /// Observed so badges recolour with the app-wide dice palette.
-    @ObservedObject private var diceTheme = DiceTheme.shared
+    @ObservedObject var diceTheme = DiceTheme.shared
     let size: CGFloat
 
     var body: some View {

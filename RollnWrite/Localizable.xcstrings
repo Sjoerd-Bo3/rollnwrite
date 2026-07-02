@@ -2465,6 +2465,38 @@
           }
         }
       }
+    },
+    "That's Pretty Clever (v3)": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That's Pretty Clever (v3)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ganz schön clever (v3)"
+          }
+        }
+      }
+    },
+    "Landscape layout experiment · shares your Clever game": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Experiment met liggende lay-out · deelt je Clever-spel"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Querformat-Layout-Experiment · teilt dein Clever-Spiel"
+          }
+        }
+      }
     }
   }
 }
