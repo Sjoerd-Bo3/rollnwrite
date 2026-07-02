@@ -79,6 +79,9 @@ struct SettingsView: View {
                     .pickerStyle(.segmented)
                 }
 
+                // Dice colours drive the Clever areas; the Qwixx-only App
+                // Store cut ships nothing that uses them, so hide the section.
+                #if !QWIXX_ONLY
                 Section {
                     ForEach(0..<DiceTheme.slotCount, id: \.self) { i in
                         ColorPicker("Die \(i + 1)", selection: dieColor(i), supportsOpacity: false)
@@ -89,6 +92,7 @@ struct SettingsView: View {
                 } footer: {
                     Text("Set the colours of your physical dice once; every game shows each of its areas in the nearest of your dice colours. Scoring is unchanged.")
                 }
+                #endif
 
                 if !scores.isEmpty {
                     Section("High scores") {

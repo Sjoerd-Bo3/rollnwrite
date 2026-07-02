@@ -5,15 +5,19 @@
 //  EXPERIMENTAL third Clever 1 layout ("v3"): a landscape-optimised REFLOW of
 //  the printed score sheet, built entirely from the existing sheet pieces.
 //
-//  Landscape — two columns filling the screen, everything directly tappable
-//  (no editor modal):
-//  • LEFT (~38% width): the yellow 4×4 panel stacked above the blue panel.
-//  • RIGHT: a compact header strip (rounds bar + reroll / +1 tracks), then the
-//    three 11-cell rows (green, orange, purple) at LARGE cell size, then the
-//    totals strip (y+b+g+o+p+fox = Total).
-//  Each column is one `ScaledSheet`: the column is laid out at a fixed design
-//  width, stretched vertically toward its slot's aspect, then scaled uniformly
-//  to fit — cells fill the slot with no scrolling and no glyph distortion.
+//  Landscape — a rounds rail plus two columns filling the screen, everything
+//  directly tappable (no editor modal):
+//  • LEFT EDGE: the 1–6 rounds as a narrow VERTICAL rail (numbers upright,
+//    the printed bonus badge under each number tile).
+//  • LEFT COLUMN (~27% width): the yellow 4×4 panel stacked above blue.
+//  • RIGHT: the reroll and +1 tracks side by side (one short strip), then the
+//    three 11-cell rows (green, orange, purple) at LARGE cell size, sized so
+//    the cells run flush to the band edge. No totals strip here — scoring is
+//    only interesting at game end (owner call); per-area scores stay visible
+//    in the portrait sheet and the editor.
+//  Each piece is one `ScaledSheet`: laid out at a fixed design width,
+//  stretched vertically toward its slot's aspect, then scaled uniformly to
+//  fit — cells fill the slot with no scrolling and no glyph distortion.
 //
 //  Portrait — falls back to the standard v2 sheet miniature
 //  (`CleverSheetBoardView`) unchanged; v3 is a landscape reflow, not a new
@@ -101,19 +105,29 @@ struct CleverV3LandscapeBoard: View {
     @ObservedObject private var diceTheme = DiceTheme.shared
     @State private var entry: ValueEntry?
 
-    // Design-space constants (pre-scale points). Each column is laid out at a
+    // Design-space constants (pre-scale points). Each piece is laid out at a
     // fixed natural width; its `ScaledSheet` stretches heights toward the
-    // slot's aspect and then scales the whole column uniformly to fit.
+    // slot's aspect and then scales the whole piece uniformly to fit.
+    private let railW: CGFloat = 46
     private let leftW: CGFloat = 240
     private let rightW: CGFloat = 560
     private let panelCell: CGFloat = 36
-    private let rowCell: CGFloat = 40
+    /// Width available to a row band's CELLS: the column width minus the
+    /// band's padding (2×8), the fixed-width chevron (14) and its spacing (6).
+    /// Cell sizes derive from it so the 11th cell ends flush with the band.
+    private var bandContentW: CGFloat { rightW - 16 - 14 - 6 }
+    /// Green/orange rows: 11 cells + 10 gaps of 0.1×cell = 12 cell widths.
+    private var rowCell: CGFloat { bandContentW / 12 }
+    /// Purple row: 11 cells + 10 "<" separators of 0.24×cell = 13.4 widths.
+    private var purpleRowCell: CGFloat { bandContentW / 13.4 }
 
     var body: some View {
         GeometryReader { geo in
             HStack(alignment: .top, spacing: 10) {
+                ScaledSheet(maxStretch: 1.5) { stretch in roundsRail(stretch) }
+                    .frame(width: 52)
                 ScaledSheet(maxStretch: 1.4) { stretch in leftColumn(stretch) }
-                    .frame(width: geo.size.width * 0.38)
+                    .frame(width: geo.size.width * 0.27)
                 ScaledSheet(maxStretch: 1.6) { stretch in rightColumn(stretch) }
                     .frame(maxWidth: .infinity)
             }
@@ -132,6 +146,38 @@ struct CleverV3LandscapeBoard: View {
         .cleverValueEntry($entry)
     }
 
+    // MARK: Rounds rail — the 1–6 rounds as a vertical left-edge column
+
+    /// Vertical counterpart of `SheetRoundsBar`: one dark tile per round with
+    /// an upright number and the printed bonus badge underneath. Informative
+    /// only — no game state — so it earns only a narrow rail.
+    private func roundsRail(_ stretch: CGFloat) -> some View {
+        VStack(spacing: 6 * stretch) {
+            ForEach(0..<6, id: \.self) { r in
+                VStack(spacing: 4 * stretch) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .fill(Color.white)
+                        Text("\(r + 1)")
+                            .font(.system(size: 17, weight: .heavy, design: .rounded))
+                            .foregroundStyle(cleverInk)
+                    }
+                    .frame(width: railW - 12, height: 30 * stretch)
+                    cleverRoundBadge(r, game: game, size: 18)
+                        .frame(height: 18)
+                }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 6 * stretch)
+                .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .fill(r >= 4 ? Color.black : Color(white: 0.3))
+                )
+            }
+        }
+        .frame(width: railW)
+    }
+
     // MARK: Left column — yellow above blue
 
     private func leftColumn(_ stretch: CGFloat) -> some View {
@@ -146,11 +192,11 @@ struct CleverV3LandscapeBoard: View {
         .frame(width: leftW)
     }
 
-    // MARK: Right column — header strip, three big rows, totals
+    // MARK: Right column — reroll/+1 tracks, then three big rows
 
     private func rightColumn(_ stretch: CGFloat) -> some View {
         VStack(spacing: 10 * stretch) {
-            headerStrip(stretch)
+            tracksRow(stretch)
             rowBand(.green, stretch) {
                 CleverGreenRow(game: game, cell: rowCell, stretch: stretch)
             }
@@ -158,34 +204,28 @@ struct CleverV3LandscapeBoard: View {
                 CleverOrangeRow(game: game, cell: rowCell, stretch: stretch) { entry = $0 }
             }
             rowBand(.purple, stretch) {
-                CleverPurpleRow(game: game, cell: rowCell, stretch: stretch) { entry = $0 }
+                CleverPurpleRow(game: game, cell: purpleRowCell, stretch: stretch) { entry = $0 }
             }
-            cleverTotalStrip(game: game, height: 44 * min(stretch, 1.25))
+            // No totals strip in landscape (owner call): scoring only matters
+            // at game end, and the freed height goes to the three rows.
         }
         .frame(width: rightW)
     }
 
-    /// Rounds bar 1–6 with the reroll and +1 circle tracks tightly stacked
-    /// beside it — one compact strip, all directly tappable.
-    private func headerStrip(_ stretch: CGFloat) -> some View {
-        HStack(alignment: .center, spacing: 12) {
-            SheetRoundsBar(rounds: 6, darkFrom: 4, cell: 26, ink: cleverInk, stretch: stretch) { r in
-                cleverRoundBadge(r, game: game, size: 15)
-            }
-            VStack(spacing: 4 * stretch) {
-                SheetCircleTrack(slots: CleverLayout.rerollTrackSlots,
-                                 used: game.state.rerollUsed,
-                                 diameter: 15, ink: cleverInk, stretch: stretch,
-                                 icon: { BonusBadge(icon: .reroll, game: game, size: 19) },
-                                 tap: { game.toggleReroll($0) })
-                SheetCircleTrack(slots: CleverLayout.extraDieTrackSlots,
-                                 used: game.state.extraDieUsed,
-                                 diameter: 15, ink: cleverInk, stretch: stretch,
-                                 icon: { BonusBadge(icon: .plusOne, game: game, size: 19) },
-                                 tap: { game.toggleExtraDie($0) })
-            }
-            // Hug the tracks so the (flexible) rounds bar takes the slack.
-            .fixedSize(horizontal: true, vertical: false)
+    /// The reroll and +1 circle tracks side by side — one short strip where
+    /// the rounds bar used to sit, both directly tappable.
+    private func tracksRow(_ stretch: CGFloat) -> some View {
+        HStack(spacing: 10) {
+            SheetCircleTrack(slots: CleverLayout.rerollTrackSlots,
+                             used: game.state.rerollUsed,
+                             diameter: 19, ink: cleverInk, stretch: stretch,
+                             icon: { BonusBadge(icon: .reroll, game: game, size: 24) },
+                             tap: { game.toggleReroll($0) })
+            SheetCircleTrack(slots: CleverLayout.extraDieTrackSlots,
+                             used: game.state.extraDieUsed,
+                             diameter: 19, ink: cleverInk, stretch: stretch,
+                             icon: { BonusBadge(icon: .plusOne, game: game, size: 24) },
+                             tap: { game.toggleExtraDie($0) })
         }
     }
 
@@ -211,6 +251,7 @@ struct CleverV3LandscapeBoard: View {
             Image(systemName: "arrowtriangle.right.fill")
                 .font(.system(size: 13, weight: .black))
                 .foregroundStyle(.white)
+                .frame(width: 14) // fixed so `bandContentW` is exact
             content()
             Spacer(minLength: 0)
         }

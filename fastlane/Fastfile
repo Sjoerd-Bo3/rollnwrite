@@ -243,8 +243,12 @@ platform :ios do
         # be shell-escaped or xcodebuild sees only "match" and signing fails.
         "PROVISIONING_PROFILE_SPECIFIER=#{profile.shellescape}",
         "MARKETING_VERSION=1.0",
-        "CURRENT_PROJECT_VERSION=#{build_number}"
-      ].join(" "),
+        "CURRENT_PROJECT_VERSION=#{build_number}",
+        # App Store cut: the `release` lane sets QWIXX_ONLY=1 so the catalogue
+        # compiles without the Clever family (App Store 1.0 is Qwixx-only —
+        # see GameRegistry.cleverGames). TestFlight builds pass no flag.
+        (ENV["QWIXX_ONLY"] == "1" ? "SWIFT_ACTIVE_COMPILATION_CONDITIONS=QWIXX_ONLY" : nil)
+      ].compact.join(" "),
       export_options: {
         method: "app-store",
         teamID: team_id,
@@ -270,6 +274,9 @@ platform :ios do
         "Build #{build_number} (#{(ENV['GITHUB_SHA'] || '')[0, 7]})"
       end
 
+    # Mark App Store candidates so they're unmistakable in the build list.
+    notes = "App Store 1.0 candidate (Qwixx only).\n#{notes}" if ENV["QWIXX_ONLY"] == "1"
+
     upload_to_testflight(
       api_key: key,
       app_identifier: bundle_id,
@@ -280,6 +287,17 @@ platform :ios do
     )
 
     UI.success("✅ Uploaded build #{build_number} to TestFlight. It will appear after Apple finishes processing.")
+  end
+
+  # App Store 1.0: the same battle-tested build+upload path as `beta`, but
+  # compiled with QWIXX_ONLY so the catalogue ships without the Clever family.
+  # Uploaded binaries land in the shared App Store Connect pool, so after the
+  # upload you attach this build to the 1.0 App Store version in the ASC web
+  # UI and submit for review there (see docs/APP_STORE.md → Releasing).
+  desc "Build the Qwixx-only App Store 1.0 candidate and upload it"
+  lane :release do
+    ENV["QWIXX_ONLY"] = "1"
+    beta
   end
 
   # One-off maintenance lane (run manually from the "Renew Certs" workflow).
