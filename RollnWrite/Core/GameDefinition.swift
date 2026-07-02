@@ -58,14 +58,25 @@ public enum GameRegistry {
         QwixxDoubleGame(),
         QwixxBonusGame(),
         QwixxMixxGame(),
+
+        // Future variants slot in here with zero changes elsewhere.
+    ] + cleverGames
+
+    /// The Clever family ships to TestFlight only for now: the App Store 1.0
+    /// is Qwixx-only. The release lane compiles with the `QWIXX_ONLY`
+    /// condition (fastlane/Fastfile → `release`), which trims the catalogue;
+    /// main/TestFlight builds carry no flag, so nothing changes there.
+    #if QWIXX_ONLY
+    private static let cleverGames: [GameDefinition] = []
+    #else
+    private static let cleverGames: [GameDefinition] = [
         ThatsPrettyCleverGame(),
         ThatsPrettyCleverV3Game(),
         TwiceAsCleverGame(),
         CleverCubedGame(),
         Clever4everGame(),
-
-        // Future variants slot in here with zero changes elsewhere.
     ]
+    #endif
 
     public static var playable: [GameDefinition] {
         games.filter { $0.availability == .available }

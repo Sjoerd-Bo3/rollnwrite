@@ -101,3 +101,35 @@ Make the reviewer's life easy:
 - Metadata, screenshots, and the privacy URL can be edited without a new build;
   only binary changes need a fresh TestFlight upload (just push to `main`).
 - Keep the disclaimer visible in the description to reduce IP-review friction.
+
+## 7. Releasing — branch strategy & the Qwixx-only 1.0
+
+The App Store 1.0 ships **Qwixx only**; the Clever family stays TestFlight-only
+until it's ready. The trimming is a **build flag**, not divergent code:
+
+- `main` — full app. Every merge auto-builds to **TestFlight** (unchanged).
+- `release/1.0` — a stability snapshot cut from a good `main` commit. No code
+  differences: the App Store workflow applies the `QWIXX_ONLY` compilation
+  condition at build time (`GameRegistry.cleverGames` compiles empty and the
+  Clever-only Dice-colours Settings section is hidden).
+
+### Cutting and shipping 1.0
+
+1. Pick the `main` commit you want to ship and cut the branch:
+   `git branch release/1.0 <sha> && git push origin release/1.0`.
+2. Actions tab → **"5. App Store Release"** → Run workflow → branch
+   `release/1.0`. The `release` lane builds with `QWIXX_ONLY` and uploads;
+   the build is labelled **"App Store 1.0 candidate (Qwixx only)"** in the
+   shared App Store Connect build list.
+3. (Recommended) TestFlight-test that exact build — verify the catalogue
+   shows only the nine Qwixx games and Settings has no Dice-colours section.
+4. In App Store Connect → your app → **1.0** version → attach that build,
+   complete the metadata from this checklist, and **Submit for Review**.
+
+### Afterwards
+
+- Bug fix for the released 1.0 while `main` has moved on? Cherry-pick the fix
+  onto `release/1.0`, re-run the workflow, submit the new build as 1.0.1
+  (bump `MARKETING_VERSION` via the "4. Bump Version" workflow on that branch).
+- When Clever is ready for the store, ship a `release/2.0` (or just release
+  from `main`) **without** the flag — no unpicking needed.

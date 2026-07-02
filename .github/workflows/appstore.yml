@@ -1,0 +1,74 @@
+name: 5. App Store Release
+
+# Build the QWIXX-ONLY App Store candidate and upload it to App Store Connect,
+# entirely on a GitHub-hosted Mac (fastlane lane `release` — the same signing
+# and upload path as TestFlight, plus the QWIXX_ONLY compilation condition
+# that trims the Clever family out of the catalogue).
+#
+# MANUAL ONLY, and branch-aware: trigger it from the Actions tab → "5. App
+# Store Release" → Run workflow → pick the branch (normally `release/1.0`,
+# the stability snapshot cut from main). Uploaded builds land in the shared
+# App Store Connect pool marked "App Store 1.0 candidate (Qwixx only)";
+# attach the build to the 1.0 version in the ASC web UI and submit for
+# review there. Full flow: docs/APP_STORE.md → Releasing.
+#
+# Requires the same repository secrets as the TestFlight workflow.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: appstore-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    name: Upload App Store candidate
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Enough commit history for the auto-generated release notes.
+          fetch-depth: 50
+
+      - name: Select latest stable Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Set up Ruby + fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+
+      - name: Configure match git auth (GH_PAT for the Match-Secrets repo)
+        # Basic-auth the certs-repo clone as "<owner>:<PAT>" — see
+        # testflight.yml for why the username must be the real account.
+        run: |
+          AUTH=$(printf '%s' "${{ github.repository_owner }}:${{ secrets.GH_PAT }}" | base64 | tr -d '\n')
+          echo "::add-mask::$AUTH"
+          echo "MATCH_GIT_BASIC_AUTHORIZATION=$AUTH" >> "$GITHUB_ENV"
+
+      - name: Build & upload App Store candidate (Qwixx only)
+        run: bundle exec fastlane ios release
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APP_BUNDLE_ID: ${{ secrets.APP_BUNDLE_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_URL: https://github.com/Sjoerd-Bo3/Match-Secrets.git
+          # Do NOT pass MATCH_GIT_BRANCH — an unset secret arrives as "" and
+          # breaks match's default-branch resolution (see testflight.yml).
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: appstore-ipa-and-logs
+          path: |
+            *.ipa
+            ~/Library/Logs/gym/*.log
+          if-no-files-found: ignore
