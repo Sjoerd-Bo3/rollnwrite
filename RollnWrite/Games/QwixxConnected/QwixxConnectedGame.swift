@@ -6,8 +6,9 @@
 //  wires up its rules and scorecard. Adding a game means adding a file like this
 //  plus one line in `GameRegistry` (OCP).
 //
-//  This implements the "Die Kette" / "The Chain" Connected score sheet
-//  (version B), which is the layout on the supplied scorecard.
+//  This implements the "Die Kette" / "The Chain" game variant (officially
+//  "Version B" in the rules) using slip "A" of the five sheets (A–E), which is
+//  the layout on the supplied scorecard.
 //
 
 import SwiftUI
@@ -29,14 +30,14 @@ public struct QwixxConnectedGame: GameDefinition {
     public var rules: RulesDocument {
         RulesDocument(
             title: "Qwixx — Connected (The Chain)",
-            subtitle: "Official rules for the Connected \u{201E}Kette\u{201C} sheet (version B)",
+            subtitle: "Official rules for the Connected \u{201E}Kette\u{201C} variant (sheet A)",
             sections: [
                 RulesSection(heading: "Goal", body: [
                     "Play classic Qwixx, but certain circled spaces are linked in pairs by a printed line. Crossing one space of a chain forces you to cross its partner too.",
                 ]),
                 RulesSection(heading: "The card", body: [
                     "Red and yellow rows run 2 → 12 (left to right). Green and blue rows run 12 → 2.",
-                    "Several spaces are circled and joined to a partner in a neighbouring row by a short line. On this sheet the chains are: red 6 ↔ yellow 6, red 11 ↔ yellow 11, yellow 3 ↔ green 11, yellow 8 ↔ green 6, and green 4 ↔ blue 4.",
+                    "Several spaces are circled and joined to a partner in a neighbouring row by a short line. On this sheet the chains are: red 6 ↔ yellow 6, red 11 ↔ yellow 11, yellow 3 ↔ green 11, yellow 8 ↔ green 6, green 9 ↔ blue 9, and green 4 ↔ blue 4.",
                     "Each sheet (A–E) places the chains differently.",
                 ]),
                 RulesSection(heading: "Crossing out numbers", body: [

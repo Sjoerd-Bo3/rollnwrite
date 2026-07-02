@@ -83,7 +83,7 @@ struct BonusBoardView: View {
             }
             Button("Cancel", role: .cancel) { confirmConcede = nil }
         } message: { color in
-            Text("Use this when another player locked \(color.displayName). The row closes but you score no lock bonus.")
+            Text("Use this when another player locked \(color.displayName). The row closes but you score no lock bonus, and its remaining bonus-bar fields are forfeited.")
         }
         .overlay {
             if showResults {
@@ -164,8 +164,9 @@ struct BonusBoardView: View {
         .colourBand(tint: color.tint, hPad: bandPad, vPad: th * 0.09, corner: min(w, th) * 0.3)
     }
 
-    /// The snaking bonus bar: twelve coloured fields, crossed left-to-right as
-    /// boxed numbers are hit. Aligned under the number tiles (offset past the
+    /// The snaking bonus bar: twelve coloured fields, earned left-to-right as
+    /// boxed numbers are hit — skipping any field forfeited because its colour
+    /// row was completed. Aligned under the number tiles (offset past the
     /// chevron column). The engine advances it automatically; it is read-only.
     private func bonusBar(w: CGFloat, h: CGFloat) -> some View {
         HStack(spacing: tileGap) {
@@ -187,7 +188,8 @@ struct BonusBoardView: View {
 
     private func barField(idx: Int, color: GameColor, w: CGFloat, h: CGFloat) -> some View {
         let s = min(w, h)
-        let isCrossed = idx < game.bar.crossed
+        let isEarned = game.bar.earned.contains(idx)
+        let isForfeited = game.bar.forfeited.contains(idx)
         return ZStack {
             RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
                 .fill(color.tint)
@@ -195,16 +197,22 @@ struct BonusBoardView: View {
                     RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
                         .strokeBorder(.black.opacity(0.25), lineWidth: 1)
                 )
-            if isCrossed {
+            if isEarned {
                 Image(systemName: "xmark")
                     .font(.system(size: s * 0.6, weight: .black))
                     .foregroundStyle(color.textColor)
+            } else if isForfeited {
+                // Forfeited fields read as struck-out and dead: a thin slash on
+                // a heavily dimmed tile, clearly distinct from an earned cross.
+                Image(systemName: "line.diagonal")
+                    .font(.system(size: s * 0.7, weight: .regular))
+                    .foregroundStyle(color.textColor.opacity(0.7))
             }
         }
         .frame(width: w, height: h)
-        .opacity(isCrossed ? 1 : 0.5)
+        .opacity(isEarned ? 1 : (isForfeited ? 0.3 : 0.5))
         .accessibilityLabel("Bonus \(color.displayName)")
-        .accessibilityValue(isCrossed ? "crossed" : "open")
+        .accessibilityValue(isEarned ? "crossed" : (isForfeited ? "forfeited" : "open"))
     }
 
     /// Controls (undo, new game) on the left; penalties + running total on the

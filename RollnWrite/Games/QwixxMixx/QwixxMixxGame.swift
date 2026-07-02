@@ -38,7 +38,7 @@ public struct QwixxMixxGame: GameDefinition {
                 ]),
                 RulesSection(heading: "Variant B — scrambled numbers", body: [
                     "There is one row per die colour (red, yellow, green, blue), but the eleven numbers within each row are no longer ordered — they are scattered wildly.",
-                    "You still cross strictly left → right, and to cross a number you must roll it with that row's coloured die (or the white dice). E.g. to cross a 11 in the red row you need an 11 in red.",
+                    "You still cross strictly left → right, and to cross a number you must roll it with that row's coloured die (or the white dice). E.g. to cross an 11 in the red row you need an 11 in red.",
                     "As in Variant A, closing a row removes that colour's die from play.",
                 ]),
                 RulesSection(heading: "Crossing out numbers", body: [

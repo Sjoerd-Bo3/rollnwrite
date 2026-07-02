@@ -42,9 +42,14 @@ public struct QwixxBonusGame: GameDefinition {
                 ]),
                 RulesSection(heading: "Boxed numbers & the bonus bar", body: [
                     "Whenever you cross out a black-boxed number, immediately cross off the left-most still-free field of the bonus bar.",
-                    "The bonus bar is crossed strictly left to right with no gaps.",
+                    "The bonus bar is crossed left to right, always onto the left-most field that is neither crossed nor forfeited — forfeited fields are simply skipped.",
                     "The field you just crossed shows a colour. You immediately make one extra cross in that colour row — the next legal (left-most free) number in it.",
                     "If that free extra cross lands on another boxed number, it advances the bonus bar again, so chains can form. You may not decline an extra cross.",
+                ]),
+                RulesSection(heading: "Completed colours forfeit bar fields", body: [
+                    "Once a colour has been completed during the game, all players immediately cross out that colour's remaining fields in the bonus bar. Those fields no longer count — they are forfeited and are simply skipped from then on.",
+                    "This applies whether you locked the row yourself or another player did.",
+                    "Under no circumstances can a box in a completed row be marked with a cross any more.",
                 ]),
                 RulesSection(heading: "Locking a row", body: [
                     "To cross the right-most number (12 for red/yellow, 2 for green/blue) you must already have at least 5 crosses in that row.",

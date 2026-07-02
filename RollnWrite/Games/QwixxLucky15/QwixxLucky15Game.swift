@@ -40,8 +40,8 @@ public struct QwixxLucky15Game: GameDefinition {
                     "On a turn the white dice total may be crossed in any one row; the active player may also add a white die to a colour die and cross that colour.",
                 ]),
                 RulesSection(heading: "The Lucky 15 track", body: [
-                    "Whenever you may cross a coloured number that sums to exactly 15 (both white dice plus one coloured die), you may instead cross the next field of the Lucky 15 track.",
-                    "If you take a Lucky 15 mark on your turn you do not also cross a colour for that same combination.",
+                    "Whenever the active player rolls exactly 15 with both white dice plus one coloured die, they may cross the next free field of the Lucky 15 track (active player only).",
+                    "The Lucky 15 mark replaces BOTH usual actions — it is your only action that turn. It counts as a mark, so it also spares you a penalty.",
                     "The track is crossed strictly left to right: 5, then 11, then 18, then 25.",
                 ]),
                 RulesSection(heading: "Locking a row", body: [

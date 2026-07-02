@@ -10,10 +10,11 @@
 //  composed from the Core `BoardComponents`) plus a thin wrapper that drops the
 //  board into `ScorecardScaffold` for the header, landscape lock and rules sheet.
 //
-//  Connect15 specifics: every colour row carries three "connection" fields woven
-//  in at the positions printed on the official sheet (`Connect15Layout`). They
-//  carry no number, are crossed strictly left → right (link glyph), and count as
-//  extra crosses — raising each row's cap to 15 (120 points).
+//  Connect15 specifics: every colour row carries three "connection" fields, each
+//  a small square straddling the gap between two adjacent number tiles at the
+//  positions printed on the official sheet (`Connect15Layout`). They carry no
+//  number (link glyph), join the row's single left-to-right sequence, and count
+//  as extra crosses — raising each row's cap to 15 (120 points).
 //
 
 import SwiftUI
@@ -35,8 +36,9 @@ struct Connect15BoardView: View {
     private let outerPad: CGFloat = 4   // gap to the safe-area edge
     private let bandPad: CGFloat = 4    // coloured border inside each band
 
-    // chevron + 11 numbers + 3 connection fields + lock + per-row score
-    private let columns: CGFloat = 17
+    // chevron + 11 numbers + lock + per-row score. The three connection fields
+    // straddle the gaps between number tiles, so they take no column of their own.
+    private let columns: CGFloat = 14
 
     init(game: Connect15Game, scoreTitle: String) {
         _game = ObservedObject(wrappedValue: game)
@@ -128,35 +130,17 @@ struct Connect15BoardView: View {
 
     // MARK: - Colour band
     //
-    // A row renders, left → right: a direction chevron, the eleven number tiles
-    // with the connection fields woven in at their printed positions
-    // (`Connect15Layout.connectionColumns`), the lock, and the running score.
-    //
-    // Connection fields are tracked by COUNT in the engine (crossed left → right,
-    // skippable), so the n-th visible field is "crossed" when `crossed > n` and
-    // "next" when `crossed == n`. Any capacity beyond the documented print
-    // positions is appended just before the lock so all three are always shown.
+    // A row renders, left → right: a direction chevron, the eleven number tiles,
+    // the lock, and the running score. The three connection fields don't occupy
+    // columns of their own — each is a small square OVERLAID on the gap between
+    // the two number tiles it connects (`Connect15Layout.connectionColumns`),
+    // like the printed sheet, where the square straddles the boundary.
 
     private func band(_ color: GameColor, w: CGFloat, tile th: CGFloat) -> some View {
         let row = game.row(for: color)
-        let printed = Connect15Layout.connectionColumns[color] ?? []
-        // Connection-field ordinals (0-based) keyed by the number column they
-        // follow; remaining fields up to capacity sit at the row's end (-1 key).
-        let weave = connectionPlacement(printed: printed)
-
         return HStack(spacing: tileGap) {
             BandChevron(w: w, h: th)
-            ForEach(0..<11, id: \.self) { i in
-                numberTile(color, i, w: w, th: th)
-                if let ordinal = weave.afterColumn[i] {
-                    connectionTile(color, ordinal: ordinal, w: w, th: th)
-                }
-            }
-            // Connection fields that have no documented print position go here,
-            // keeping every row at the full three (and aligned across rows).
-            ForEach(weave.trailing, id: \.self) { ordinal in
-                connectionTile(color, ordinal: ordinal, w: w, th: th)
-            }
+            numberStrip(color, w: w, th: th)
             LockTile(tint: color.tint, locked: row.locked,
                      undoable: row.locked && game.isLastConcede(color),
                      w: w, h: th) {
@@ -168,18 +152,25 @@ struct Connect15BoardView: View {
         .colourBand(tint: color.tint, hPad: bandPad, vPad: th * 0.09, corner: min(w, th) * 0.3)
     }
 
-    /// Maps the documented per-row connection positions onto connection-field
-    /// ordinals, assigning any leftover ordinals (up to capacity) to the trailing
-    /// group so every row shows all `ConnectionFields.capacity` fields.
-    private func connectionPlacement(printed: [Int]) -> (afterColumn: [Int: Int], trailing: [Int]) {
-        var afterColumn: [Int: Int] = [:]
-        let cappedPrinted = Array(printed.prefix(ConnectionFields.capacity))
-        for (ordinal, column) in cappedPrinted.enumerated() {
-            afterColumn[column] = ordinal
+    /// The eleven number tiles with the row's three connection squares overlaid
+    /// on the gaps at their printed positions. Within the strip, the gap after
+    /// number column `i` is centred at `i·(w+gap) + w + gap/2`; the square is
+    /// vertically centred (the overlay's `.leading` alignment) and offset there.
+    private func numberStrip(_ color: GameColor, w: CGFloat, th: CGFloat) -> some View {
+        let columns = Connect15Layout.columns(for: color)
+        let s = min(w, th) * 0.52
+        return HStack(spacing: tileGap) {
+            ForEach(0..<11, id: \.self) { i in
+                numberTile(color, i, w: w, th: th)
+            }
         }
-        let placed = cappedPrinted.count
-        let trailing = placed < ConnectionFields.capacity ? Array(placed..<ConnectionFields.capacity) : []
-        return (afterColumn, trailing)
+        .overlay(alignment: .leading) {
+            ForEach(Array(columns.enumerated()), id: \.offset) { field, column in
+                let gapCenter = CGFloat(column) * (w + tileGap) + w + tileGap / 2
+                connectionTile(color, field: field, size: s)
+                    .offset(x: gapCenter - s / 2)
+            }
+        }
     }
 
     private func numberTile(_ color: GameColor, _ i: Int, w: CGFloat, th: CGFloat) -> some View {
@@ -193,28 +184,24 @@ struct Connect15BoardView: View {
         .accessibilityLabel("\(color.displayName) \(color.numbers[i])")
     }
 
-    /// One connection field. `ordinal` is its 0-based order within the row's
-    /// three fields; the engine crosses them strictly left → right.
-    private func connectionTile(_ color: GameColor, ordinal: Int, w: CGFloat, th: CGFloat) -> some View {
-        let crossed = game.connections(for: color).crossed
-        let isMarked = ordinal < crossed
-        // The next legal field is the left-most uncrossed one.
-        let isNext = ordinal == crossed && game.canMarkConnection(color)
-        // Only the most-recently-crossed field (the highest crossed ordinal) is
-        // tap-undoable, and only if a connection mark is the last action.
-        let isLastCrossed = ordinal == crossed - 1
-        let undoable = isMarked && isLastCrossed && game.isLastConnectionMark(color)
+    /// One connection field. `field` is its 0-based ordinal within the row's
+    /// three fields. Any unmarked field right of the row's highest mark is legal
+    /// (the engine's interleaved rule — skipping forfeits, exactly like numbers);
+    /// only the most recent action's mark is ringed and tap-undoable.
+    private func connectionTile(_ color: GameColor, field: Int, size: CGFloat) -> some View {
+        let marked = game.connections(for: color).marks.contains(field)
+        let legal = game.canMarkConnection(color, field: field)
+        let undoable = marked && game.isLastConnectionMark(color, field)
         return ConnectionTile(
             tint: color.tint,
-            textColor: color.textColor,
-            marked: isMarked,
-            legal: isNext,
+            marked: marked,
+            legal: legal,
             undoable: undoable,
-            w: w, h: th
+            size: size
         ) {
-            if undoable { game.undo() } else if isNext { game.markConnection(color) }
+            if undoable { game.undo() } else if legal { game.markConnection(color, field: field) }
         }
-        .accessibilityLabel("\(color.displayName) connection field")
+        .accessibilityLabel("\(color.displayName) connection field \(field + 1)")
     }
 
     // MARK: - Bottom bar
@@ -272,50 +259,52 @@ struct Connect15BoardView: View {
     }
 }
 
-/// A Connect15 "connection" field tile: a dashed-edged cell carrying a link glyph
-/// (uncrossed) or an X (crossed). Styled like the Core `NumberTile` but specific
-/// to Connect15's number-less connection spaces, so it stays in the game module.
+/// A Connect15 "connection" square: a small dashed-edged light square that
+/// straddles the boundary between two number tiles, carrying a link glyph
+/// (uncrossed) or an X (crossed) — matching the printed sheet. Sits on top of
+/// the number strip, so when inert it lets touches pass through to the tiles
+/// beneath its overhang.
 private struct ConnectionTile: View {
     let tint: Color
-    let textColor: Color
     let marked: Bool
     let legal: Bool
     let undoable: Bool
-    let w: CGFloat
-    let h: CGFloat
+    let size: CGFloat
     let onTap: () -> Void
 
     var body: some View {
-        let s = min(w, h)
+        let s = size
         let dimmed = !marked && !legal
         return Button(action: onTap) {
             ZStack {
                 RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
-                    .fill(tint)
+                    .fill(Color.white.opacity(0.95))
                     .overlay(
                         RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
-                            .strokeBorder(.white.opacity(0.9),
+                            .strokeBorder(tint,
                                           style: StrokeStyle(lineWidth: s * 0.07, dash: [s * 0.16, s * 0.1]))
                     )
                 if marked {
                     Image(systemName: "xmark")
                         .font(.system(size: s * 0.66, weight: .black))
-                        .foregroundStyle(textColor)
+                        .foregroundStyle(tint)
                 } else {
                     Image(systemName: "link")
                         .font(.system(size: s * 0.46, weight: .bold))
-                        .foregroundStyle(textColor)
+                        .foregroundStyle(tint)
                 }
             }
-            .frame(width: w, height: h)
+            .frame(width: s, height: s)
+            .shadow(color: .black.opacity(0.2), radius: 1)
             .overlay(
                 RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
-                    .strokeBorder(.white, lineWidth: undoable ? 2.5 : 0)
+                    .strokeBorder(tint, lineWidth: undoable ? 2.5 : 0)
             )
         }
         .buttonStyle(.plain)
         .disabled(!(legal || undoable))
-        .opacity(dimmed ? 0.3 : 1)
+        .allowsHitTesting(legal || undoable)
+        .opacity(dimmed ? 0.35 : 1)
         .accessibilityValue(marked ? "marked" : (legal ? "available" : "blocked"))
         .accessibilityHint(undoable ? "Tap to undo" : "")
         .animation(.easeOut(duration: 0.12), value: marked)
