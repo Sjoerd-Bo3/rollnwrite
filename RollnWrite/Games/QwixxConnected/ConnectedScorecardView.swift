@@ -13,7 +13,8 @@
 //  `QwixxBoardView` / `QwixxScorecardView`.
 //
 //  Chain spaces are rendered as the underlying colour `NumberTile` wearing a
-//  dashed ring (matching the printed circled chain fields). Crossing one chain
+//  dashed ring, and each pair is joined by a short dashed connector line —
+//  matching the printed circled-and-linked chain fields. Crossing one chain
 //  space automatically crosses its partner — handled entirely by the engine.
 //
 
@@ -123,6 +124,45 @@ struct ConnectedBoardView: View {
             band(.blue, w: w, tile: th)
             bottomBar(w: w, h: bottomH)
         }
+        // The printed sheet joins each circled chain pair with a short line —
+        // draw the connectors on top of the stack (they never intercept taps).
+        .overlay { chainLinks(w: w, th: th) }
+    }
+
+    /// Dashed connector lines between the two dashed circles of every chain,
+    /// like the printed sheet. All six chains join ADJACENT rows in the SAME
+    /// column, so each connector is a short vertical dashed segment from the
+    /// bottom edge of the upper ring to the top edge of the lower ring.
+    ///
+    /// Geometry mirrors `band(_:w:tile:)` exactly: a band is `1.18·th` tall
+    /// (tile + 2×0.09 vertical padding) and starts at `row·(1.18·th + rowGap)`;
+    /// within it, column `c`'s tile centre sits at
+    /// `bandPad + (c+1)·(w+tileGap) + w/2` (chevron occupies column 0). The
+    /// ring's diameter is `min(w, th)` (see `numberTile`).
+    private func chainLinks(w: CGFloat, th: CGFloat) -> some View {
+        let bandH = th * 1.18
+        let dia = min(w, th)
+        let colors = GameColor.allCases
+        return Canvas { ctx, _ in
+            for chain in ConnectedLayout.chains {
+                guard
+                    let rowA = colors.firstIndex(of: chain.a.color),
+                    let rowB = colors.firstIndex(of: chain.b.color)
+                else { continue }
+                let top = min(rowA, rowB)
+                let bottom = max(rowA, rowB)
+                let x = bandPad + CGFloat(chain.a.index + 1) * (w + tileGap) + w / 2
+                let tileCentre = th * 0.09 + th / 2
+                let yTop = CGFloat(top) * (bandH + rowGap) + tileCentre + dia / 2 - 1
+                let yBottom = CGFloat(bottom) * (bandH + rowGap) + tileCentre - dia / 2 + 1
+                var path = Path()
+                path.move(to: CGPoint(x: x, y: yTop))
+                path.addLine(to: CGPoint(x: x, y: yBottom))
+                ctx.stroke(path, with: .color(.primary.opacity(0.55)),
+                           style: StrokeStyle(lineWidth: 2, dash: [3, 2.5]))
+            }
+        }
+        .allowsHitTesting(false)
     }
 
     /// One full-width colour band: a direction chevron, the eleven number tiles
