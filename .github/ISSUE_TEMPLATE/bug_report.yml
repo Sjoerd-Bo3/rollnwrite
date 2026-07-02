@@ -1,0 +1,48 @@
+name: Bug report
+description: Something in the app doesn't work as it should.
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, and what went wrong? Steps to reproduce help a lot.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      description: The behaviour you expected — cite the official rules if it's a scoring/rules issue.
+    validations:
+      required: false
+  - type: dropdown
+    id: game
+    attributes:
+      label: Game affected
+      options:
+        - Qwixx — Big Points
+        - Qwixx
+        - Qwixx — Lucky 15
+        - Qwixx — Connect 15
+        - Qwixx — Connected (The Chain)
+        - Qwixx — X-Change
+        - Qwixx — Double (Variant A)
+        - Qwixx — Bonus (Version A)
+        - Qwixx — gemixxt (Mixx)
+        - That's Pretty Clever (Ganz schön clever)
+        - That's Pretty Clever (v3)
+        - Twice as Clever (Doppelt so clever)
+        - Clever Cubed (Clever hoch Drei)
+        - Clever 4ever
+        - Other / app-wide
+    validations:
+      required: false
+  - type: textarea
+    id: device
+    attributes:
+      label: Device info
+      description: App version, iOS version and device. Reporting from the app (Settings → Feedback) fills this in automatically.
+      placeholder: "e.g. App 1.2 (34), iOS 17.5, iPhone15,3"
+    validations:
+      required: false

@@ -1,0 +1,42 @@
+name: Feature request
+description: Suggest a new game, variant or improvement.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+      description: The game, variant or improvement you're after — and why it would help.
+    validations:
+      required: true
+  - type: dropdown
+    id: game
+    attributes:
+      label: Game affected
+      description: If the request concerns an existing game.
+      options:
+        - New game / variant
+        - Qwixx — Big Points
+        - Qwixx
+        - Qwixx — Lucky 15
+        - Qwixx — Connect 15
+        - Qwixx — Connected (The Chain)
+        - Qwixx — X-Change
+        - Qwixx — Double (Variant A)
+        - Qwixx — Bonus (Version A)
+        - Qwixx — gemixxt (Mixx)
+        - That's Pretty Clever (Ganz schön clever)
+        - That's Pretty Clever (v3)
+        - Twice as Clever (Doppelt so clever)
+        - Clever Cubed (Clever hoch Drei)
+        - Clever 4ever
+        - Other / app-wide
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else?
+      description: Links to official rules or score sheets are especially welcome — the app only implements official material.
+    validations:
+      required: false

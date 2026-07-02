@@ -45,6 +45,7 @@ struct SettingsView: View {
     @ObservedObject private var diceTheme = DiceTheme.shared
     @Environment(\.dismiss) private var dismiss
     @State private var scores: [(name: String, best: Int)] = []
+    @State private var feedbackKind: FeedbackKind?
 
     private var appearance: Binding<AppearanceMode> {
         Binding(
@@ -107,6 +108,23 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    Button {
+                        feedbackKind = .bug
+                    } label: {
+                        Label("Report a bug", systemImage: "ladybug")
+                    }
+                    Button {
+                        feedbackKind = .feature
+                    } label: {
+                        Label("Request a feature", systemImage: "lightbulb")
+                    }
+                } header: {
+                    Text("Feedback")
+                } footer: {
+                    Text("Opens GitHub with your report pre-filled — a GitHub account is needed to submit.")
+                }
+
+                Section {
                     LabeledContent("App", value: "Roll'n Write")
                     LabeledContent("Build", value: versionString)
                 } footer: {
@@ -116,6 +134,9 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .onAppear { scores = HighScores.all() }
+            .sheet(item: $feedbackKind) { kind in
+                FeedbackComposerView(kind: kind)
+            }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
