@@ -1,923 +1,2469 @@
 {
-  "sourceLanguage" : "en",
-  "version" : "1.0",
-  "strings" : {
-    "Games" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Spellen" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Spiele" } }
-      }
-    },
-    "Coming soon" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Binnenkort" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Demnächst" } }
-      }
-    },
-    "Soon" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Binnenkort" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bald" } }
-      }
-    },
-    "Roll'n Write" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Roll'n Write" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Roll'n Write" } }
-      }
-    },
-    "Rules" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Regels" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Regeln" } }
-      }
-    },
-    "Done" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Gereed" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Fertig" } }
-      }
-    },
-    "Cancel" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Annuleren" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Abbrechen" } }
-      }
-    },
-    "Clear" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Wissen" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Löschen" } }
-      }
-    },
-    "New game" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Nieuw spel" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Neues Spiel" } }
-      }
-    },
-    "Start a new game?" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Nieuw spel beginnen?" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Neues Spiel starten?" } }
-      }
-    },
-    "This clears the current scorecard." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Hiermee wordt de huidige scorekaart gewist." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dadurch wird der aktuelle Spielzettel gelöscht." } }
-      }
-    },
-    "This clears the scorecard." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Hiermee wordt de scorekaart gewist." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dadurch wird der Spielzettel gelöscht." } }
-      }
-    },
-    "Source: %@" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Bron: %@" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Quelle: %@" } }
-      }
-    },
-    "This game hasn't been added yet." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Dit spel is nog niet toegevoegd." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dieses Spiel wurde noch nicht hinzugefügt." } }
-      }
-    },
-    "%@ hasn't been added yet." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "%@ is nog niet toegevoegd." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ wurde noch nicht hinzugefügt." } }
-      }
-    },
-    "The original" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Het origineel" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das Original" } }
-      }
-    },
-    "Total" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Totaal" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gesamt" } }
-      }
-    },
-    "Penalties" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Strafpunten" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Strafen" } }
-      }
-    },
-    "Penalties −%lld" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Strafpunten −%lld" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Strafen −%lld" } }
-      }
-    },
-    "Penalty %lld" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Strafpunt %lld" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Strafe %lld" } }
-      }
-    },
-    "Game over — final score %lld" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Spel afgelopen — eindscore %lld" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Spielende — Endpunktzahl %lld" } }
-      }
-    },
-    "Points per crosses" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Punten per kruisje" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Punkte pro Kreuz" } }
-      }
-    },
-    "%@ lock" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Slot %@" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Schloss %@" } }
-      }
-    },
-    "Bonus %@" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Bonus %@" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bonus %@" } }
-      }
-    },
-    "marked" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "gemarkeerd" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "markiert" } }
-      }
-    },
-    "available" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "beschikbaar" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "verfügbar" } }
-      }
-    },
-    "blocked" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "geblokkeerd" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "blockiert" } }
-      }
-    },
-    "locked" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "vergrendeld" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "verriegelt" } }
-      }
-    },
-    "open" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "open" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "offen" } }
-      }
-    },
-    "taken" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "genomen" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "genommen" } }
-      }
-    },
-    "empty" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "leeg" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "leer" } }
-      }
-    },
-    "Dice colours" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Dobbelsteenkleuren" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Würfelfarben" } }
-      }
-    },
-    "Die %lld" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Dobbelsteen %lld" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Würfel %lld" } }
-      }
-    },
-    "Set the colours of your physical dice once; every game shows each of its areas in the nearest of your dice colours. Scoring is unchanged." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Stel de kleuren van je echte dobbelstenen één keer in; elk spel toont zijn gebieden in de dichtstbijzijnde van jouw dobbelsteenkleuren. De puntentelling blijft gelijk." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Lege die Farben deiner echten Würfel einmal fest; jedes Spiel zeigt seine Bereiche in der nächstliegenden deiner Würfelfarben. Die Wertung bleibt unverändert." } }
-      }
-    },
-    "Reset to standard colours" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Terug naar standaardkleuren" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Auf Standardfarben zurücksetzen" } }
-      }
-    },
-    "Rounds" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Rondes" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Runden" } }
-      }
-    },
-    "Reroll" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Opnieuw gooien" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Neu würfeln" } }
-      }
-    },
-    "Return" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Teruggeven" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zurücklegen" } }
-      }
-    },
-    "Extra die" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Extra dobbelsteen" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Extra-Würfel" } }
-      }
-    },
-    "Rounds & bonuses" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Rondes & bonussen" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Runden & Boni" } }
-      }
-    },
-    "Undo" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Ongedaan maken" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Rückgängig" } }
-      }
-    },
-    "Tap to undo" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Tik om ongedaan te maken" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zum Rückgängigmachen tippen" } }
-      }
-    },
-    "Foxes score the lowest area (%lld) each" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Elke vos scoort het laagste gebied (%lld)" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Jeder Fuchs zählt den niedrigsten Bereich (%lld)" } }
-      }
-    },
-    "🦊 Foxes earned: %lld" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "🦊 Verdiende vossen: %lld" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "🦊 Verdiente Füchse: %lld" } }
-      }
-    },
-    "Orange die value" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Waarde oranje dobbelsteen" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wert des orangen Würfels" } }
-      }
-    },
-    "Purple die value (> previous)" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Waarde paarse dobbelsteen (> vorige)" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wert des violetten Würfels (> vorheriger)" } }
-      }
-    },
-    "Blue sum (≤ previous)" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Blauwe som (≤ vorige)" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Blaue Summe (≤ vorheriger)" } }
-      }
-    },
-    "Green die (×%lld)" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Groene dobbelsteen (×%lld)" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Grüner Würfel (×%lld)" } }
-      }
-    },
-    "Pink die value" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Waarde roze dobbelsteen" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wert des rosa Würfels" } }
-      }
-    },
-    "Blue value" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Blauwe waarde" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Blauer Wert" } }
-      }
-    },
-    "Pink written value" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Geschreven roze waarde" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Geschriebener rosa Wert" } }
-      }
-    },
-    "Yellow value" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Gele waarde" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gelber Wert" } }
-      }
-    },
-    "Pink value" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Roze waarde" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Rosa Wert" } }
-      }
-    },
-    "Green top" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Groen boven" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Grün oben" } }
-      }
-    },
-    "Green bottom" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Groen onder" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Grün unten" } }
-      }
-    },
-    "Tap once to circle, twice to cross. Score counts crosses: %lld → %lld" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Tik één keer om te omcirkelen, twee keer om te kruisen. De score telt kruisjes: %lld → %lld" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Einmal tippen zum Einkreisen, zweimal zum Ankreuzen. Gewertet werden Kreuze: %lld → %lld" } }
-      }
-    },
-    "Outermost left + outermost right + 4 per 2/3/4/10/11/12." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Meest links + meest rechts + 4 per 2/3/4/10/11/12." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Äußerste links + äußerste rechts + 4 je 2/3/4/10/11/12." } }
-      }
-    },
-    "Enter the value you wrote (die × the shown multiplier, or the halved bonus value)." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Voer de waarde in die je opschreef (dobbelsteen × de getoonde vermenigvuldiger, of de gehalveerde bonuswaarde)." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gib den notierten Wert ein (Würfel × angezeigter Multiplikator oder den halbierten Bonuswert)." } }
-      }
-    },
-    "▲ ascending (0 pts)" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "▲ oplopend (0 ptn)" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "▲ aufsteigend (0 Pkt.)" } }
-      }
-    },
-    "− negative" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "− negatief" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "− negativ" } }
-      }
-    },
-    "+ positive" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "+ positief" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "+ positiv" } }
-      }
-    },
-    "Each fully-filled column scores its star. Total = (sum +) − (sum −) + columns." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Elke volledig gevulde kolom scoort haar ster. Totaal = (som +) − (som −) + kolommen." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Jede vollständig gefüllte Spalte zählt ihren Stern. Gesamt = (Summe +) − (Summe −) + Spalten." } }
-      }
-    },
-    "Column with ≥2 crosses scores its value. Top-right→bottom-left diagonal with ≥2 scores +6." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Een kolom met ≥2 kruisjes scoort haar waarde. De diagonaal rechtsboven→linksonder met ≥2 scoort +6." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Eine Spalte mit ≥2 Kreuzen zählt ihren Wert. Die Diagonale oben rechts→unten links mit ≥2 zählt +6." } }
-      }
-    },
-    "Cross polyomino cells freely. Each fully-crossed column scores the value above it." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Kruis polyominovakjes vrij aan. Elke volledig aangekruiste kolom scoort de waarde erboven." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kreuze die Polyomino-Felder frei an. Jede vollständig angekreuzte Spalte zählt den Wert darüber." } }
-      }
-    },
-    "Fill both triangles left→right. Field box = top + bottom; doubled from the 4th field (×2)." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Vul beide driehoeken links→rechts. Vakwaarde = boven + onder; vanaf het 4e vak verdubbeld (×2)." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Fülle beide Dreiecke von links→rechts. Feldwert = oben + unten; ab dem 4. Feld verdoppelt (×2)." } }
-      }
-    },
-    "Fill left→right (no skips). Score = value above the last field, plus 2→+2, 4→+4, 6→+3." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Vul links→rechts (niet overslaan). Score = waarde boven het laatste vak, plus 2→+2, 4→+4, 6→+3." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Fülle von links→rechts (kein Überspringen). Wert = Zahl über dem letzten Feld, plus 2→+2, 4→+4, 6→+3." } }
-      }
-    },
-
-    "Qwixx — Big Points" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Qwixx — Big Points" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Qwixx — Big Points" } }
-      }
-    },
-    "Official rules for the Big Points variant" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Officiële regels voor de Big Points-variant" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Offizielle Regeln für die Big-Points-Variante" } }
-      }
-    },
-    "Goal" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Doel" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ziel" } }
-      }
-    },
-    "Cross out as many numbers as you can in the four colour rows to score points. In Big Points the two extra bonus rows let a single colour reach up to 120 points." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Streep zoveel mogelijk getallen weg in de vier kleurenrijen om punten te scoren. In Big Points laten de twee extra bonusrijen één kleur tot 120 punten reiken." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Streiche in den vier Farbreihen so viele Zahlen wie möglich, um Punkte zu erzielen. Bei Big Points können die zwei zusätzlichen Bonusreihen eine Farbe bis auf 120 Punkte bringen." } }
-      }
-    },
-    "The card" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "De kaart" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der Zettel" } }
-      }
-    },
-    "Red and yellow rows run 2 → 12 (left to right). Green and blue rows run 12 → 2." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "De rode en gele rij lopen 2 → 12 (van links naar rechts). De groene en blauwe rij lopen 12 → 2." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die rote und gelbe Reihe laufen 2 → 12 (von links nach rechts). Die grüne und blaue Reihe laufen 12 → 2." } }
-      }
-    },
-    "Between red and yellow sits the red/yellow bonus row; between green and blue sits the green/blue bonus row. Each has the same numbers as its neighbours." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Tussen rood en geel ligt de rood/gele bonusrij; tussen groen en blauw de groen/blauwe bonusrij. Elke heeft dezelfde getallen als haar buren." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zwischen Rot und Gelb liegt die rot/gelbe Bonusreihe; zwischen Grün und Blau die grün/blaue Bonusreihe. Beide haben dieselben Zahlen wie ihre Nachbarn." } }
-      }
-    },
-    "Crossing out numbers" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Getallen wegstrepen" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zahlen ankreuzen" } }
-      }
-    },
-    "Within every row you must cross out from left to right. You may skip numbers, but skipped numbers can never be crossed later." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "In elke rij streep je van links naar rechts weg. Je mag getallen overslaan, maar overgeslagen getallen kunnen later nooit meer worden weggestreept." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "In jeder Reihe musst du von links nach rechts ankreuzen. Du darfst Zahlen überspringen, übersprungene Zahlen können aber später nie mehr angekreuzt werden." } }
-      }
-    },
-    "On a turn the white dice total may be crossed in any one row; the active player may also add a white die to a colour die and cross that colour." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Tijdens een beurt mag de som van de witte dobbelstenen in één rij worden weggestreept; de actieve speler mag ook een witte dobbelsteen bij een kleurdobbelsteen optellen en die kleur wegstrepen." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "In einem Zug darf die Summe der weißen Würfel in einer Reihe angekreuzt werden; der aktive Spieler darf zudem einen weißen Würfel zu einem Farbwürfel addieren und diese Farbe ankreuzen." } }
-      }
-    },
-    "Bonus rows" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Bonusrijen" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bonusreihen" } }
-      }
-    },
-    "A bonus space may only be crossed once an adjacent same-number colour space has already been crossed." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Een bonusvakje mag pas worden weggestreept zodra een aangrenzend kleurvakje met hetzelfde getal al is weggestreept." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ein Bonusfeld darf erst angekreuzt werden, wenn ein benachbartes Farbfeld mit derselben Zahl bereits angekreuzt wurde." } }
-      }
-    },
-    "The left-to-right rule applies to bonus rows too — skipped bonus spaces are lost." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "De links-naar-rechtsregel geldt ook voor bonusrijen — overgeslagen bonusvakjes zijn verloren." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Links-nach-rechts-Regel gilt auch für Bonusreihen — übersprungene Bonusfelder sind verloren." } }
-      }
-    },
-    "Each crossed bonus space counts for BOTH adjacent colour rows when scoring." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Elk weggestreept bonusvakje telt bij de telling voor BEIDE aangrenzende kleurenrijen." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Jedes angekreuzte Bonusfeld zählt bei der Wertung für BEIDE benachbarten Farbreihen." } }
-      }
-    },
-    "Locking a row" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Een rij vergrendelen" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Eine Reihe schließen" } }
-      }
-    },
-    "To cross the right-most number (12 for red/yellow, 2 for green/blue) you must already have at least 5 crosses in that row." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Om het meest rechtse getal weg te strepen (12 voor rood/geel, 2 voor groen/blauw) moet je al minstens 5 kruisjes in die rij hebben." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Um die äußerste rechte Zahl anzukreuzen (12 bei Rot/Gelb, 2 bei Grün/Blau), musst du bereits mindestens 5 Kreuze in dieser Reihe haben." } }
-      }
-    },
-    "Crossing it locks the row and adds the lock as one extra cross." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Wegstrepen vergrendelt de rij en telt het slot als één extra kruisje." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das Ankreuzen schließt die Reihe und zählt das Schloss als zusätzliches Kreuz." } }
-      }
-    },
-    "Penalties & game end" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Strafpunten & einde spel" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Strafen & Spielende" } }
-      }
-    },
-    "If on your turn you cross nothing, take a penalty (−5 points). Four penalties end the game." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Als je tijdens je beurt niets wegstreept, neem je een strafpunt (−5 punten). Vier strafpunten beëindigen het spel." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kreuzt du in deinem Zug nichts an, nimmst du eine Strafe (−5 Punkte). Vier Strafen beenden das Spiel." } }
-      }
-    },
-    "The game also ends the moment two rows are locked." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Het spel eindigt ook op het moment dat twee rijen vergrendeld zijn." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das Spiel endet auch, sobald zwei Reihen geschlossen sind." } }
-      }
-    },
-    "Scoring" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Puntentelling" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wertung" } }
-      }
-    },
-    "Per colour, count its crosses (its own numbers + lock + adjacent bonus crosses, max 15) and score 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105, 120." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Tel per kleur de kruisjes (eigen getallen + slot + aangrenzende bonuskruisjes, max. 15) en scoor 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105, 120." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zähle je Farbe ihre Kreuze (eigene Zahlen + Schloss + benachbarte Bonuskreuze, max. 15) und werte 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105, 120." } }
-      }
-    },
-    "Total = red + yellow + green + blue − (5 × penalties)." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Totaal = rood + geel + groen + blauw − (5 × strafpunten)." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gesamt = Rot + Gelb + Grün + Blau − (5 × Strafen)." } }
-      }
-    },
-
-    "Turn" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Beurt" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zug" } }
-      }
-    },
-    "Yellow" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Geel" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gelb" } }
-      }
-    },
-    "Blue" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Blauw" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Blau" } }
-      }
-    },
-    "Green" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Groen" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Grün" } }
-      }
-    },
-    "Orange" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Oranje" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Orange" } }
-      }
-    },
-    "Purple" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Paars" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Violett" } }
-      }
-    },
-    "Silver" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Zilver" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Silber" } }
-      }
-    },
-    "Pink" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Roze" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Rosa" } }
-      }
-    },
-    "Bonuses & foxes" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Bonussen & vossen" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Boni & Füchse" } }
-      }
-    },
-    "Foxes & scoring" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Vossen & puntentelling" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Füchse & Wertung" } }
-      }
-    },
-    "Game end & scoring" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Einde spel & puntentelling" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Spielende & Wertung" } }
-      }
-    },
-    "Areas" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Gebieden" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bereiche" } }
-      }
-    },
-    "Brown" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Bruin" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Braun" } }
-      }
-    },
-    "Grey" : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Grijs" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Grau" } }
-      }
-    },
-
-    "On your turn roll all 6 dice, pick one and mark it in the matching colour area. Set aside all dice showing a lower value (the Silver Platter), then re-roll and pick again — up to 3 dice total." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "In jouw beurt gooi je alle 6 dobbelstenen, kies je er één en markeer je die in het bijbehorende kleurgebied. Leg alle dobbelstenen met een lagere waarde apart (het zilveren dienblad), gooi dan opnieuw en kies weer — in totaal maximaal 3 dobbelstenen." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "In deinem Zug würfelst du alle 6 Würfel, wählst einen und trägst ihn im passenden Farbbereich ein. Lege alle Würfel mit niedrigerem Wert beiseite (das Silbertablett), würfle erneut und wähle wieder — insgesamt bis zu 3 Würfel." } }
-      }
-    },
-    "The white die is wild: use it as yellow, green, orange or purple, or add it to the blue die for the blue area." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "De witte dobbelsteen is joker: gebruik hem als geel, groen, oranje of paars, of tel hem bij de blauwe dobbelsteen op voor het blauwe gebied." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der weiße Würfel ist Joker: nutze ihn als Gelb, Grün, Orange oder Violett oder addiere ihn zum blauen Würfel für den blauen Bereich." } }
-      }
-    },
-    "This app is a scorecard — you roll physical dice and tap to record. It enforces each area's structure and totals everything for you." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Deze app is een scorekaart — je gooit met echte dobbelstenen en tikt om te noteren. Hij bewaakt de structuur van elk gebied en telt alles voor je op." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Diese App ist ein Spielzettel — du würfelst mit echten Würfeln und tippst zum Eintragen. Sie wacht über die Struktur jedes Bereichs und zählt alles für dich zusammen." } }
-      }
-    },
-    "Cross out the die value anywhere in the 4×4 grid (any order). The anti-diagonal is pre-crossed." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Streep de dobbelsteenwaarde overal in het 4×4-rooster weg (volgorde vrij). De tegendiagonaal is vooraf weggestreept." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kreuze den Würfelwert beliebig im 4×4-Gitter an (Reihenfolge frei). Die Nebendiagonale ist vorab angekreuzt." } }
-      }
-    },
-    "Each completed column scores the value beneath it (10, 14, 16, 20) — these are added together." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Elke voltooide kolom scoort de waarde eronder (10, 14, 16, 20) — deze worden bij elkaar opgeteld." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Jede vollständige Spalte zählt den Wert darunter (10, 14, 16, 20) — diese werden addiert." } }
-      }
-    },
-    "Completing a row, the main diagonal, or other spots grants the printed bonus." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Het voltooien van een rij, de hoofddiagonaal of andere vakjes geeft de afgedrukte bonus." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das Vervollständigen einer Reihe, der Hauptdiagonale oder anderer Felder gewährt den aufgedruckten Bonus." } }
-      }
-    },
-    "Cross the cell equal to blue + white (2–12), any order." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Streep het vakje weg dat gelijk is aan blauw + wit (2–12), in willekeurige volgorde." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kreuze das Feld an, das Blau + Weiß (2–12) entspricht, in beliebiger Reihenfolge." } }
-      }
-    },
-    "Score by how many cells you've crossed: 1, 2, 4, 7, 11, 16, 22, 29, 37, 46, 56." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Scoor naar het aantal weggestreepte vakjes: 1, 2, 4, 7, 11, 16, 22, 29, 37, 46, 56." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Werte nach der Anzahl angekreuzter Felder: 1, 2, 4, 7, 11, 16, 22, 29, 37, 46, 56." } }
-      }
-    },
-    "Mark left to right without skipping; each space needs the printed minimum die value." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Markeer van links naar rechts zonder overslaan; elk vakje vereist de afgedrukte minimale dobbelsteenwaarde." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Markiere von links nach rechts ohne zu überspringen; jedes Feld benötigt den aufgedruckten Mindestwürfelwert." } }
-      }
-    },
-    "Score the value above your last marked space (1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66)." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Scoor de waarde boven je laatst gemarkeerde vakje (1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66)." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Werte den Wert über deinem zuletzt markierten Feld (1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66)." } }
-      }
-    },
-    "Write the die value left to right. Some spaces multiply it (×2 or ×3)." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Schrijf de dobbelsteenwaarde van links naar rechts. Sommige vakjes vermenigvuldigen hem (×2 of ×3)." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Schreibe den Würfelwert von links nach rechts. Manche Felder vervielfachen ihn (×2 oder ×3)." } }
-      }
-    },
-    "Score the sum of all written numbers." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Scoor de som van alle opgeschreven getallen." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Werte die Summe aller geschriebenen Zahlen." } }
-      }
-    },
-    "Write the die value left to right; each must be higher than the previous — except any value may follow a 6." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Schrijf de dobbelsteenwaarde van links naar rechts; elke moet hoger zijn dan de vorige — behalve dat na een 6 elke waarde mag volgen." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Schreibe den Würfelwert von links nach rechts; jeder muss höher als der vorherige sein — außer nach einer 6 darf jeder Wert folgen." } }
-      }
-    },
-    "Printed bonuses (re-roll, +1, extra cross, a coloured number) are earned as you mark spaces; apply them by tapping the granted space yourself. Bonuses can chain." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Afgedrukte bonussen (opnieuw gooien, +1, extra kruisje, een gekleurd getal) verdien je tijdens het markeren; pas ze zelf toe door op het toegekende vakje te tikken. Bonussen kunnen elkaar opvolgen." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aufgedruckte Boni (Neu würfeln, +1, Extra-Kreuz, eine farbige Zahl) verdienst du beim Markieren; wende sie selbst an, indem du das gewährte Feld antippst. Boni können verkettet werden." } }
-      }
-    },
-    "Each fox scores the value of your lowest-scoring area. The app detects foxes automatically and counts them for you." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Elke vos scoort de waarde van je laagst scorende gebied. De app herkent vossen automatisch en telt ze voor je." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Jeder Fuchs zählt den Wert deines niedrigsten Bereichs. Die App erkennt Füchse automatisch und zählt sie für dich." } }
-      }
-    },
-    "Played over 6 rounds (solo / 2 players), 5 (3 players) or 4 (4 players)." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Gespeeld over 6 rondes (solo / 2 spelers), 5 (3 spelers) of 4 (4 spelers)." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gespielt über 6 Runden (solo / 2 Spieler), 5 (3 Spieler) oder 4 (4 Spieler)." } }
-      }
-    },
-    "Final score = yellow + blue + green + orange + purple + (foxes × lowest area). Highest total wins." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Eindscore = geel + blauw + groen + oranje + paars + (vossen × laagste gebied). Hoogste totaal wint." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Endpunktzahl = Gelb + Blau + Grün + Orange + Violett + (Füchse × niedrigster Bereich). Höchste Summe gewinnt." } }
-      }
-    },
-
-    "Same flow as That's Pretty Clever: roll 6 dice, take up to 3 (setting aside lower dice for others), and record each in its colour area. White is wild." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Zelfde verloop als That's Pretty Clever: gooi 6 dobbelstenen, neem er maximaal 3 (lagere dobbelstenen leg je apart voor de anderen) en noteer elke in zijn kleurgebied. Wit is joker." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gleicher Ablauf wie bei That's Pretty Clever: würfle 6 Würfel, nimm bis zu 3 (niedrigere Würfel legst du für die anderen beiseite) und trage jeden in seinem Farbbereich ein. Weiß ist Joker." } }
-      }
-    },
-    "This app is a scorecard: it enforces each area's structure and totals your score. Apply re-roll / return / +1 / extra-die bonuses yourself." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Deze app is een scorekaart: hij bewaakt de structuur van elk gebied en telt je score op. Pas de bonussen opnieuw gooien / teruggeven / +1 / extra dobbelsteen zelf toe." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Diese App ist ein Spielzettel: sie wacht über die Struktur jedes Bereichs und zählt deine Punkte zusammen. Wende die Boni Neu würfeln / Zurücklegen / +1 / Extra-Würfel selbst an." } }
-      }
-    },
-    "Cross the die value in any of the four colour rows (the colour is free)." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Streep de dobbelsteenwaarde weg in een van de vier kleurenrijen (de kleur is vrij)." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kreuze den Würfelwert in einer der vier Farbreihen an (die Farbe ist frei)." } }
-      }
-    },
-    "Each row scores by how many marks it has: 2, 4, 7, 11, 16, 22. Add all four rows." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Elke rij scoort naar het aantal kruisjes: 2, 4, 7, 11, 16, 22. Tel alle vier rijen op." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Jede Reihe zählt nach der Anzahl ihrer Kreuze: 2, 4, 7, 11, 16, 22. Addiere alle vier Reihen." } }
-      }
-    },
-    "Tap once to circle a number, twice to cross it (you may only cross what's circled)." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Tik één keer om een getal te omcirkelen, twee keer om het te kruisen (je mag alleen kruisen wat omcirkeld is)." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Einmal tippen, um eine Zahl einzukreisen, zweimal, um sie anzukreuzen (du darfst nur Eingekreistes ankreuzen)." } }
-      }
-    },
-    "Only crosses score: 3, 10, 21, 36, 55, 75, 96, 118, 141, 165 for 1–10 crosses. Circles enable bonuses." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Alleen kruisjes scoren: 3, 10, 21, 36, 55, 75, 96, 118, 141, 165 voor 1–10 kruisjes. Cirkels activeren bonussen." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nur Kreuze zählen: 3, 10, 21, 36, 55, 75, 96, 118, 141, 165 für 1–10 Kreuze. Kreise ermöglichen Boni." } }
-      }
-    },
-    "Write blue + white (2–12) left to right; each number must be ≤ the previous one." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Schrijf blauw + wit (2–12) van links naar rechts; elk getal moet ≤ het vorige zijn." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Schreibe Blau + Weiß (2–12) von links nach rechts; jede Zahl muss ≤ der vorherigen sein." } }
-      }
-    },
-    "Score the value above the last filled box (up to 78)." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Scoor de waarde boven het laatst gevulde vakje (tot 78)." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Werte den Wert über dem zuletzt gefüllten Feld (bis 78)." } }
-      }
-    },
-    "Write the die × the printed multiplier, left to right. Cells are grouped in pairs." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Schrijf de dobbelsteen × de afgedrukte vermenigvuldiger, van links naar rechts. Vakjes zijn gegroepeerd in paren." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Schreibe den Würfel × den aufgedruckten Multiplikator, von links nach rechts. Die Felder sind paarweise gruppiert." } }
-      }
-    },
-    "Each completed pair scores (first − second); add all pair results. Put a high number first, a low number second." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Elk voltooid paar scoort (eerste − tweede); tel alle paarresultaten op. Zet een hoog getal eerst, een laag getal als tweede." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Jedes vollständige Paar zählt (erster − zweiter); addiere alle Paarergebnisse. Setze eine hohe Zahl zuerst, eine niedrige als zweite." } }
-      }
-    },
-    "Write the die value left to right (any value). Score the sum of all entries." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Schrijf de dobbelsteenwaarde van links naar rechts (elke waarde). Scoor de som van alle invoeren." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Schreibe den Würfelwert von links nach rechts (jeder Wert). Werte die Summe aller Einträge." } }
-      }
-    },
-    "A space's bonus is only earned if the value is ≥ the printed minimum." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "De bonus van een vakje verdien je alleen als de waarde ≥ het afgedrukte minimum is." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der Bonus eines Feldes wird nur gewährt, wenn der Wert ≥ dem aufgedruckten Minimum ist." } }
-      }
-    },
-    "Each fox scores your lowest area. Tap the fox stepper when you earn one." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Elke vos scoort je laagste gebied. Tik op de vossenteller wanneer je er een verdient." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Jeder Fuchs zählt deinen niedrigsten Bereich. Tippe auf den Fuchs-Zähler, wenn du einen verdienst." } }
-      }
-    },
-    "Final score = silver + yellow + blue + green + pink + (foxes × lowest area)." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Eindscore = zilver + geel + blauw + groen + roze + (vossen × laagste gebied)." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Endpunktzahl = Silber + Gelb + Blau + Grün + Rosa + (Füchse × niedrigster Bereich)." } }
-      }
-    },
-
-    "Five areas: yellow, turquoise, brown (cross out) and blue, pink (write numbers). White is wild. The app auto-scores all five." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Vijf gebieden: geel, turkoois, bruin (wegstrepen) en blauw, roze (getallen schrijven). Wit is joker. De app scoort alle vijf automatisch." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Fünf Bereiche: Gelb, Türkis, Braun (ankreuzen) sowie Blau, Rosa (Zahlen schreiben). Weiß ist Joker. Die App wertet alle fünf automatisch." } }
-      }
-    },
-    "Three rows; cross the rolled number (active rows go I→II→III by roll). Each row scores 2, 6, 12, 20, 30, 42 by its number of crosses. Max 126." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Drie rijen; streep het gegooide getal weg (actieve rijen gaan I→II→III per worp). Elke rij scoort 2, 6, 12, 20, 30, 42 naar het aantal kruisjes. Max. 126." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Drei Reihen; kreuze die gewürfelte Zahl an (aktive Reihen gehen I→II→III je Wurf). Jede Reihe zählt 2, 6, 12, 20, 30, 42 nach ihrer Kreuzanzahl. Max. 126." } }
-      }
-    },
-    "Five rows; cross the rolled number — and one extra field per matching die. Each row scores 1, 3, 6, 10, 15, 21 by its crosses. Max 105." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Vijf rijen; streep het gegooide getal weg — plus één extra vakje per passende dobbelsteen. Elke rij scoort 1, 3, 6, 10, 15, 21 naar haar kruisjes. Max. 105." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Fünf Reihen; kreuze die gewürfelte Zahl an — plus ein zusätzliches Feld je passendem Würfel. Jede Reihe zählt 1, 3, 6, 10, 15, 21 nach ihren Kreuzen. Max. 105." } }
-      }
-    },
-    "A ±1 track around the central 7: tap left writing exactly one lower, right exactly one higher; a 7 resets the run." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Een ±1-spoor rond de centrale 7: tik links om precies één lager te schrijven, rechts precies één hoger; een 7 herstart de reeks." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Eine ±1-Leiste um die zentrale 7: links tippen schreibt genau eins niedriger, rechts genau eins höher; eine 7 setzt die Reihe zurück." } }
-      }
-    },
-    "Score = points above the outermost-left and outermost-right entries (3/6/9/13/17/22), plus 4 per written 2/3/4/10/11/12. Max 68." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Score = punten boven de meest linkse en meest rechtse invoer (3/6/9/13/17/22), plus 4 per geschreven 2/3/4/10/11/12. Max. 68." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wert = Punkte über dem äußersten linken und äußersten rechten Eintrag (3/6/9/13/17/22), plus 4 je geschriebener 2/3/4/10/11/12. Max. 68." } }
-      }
-    },
-    "One row, left to right; you may skip but never go back. Scores 2, 5, 9, 14, 20, 27, 35, 44, 54, 65, 77, 90 by total crosses." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Eén rij, van links naar rechts; je mag overslaan maar nooit terug. Scoort 2, 5, 9, 14, 20, 27, 35, 44, 54, 65, 77, 90 naar het totaal aantal kruisjes." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Eine Reihe, von links nach rechts; du darfst überspringen, aber nie zurück. Zählt 2, 5, 9, 14, 20, 27, 35, 44, 54, 65, 77, 90 nach der Gesamtzahl der Kreuze." } }
-      }
-    },
-    "Fill left to right. Take the bonus (halve the die, round up) or the points (die × the printed multiplier). Enter each written value; score = their sum." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Vul van links naar rechts. Neem de bonus (halveer de dobbelsteen, naar boven afronden) of de punten (dobbelsteen × de afgedrukte vermenigvuldiger). Voer elke geschreven waarde in; score = hun som." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Fülle von links nach rechts. Nimm den Bonus (Würfel halbieren, aufrunden) oder die Punkte (Würfel × aufgedruckter Multiplikator). Gib jeden geschriebenen Wert ein; Wert = ihre Summe." } }
-      }
-    },
-    "Each fox scores your lowest area. Total = yellow + turquoise + blue + brown + pink + (foxes × lowest area)." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Elke vos scoort je laagste gebied. Totaal = geel + turkoois + blauw + bruin + roze + (vossen × laagste gebied)." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Jeder Fuchs zählt deinen niedrigsten Bereich. Gesamt = Gelb + Türkis + Blau + Braun + Rosa + (Füchse × niedrigster Bereich)." } }
-      }
-    },
-
-    "Five areas: yellow, blue, grey, green and pink. The white die is a joker. The app auto-scores all five." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Vijf gebieden: geel, blauw, grijs, groen en roze. De witte dobbelsteen is joker. De app scoort alle vijf automatisch." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Fünf Bereiche: Gelb, Blau, Grau, Grün und Rosa. Der weiße Würfel ist Joker. Die App wertet alle fünf automatisch." } }
-      }
-    },
-    "Three rows of five fields. The top row must strictly ascend (it closes after a 6) and scores 0 itself — it only grants bonuses." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Drie rijen van vijf vakjes. De bovenste rij moet strikt oplopen (sluit na een 6) en scoort zelf 0 — hij geeft alleen bonussen." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Drei Reihen mit fünf Feldern. Die obere Reihe muss streng aufsteigen (schließt nach einer 6) und zählt selbst 0 — sie gewährt nur Boni." } }
-      }
-    },
-    "The middle row counts as negative; the bottom row as positive. Each fully-filled column scores its yellow star (10, 10, 15, 15, 20)." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "De middelste rij telt negatief; de onderste rij positief. Elke volledig gevulde kolom scoort haar gele ster (10, 10, 15, 15, 20)." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die mittlere Reihe zählt negativ, die untere positiv. Jede vollständig gefüllte Spalte zählt ihren gelben Stern (10, 10, 15, 15, 20)." } }
-      }
-    },
-    "Score = (sum of bottom) − (sum of middle) + completed-column stars." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Score = (som onderste) − (som middelste) + sterren van voltooide kolommen." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wert = (Summe unten) − (Summe Mitte) + Sterne vollständiger Spalten." } }
-      }
-    },
-    "A 6×6 grid: cross a cell at (blue die = row, white die = column). A column with two or more crosses scores its value (7, 8, 9, 10, 11, 12)." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Een 6×6-rooster: kruis een vakje aan op (blauwe dobbelsteen = rij, witte dobbelsteen = kolom). Een kolom met twee of meer kruisjes scoort haar waarde (7, 8, 9, 10, 11, 12)." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ein 6×6-Gitter: kreuze ein Feld bei (blauer Würfel = Zeile, weißer Würfel = Spalte) an. Eine Spalte mit zwei oder mehr Kreuzen zählt ihren Wert (7, 8, 9, 10, 11, 12)." } }
-      }
-    },
-    "The top-right→bottom-left diagonal scores +6 when it has two or more crosses." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "De diagonaal rechtsboven→linksonder scoort +6 wanneer hij twee of meer kruisjes heeft." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Diagonale oben rechts→unten links zählt +6, wenn sie zwei oder mehr Kreuze hat." } }
-      }
-    },
-    "Cross polyomino cells across a 4×16 grid (cross freely here). Each fully-crossed column scores the value printed above it (1…11)." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Kruis polyominovakjes aan over een 4×16-rooster (hier vrij kruisen). Elke volledig aangekruiste kolom scoort de waarde erboven (1…11)." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kreuze Polyomino-Felder über ein 4×16-Gitter an (hier frei ankreuzen). Jede vollständig angekreuzte Spalte zählt den darüber gedruckten Wert (1…11)." } }
-      }
-    },
-    "Eleven fields, each split into an upper and a lower triangle; fill both rows left→right. When both triangles of a field are filled, its box = their sum, doubled from the 4th field onward (×2)." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Elf vakjes, elk verdeeld in een boven- en onderdriehoek; vul beide rijen links→rechts. Als beide driehoeken van een vakje gevuld zijn, is de vakwaarde hun som, vanaf het 4e vak verdubbeld (×2)." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Elf Felder, jedes in ein oberes und unteres Dreieck geteilt; fülle beide Reihen von links→rechts. Sind beide Dreiecke eines Feldes gefüllt, ist der Feldwert ihre Summe, ab dem 4. Feld verdoppelt (×2)." } }
-      }
-    },
-    "One bar of twelve fields, filled left→right with no skips. Score = the value above the last filled field (up to 42), plus circled bonuses: each 2 → +2, each 4 → +4, each 6 → +3." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Eén balk van twaalf vakjes, links→rechts gevuld zonder overslaan. Score = de waarde boven het laatst gevulde vak (tot 42), plus omcirkelde bonussen: elke 2 → +2, elke 4 → +4, elke 6 → +3." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ein Balken mit zwölf Feldern, von links→rechts ohne Überspringen gefüllt. Wert = Zahl über dem zuletzt gefüllten Feld (bis 42), plus eingekreiste Boni: jede 2 → +2, jede 4 → +4, jede 6 → +3." } }
-      }
-    },
-    "Foxes are tracked with the stepper; each scores your lowest area. Total = yellow + blue + grey + green + pink + (foxes × lowest area)." : {
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Vossen worden bijgehouden met de teller; elke scoort je laagste gebied. Totaal = geel + blauw + grijs + groen + roze + (vossen × laagste gebied)." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Füchse werden mit dem Zähler erfasst; jeder zählt deinen niedrigsten Bereich. Gesamt = Gelb + Blau + Grau + Grün + Rosa + (Füchse × niedrigster Bereich)." } }
+  "sourceLanguage": "en",
+  "version": "1.0",
+  "strings": {
+    "Games": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spellen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spiele"
+          }
+        }
+      }
+    },
+    "Coming soon": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Binnenkort"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demnächst"
+          }
+        }
+      }
+    },
+    "Soon": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Binnenkort"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bald"
+          }
+        }
+      }
+    },
+    "Roll'n Write": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Roll'n Write"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Roll'n Write"
+          }
+        }
+      }
+    },
+    "Rules": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regels"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regeln"
+          }
+        }
+      }
+    },
+    "Done": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gereed"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fertig"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuleren"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abbrechen"
+          }
+        }
+      }
+    },
+    "Clear": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wissen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Löschen"
+          }
+        }
+      }
+    },
+    "New game": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieuw spel"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neues Spiel"
+          }
+        }
+      }
+    },
+    "Start a new game?": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieuw spel beginnen?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neues Spiel starten?"
+          }
+        }
+      }
+    },
+    "This clears the current scorecard.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiermee wordt de huidige scorekaart gewist."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dadurch wird der aktuelle Spielzettel gelöscht."
+          }
+        }
+      }
+    },
+    "This clears the scorecard.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiermee wordt de scorekaart gewist."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dadurch wird der Spielzettel gelöscht."
+          }
+        }
+      }
+    },
+    "Source: %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bron: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quelle: %@"
+          }
+        }
+      }
+    },
+    "This game hasn't been added yet.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit spel is nog niet toegevoegd."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Spiel wurde noch nicht hinzugefügt."
+          }
+        }
+      }
+    },
+    "%@ hasn't been added yet.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is nog niet toegevoegd."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wurde noch nicht hinzugefügt."
+          }
+        }
+      }
+    },
+    "The original": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het origineel"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Original"
+          }
+        }
+      }
+    },
+    "Total": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Totaal"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesamt"
+          }
+        }
+      }
+    },
+    "Penalties": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strafpunten"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strafen"
+          }
+        }
+      }
+    },
+    "Penalties −%lld": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strafpunten −%lld"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strafen −%lld"
+          }
+        }
+      }
+    },
+    "Penalty %lld": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strafpunt %lld"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strafe %lld"
+          }
+        }
+      }
+    },
+    "Game over — final score %lld": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spel afgelopen — eindscore %lld"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spielende — Endpunktzahl %lld"
+          }
+        }
+      }
+    },
+    "Points per crosses": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Punten per kruisje"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Punkte pro Kreuz"
+          }
+        }
+      }
+    },
+    "%@ lock": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slot %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schloss %@"
+          }
+        }
+      }
+    },
+    "Bonus %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bonus %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bonus %@"
+          }
+        }
+      }
+    },
+    "marked": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gemarkeerd"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "markiert"
+          }
+        }
+      }
+    },
+    "available": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "beschikbaar"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "verfügbar"
+          }
+        }
+      }
+    },
+    "blocked": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "geblokkeerd"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "blockiert"
+          }
+        }
+      }
+    },
+    "locked": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vergrendeld"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "verriegelt"
+          }
+        }
+      }
+    },
+    "open": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "open"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "offen"
+          }
+        }
+      }
+    },
+    "taken": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "genomen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "genommen"
+          }
+        }
+      }
+    },
+    "empty": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "leeg"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "leer"
+          }
+        }
+      }
+    },
+    "Dice colours": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dobbelsteenkleuren"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Würfelfarben"
+          }
+        }
+      }
+    },
+    "Die %lld": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dobbelsteen %lld"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Würfel %lld"
+          }
+        }
+      }
+    },
+    "Set the colours of your physical dice once; every game shows each of its areas in the nearest of your dice colours. Scoring is unchanged.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stel de kleuren van je echte dobbelstenen één keer in; elk spel toont zijn gebieden in de dichtstbijzijnde van jouw dobbelsteenkleuren. De puntentelling blijft gelijk."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lege die Farben deiner echten Würfel einmal fest; jedes Spiel zeigt seine Bereiche in der nächstliegenden deiner Würfelfarben. Die Wertung bleibt unverändert."
+          }
+        }
+      }
+    },
+    "Reset to standard colours": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terug naar standaardkleuren"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf Standardfarben zurücksetzen"
+          }
+        }
+      }
+    },
+    "Rounds": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rondes"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Runden"
+          }
+        }
+      }
+    },
+    "Reroll": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opnieuw gooien"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neu würfeln"
+          }
+        }
+      }
+    },
+    "Return": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teruggeven"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zurücklegen"
+          }
+        }
+      }
+    },
+    "Extra die": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extra dobbelsteen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extra-Würfel"
+          }
+        }
+      }
+    },
+    "Rounds & bonuses": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rondes & bonussen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Runden & Boni"
+          }
+        }
+      }
+    },
+    "Undo": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ongedaan maken"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rückgängig"
+          }
+        }
+      }
+    },
+    "Tap to undo": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tik om ongedaan te maken"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zum Rückgängigmachen tippen"
+          }
+        }
+      }
+    },
+    "Foxes score the lowest area (%lld) each": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elke vos scoort het laagste gebied (%lld)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeder Fuchs zählt den niedrigsten Bereich (%lld)"
+          }
+        }
+      }
+    },
+    "🦊 Foxes earned: %lld": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🦊 Verdiende vossen: %lld"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🦊 Verdiente Füchse: %lld"
+          }
+        }
+      }
+    },
+    "Orange die value": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waarde oranje dobbelsteen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wert des orangen Würfels"
+          }
+        }
+      }
+    },
+    "Purple die value (> previous)": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waarde paarse dobbelsteen (> vorige)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wert des violetten Würfels (> vorheriger)"
+          }
+        }
+      }
+    },
+    "Blue sum (≤ previous)": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blauwe som (≤ vorige)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blaue Summe (≤ vorheriger)"
+          }
+        }
+      }
+    },
+    "Green die (×%lld)": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groene dobbelsteen (×%lld)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grüner Würfel (×%lld)"
+          }
+        }
+      }
+    },
+    "Pink die value": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waarde roze dobbelsteen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wert des rosa Würfels"
+          }
+        }
+      }
+    },
+    "Blue value": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blauwe waarde"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blauer Wert"
+          }
+        }
+      }
+    },
+    "Pink written value": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geschreven roze waarde"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geschriebener rosa Wert"
+          }
+        }
+      }
+    },
+    "Yellow value": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gele waarde"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gelber Wert"
+          }
+        }
+      }
+    },
+    "Pink value": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Roze waarde"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rosa Wert"
+          }
+        }
+      }
+    },
+    "Green top": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groen boven"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grün oben"
+          }
+        }
+      }
+    },
+    "Green bottom": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groen onder"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grün unten"
+          }
+        }
+      }
+    },
+    "Tap once to circle, twice to cross. Score counts crosses: %lld → %lld": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tik één keer om te omcirkelen, twee keer om te kruisen. De score telt kruisjes: %lld → %lld"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einmal tippen zum Einkreisen, zweimal zum Ankreuzen. Gewertet werden Kreuze: %lld → %lld"
+          }
+        }
+      }
+    },
+    "Outermost left + outermost right + 4 per 2/3/4/10/11/12.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meest links + meest rechts + 4 per 2/3/4/10/11/12."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Äußerste links + äußerste rechts + 4 je 2/3/4/10/11/12."
+          }
+        }
+      }
+    },
+    "Enter the value you wrote (die × the shown multiplier, or the halved bonus value).": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voer de waarde in die je opschreef (dobbelsteen × de getoonde vermenigvuldiger, of de gehalveerde bonuswaarde)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib den notierten Wert ein (Würfel × angezeigter Multiplikator oder den halbierten Bonuswert)."
+          }
+        }
+      }
+    },
+    "▲ ascending (0 pts)": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "▲ oplopend (0 ptn)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "▲ aufsteigend (0 Pkt.)"
+          }
+        }
+      }
+    },
+    "− negative": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "− negatief"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "− negativ"
+          }
+        }
+      }
+    },
+    "+ positive": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+ positief"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+ positiv"
+          }
+        }
+      }
+    },
+    "Each fully-filled column scores its star. Total = (sum +) − (sum −) + columns.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elke volledig gevulde kolom scoort haar ster. Totaal = (som +) − (som −) + kolommen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jede vollständig gefüllte Spalte zählt ihren Stern. Gesamt = (Summe +) − (Summe −) + Spalten."
+          }
+        }
+      }
+    },
+    "Column with ≥2 crosses scores its value. Top-right→bottom-left diagonal with ≥2 scores +6.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een kolom met ≥2 kruisjes scoort haar waarde. De diagonaal rechtsboven→linksonder met ≥2 scoort +6."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Spalte mit ≥2 Kreuzen zählt ihren Wert. Die Diagonale oben rechts→unten links mit ≥2 zählt +6."
+          }
+        }
+      }
+    },
+    "Cross polyomino cells freely. Each fully-crossed column scores the value above it.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kruis polyominovakjes vrij aan. Elke volledig aangekruiste kolom scoort de waarde erboven."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kreuze die Polyomino-Felder frei an. Jede vollständig angekreuzte Spalte zählt den Wert darüber."
+          }
+        }
+      }
+    },
+    "Fill both triangles left→right. Field box = top + bottom; doubled from the 4th field (×2).": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul beide driehoeken links→rechts. Vakwaarde = boven + onder; vanaf het 4e vak verdubbeld (×2)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fülle beide Dreiecke von links→rechts. Feldwert = oben + unten; ab dem 4. Feld verdoppelt (×2)."
+          }
+        }
+      }
+    },
+    "Fill left→right (no skips). Score = value above the last field, plus 2→+2, 4→+4, 6→+3.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul links→rechts (niet overslaan). Score = waarde boven het laatste vak, plus 2→+2, 4→+4, 6→+3."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fülle von links→rechts (kein Überspringen). Wert = Zahl über dem letzten Feld, plus 2→+2, 4→+4, 6→+3."
+          }
+        }
+      }
+    },
+    "Qwixx — Big Points": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qwixx — Big Points"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qwixx — Big Points"
+          }
+        }
+      }
+    },
+    "Official rules for the Big Points variant": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Officiële regels voor de Big Points-variant"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offizielle Regeln für die Big-Points-Variante"
+          }
+        }
+      }
+    },
+    "Goal": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doel"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ziel"
+          }
+        }
+      }
+    },
+    "Cross out as many numbers as you can in the four colour rows to score points. In Big Points the two extra bonus rows let a single colour reach up to 120 points.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streep zoveel mogelijk getallen weg in de vier kleurenrijen om punten te scoren. In Big Points laten de twee extra bonusrijen één kleur tot 120 punten reiken."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streiche in den vier Farbreihen so viele Zahlen wie möglich, um Punkte zu erzielen. Bei Big Points können die zwei zusätzlichen Bonusreihen eine Farbe bis auf 120 Punkte bringen."
+          }
+        }
+      }
+    },
+    "The card": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De kaart"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Zettel"
+          }
+        }
+      }
+    },
+    "Red and yellow rows run 2 → 12 (left to right). Green and blue rows run 12 → 2.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De rode en gele rij lopen 2 → 12 (van links naar rechts). De groene en blauwe rij lopen 12 → 2."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die rote und gelbe Reihe laufen 2 → 12 (von links nach rechts). Die grüne und blaue Reihe laufen 12 → 2."
+          }
+        }
+      }
+    },
+    "Between red and yellow sits the red/yellow bonus row; between green and blue sits the green/blue bonus row. Each has the same numbers as its neighbours.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tussen rood en geel ligt de rood/gele bonusrij; tussen groen en blauw de groen/blauwe bonusrij. Elke heeft dezelfde getallen als haar buren."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zwischen Rot und Gelb liegt die rot/gelbe Bonusreihe; zwischen Grün und Blau die grün/blaue Bonusreihe. Beide haben dieselben Zahlen wie ihre Nachbarn."
+          }
+        }
+      }
+    },
+    "Crossing out numbers": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Getallen wegstrepen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zahlen ankreuzen"
+          }
+        }
+      }
+    },
+    "Within every row you must cross out from left to right. You may skip numbers, but skipped numbers can never be crossed later.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In elke rij streep je van links naar rechts weg. Je mag getallen overslaan, maar overgeslagen getallen kunnen later nooit meer worden weggestreept."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In jeder Reihe musst du von links nach rechts ankreuzen. Du darfst Zahlen überspringen, übersprungene Zahlen können aber später nie mehr angekreuzt werden."
+          }
+        }
+      }
+    },
+    "On a turn the white dice total may be crossed in any one row; the active player may also add a white die to a colour die and cross that colour.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tijdens een beurt mag de som van de witte dobbelstenen in één rij worden weggestreept; de actieve speler mag ook een witte dobbelsteen bij een kleurdobbelsteen optellen en die kleur wegstrepen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In einem Zug darf die Summe der weißen Würfel in einer Reihe angekreuzt werden; der aktive Spieler darf zudem einen weißen Würfel zu einem Farbwürfel addieren und diese Farbe ankreuzen."
+          }
+        }
+      }
+    },
+    "Bonus rows": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bonusrijen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bonusreihen"
+          }
+        }
+      }
+    },
+    "A bonus space may only be crossed once an adjacent same-number colour space has already been crossed.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een bonusvakje mag pas worden weggestreept zodra een aangrenzend kleurvakje met hetzelfde getal al is weggestreept."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Bonusfeld darf erst angekreuzt werden, wenn ein benachbartes Farbfeld mit derselben Zahl bereits angekreuzt wurde."
+          }
+        }
+      }
+    },
+    "The left-to-right rule applies to bonus rows too — skipped bonus spaces are lost.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De links-naar-rechtsregel geldt ook voor bonusrijen — overgeslagen bonusvakjes zijn verloren."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Links-nach-rechts-Regel gilt auch für Bonusreihen — übersprungene Bonusfelder sind verloren."
+          }
+        }
+      }
+    },
+    "Each crossed bonus space counts for BOTH adjacent colour rows when scoring.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elk weggestreept bonusvakje telt bij de telling voor BEIDE aangrenzende kleurenrijen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jedes angekreuzte Bonusfeld zählt bei der Wertung für BEIDE benachbarten Farbreihen."
+          }
+        }
+      }
+    },
+    "Locking a row": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een rij vergrendelen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Reihe schließen"
+          }
+        }
+      }
+    },
+    "To cross the right-most number (12 for red/yellow, 2 for green/blue) you must already have at least 5 crosses in that row.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Om het meest rechtse getal weg te strepen (12 voor rood/geel, 2 voor groen/blauw) moet je al minstens 5 kruisjes in die rij hebben."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Um die äußerste rechte Zahl anzukreuzen (12 bei Rot/Gelb, 2 bei Grün/Blau), musst du bereits mindestens 5 Kreuze in dieser Reihe haben."
+          }
+        }
+      }
+    },
+    "Crossing it locks the row and adds the lock as one extra cross.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wegstrepen vergrendelt de rij en telt het slot als één extra kruisje."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Ankreuzen schließt die Reihe und zählt das Schloss als zusätzliches Kreuz."
+          }
+        }
+      }
+    },
+    "Penalties & game end": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strafpunten & einde spel"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strafen & Spielende"
+          }
+        }
+      }
+    },
+    "If on your turn you cross nothing, take a penalty (−5 points). Four penalties end the game.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als je tijdens je beurt niets wegstreept, neem je een strafpunt (−5 punten). Vier strafpunten beëindigen het spel."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kreuzt du in deinem Zug nichts an, nimmst du eine Strafe (−5 Punkte). Vier Strafen beenden das Spiel."
+          }
+        }
+      }
+    },
+    "The game also ends the moment two rows are locked.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het spel eindigt ook op het moment dat twee rijen vergrendeld zijn."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Spiel endet auch, sobald zwei Reihen geschlossen sind."
+          }
+        }
+      }
+    },
+    "Scoring": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puntentelling"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wertung"
+          }
+        }
+      }
+    },
+    "Per colour, count its crosses (its own numbers + lock + adjacent bonus crosses, max 15) and score 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105, 120.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tel per kleur de kruisjes (eigen getallen + slot + aangrenzende bonuskruisjes, max. 15) en scoor 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105, 120."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zähle je Farbe ihre Kreuze (eigene Zahlen + Schloss + benachbarte Bonuskreuze, max. 15) und werte 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105, 120."
+          }
+        }
+      }
+    },
+    "Total = red + yellow + green + blue − (5 × penalties).": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Totaal = rood + geel + groen + blauw − (5 × strafpunten)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesamt = Rot + Gelb + Grün + Blau − (5 × Strafen)."
+          }
+        }
+      }
+    },
+    "Turn": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beurt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zug"
+          }
+        }
+      }
+    },
+    "Yellow": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geel"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gelb"
+          }
+        }
+      }
+    },
+    "Blue": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blauw"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blau"
+          }
+        }
+      }
+    },
+    "Green": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grün"
+          }
+        }
+      }
+    },
+    "Orange": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oranje"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orange"
+          }
+        }
+      }
+    },
+    "Purple": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paars"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Violett"
+          }
+        }
+      }
+    },
+    "Silver": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zilver"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silber"
+          }
+        }
+      }
+    },
+    "Pink": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Roze"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rosa"
+          }
+        }
+      }
+    },
+    "Bonuses & foxes": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bonussen & vossen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boni & Füchse"
+          }
+        }
+      }
+    },
+    "Foxes & scoring": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vossen & puntentelling"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Füchse & Wertung"
+          }
+        }
+      }
+    },
+    "Game end & scoring": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einde spel & puntentelling"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spielende & Wertung"
+          }
+        }
+      }
+    },
+    "Areas": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebieden"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bereiche"
+          }
+        }
+      }
+    },
+    "Brown": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bruin"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Braun"
+          }
+        }
+      }
+    },
+    "Grey": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grijs"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grau"
+          }
+        }
+      }
+    },
+    "On your turn roll all 6 dice, pick one and mark it in the matching colour area. Set aside all dice showing a lower value (the Silver Platter), then re-roll and pick again — up to 3 dice total.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In jouw beurt gooi je alle 6 dobbelstenen, kies je er één en markeer je die in het bijbehorende kleurgebied. Leg alle dobbelstenen met een lagere waarde apart (het zilveren dienblad), gooi dan opnieuw en kies weer — in totaal maximaal 3 dobbelstenen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In deinem Zug würfelst du alle 6 Würfel, wählst einen und trägst ihn im passenden Farbbereich ein. Lege alle Würfel mit niedrigerem Wert beiseite (das Silbertablett), würfle erneut und wähle wieder — insgesamt bis zu 3 Würfel."
+          }
+        }
+      }
+    },
+    "The white die is wild: use it as yellow, green, orange or purple, or add it to the blue die for the blue area.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De witte dobbelsteen is joker: gebruik hem als geel, groen, oranje of paars, of tel hem bij de blauwe dobbelsteen op voor het blauwe gebied."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der weiße Würfel ist Joker: nutze ihn als Gelb, Grün, Orange oder Violett oder addiere ihn zum blauen Würfel für den blauen Bereich."
+          }
+        }
+      }
+    },
+    "This app is a scorecard — you roll physical dice and tap to record. It enforces each area's structure and totals everything for you.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze app is een scorekaart — je gooit met echte dobbelstenen en tikt om te noteren. Hij bewaakt de structuur van elk gebied en telt alles voor je op."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese App ist ein Spielzettel — du würfelst mit echten Würfeln und tippst zum Eintragen. Sie wacht über die Struktur jedes Bereichs und zählt alles für dich zusammen."
+          }
+        }
+      }
+    },
+    "Cross out the die value anywhere in the 4×4 grid (any order). The anti-diagonal is pre-crossed.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streep de dobbelsteenwaarde overal in het 4×4-rooster weg (volgorde vrij). De tegendiagonaal is vooraf weggestreept."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kreuze den Würfelwert beliebig im 4×4-Gitter an (Reihenfolge frei). Die Nebendiagonale ist vorab angekreuzt."
+          }
+        }
+      }
+    },
+    "Each completed column scores the value beneath it (10, 14, 16, 20) — these are added together.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elke voltooide kolom scoort de waarde eronder (10, 14, 16, 20) — deze worden bij elkaar opgeteld."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jede vollständige Spalte zählt den Wert darunter (10, 14, 16, 20) — diese werden addiert."
+          }
+        }
+      }
+    },
+    "Completing a row, the main diagonal, or other spots grants the printed bonus.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het voltooien van een rij, de hoofddiagonaal of andere vakjes geeft de afgedrukte bonus."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Vervollständigen einer Reihe, der Hauptdiagonale oder anderer Felder gewährt den aufgedruckten Bonus."
+          }
+        }
+      }
+    },
+    "Cross the cell equal to blue + white (2–12), any order.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streep het vakje weg dat gelijk is aan blauw + wit (2–12), in willekeurige volgorde."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kreuze das Feld an, das Blau + Weiß (2–12) entspricht, in beliebiger Reihenfolge."
+          }
+        }
+      }
+    },
+    "Score by how many cells you've crossed: 1, 2, 4, 7, 11, 16, 22, 29, 37, 46, 56.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scoor naar het aantal weggestreepte vakjes: 1, 2, 4, 7, 11, 16, 22, 29, 37, 46, 56."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Werte nach der Anzahl angekreuzter Felder: 1, 2, 4, 7, 11, 16, 22, 29, 37, 46, 56."
+          }
+        }
+      }
+    },
+    "Mark left to right without skipping; each space needs the printed minimum die value.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markeer van links naar rechts zonder overslaan; elk vakje vereist de afgedrukte minimale dobbelsteenwaarde."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markiere von links nach rechts ohne zu überspringen; jedes Feld benötigt den aufgedruckten Mindestwürfelwert."
+          }
+        }
+      }
+    },
+    "Score the value above your last marked space (1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66).": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scoor de waarde boven je laatst gemarkeerde vakje (1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Werte den Wert über deinem zuletzt markierten Feld (1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66)."
+          }
+        }
+      }
+    },
+    "Write the die value left to right. Some spaces multiply it (×2 or ×3).": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schrijf de dobbelsteenwaarde van links naar rechts. Sommige vakjes vermenigvuldigen hem (×2 of ×3)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schreibe den Würfelwert von links nach rechts. Manche Felder vervielfachen ihn (×2 oder ×3)."
+          }
+        }
+      }
+    },
+    "Score the sum of all written numbers.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scoor de som van alle opgeschreven getallen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Werte die Summe aller geschriebenen Zahlen."
+          }
+        }
+      }
+    },
+    "Write the die value left to right; each must be higher than the previous — except any value may follow a 6.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schrijf de dobbelsteenwaarde van links naar rechts; elke moet hoger zijn dan de vorige — behalve dat na een 6 elke waarde mag volgen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schreibe den Würfelwert von links nach rechts; jeder muss höher als der vorherige sein — außer nach einer 6 darf jeder Wert folgen."
+          }
+        }
+      }
+    },
+    "Printed bonuses (re-roll, +1, extra cross, a coloured number) are earned as you mark spaces; apply them by tapping the granted space yourself. Bonuses can chain.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afgedrukte bonussen (opnieuw gooien, +1, extra kruisje, een gekleurd getal) verdien je tijdens het markeren; pas ze zelf toe door op het toegekende vakje te tikken. Bonussen kunnen elkaar opvolgen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufgedruckte Boni (Neu würfeln, +1, Extra-Kreuz, eine farbige Zahl) verdienst du beim Markieren; wende sie selbst an, indem du das gewährte Feld antippst. Boni können verkettet werden."
+          }
+        }
+      }
+    },
+    "Each fox scores the value of your lowest-scoring area. The app detects foxes automatically and counts them for you.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elke vos scoort de waarde van je laagst scorende gebied. De app herkent vossen automatisch en telt ze voor je."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeder Fuchs zählt den Wert deines niedrigsten Bereichs. Die App erkennt Füchse automatisch und zählt sie für dich."
+          }
+        }
+      }
+    },
+    "Played over 6 rounds (solo / 2 players), 5 (3 players) or 4 (4 players).": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gespeeld over 6 rondes (solo / 2 spelers), 5 (3 spelers) of 4 (4 spelers)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gespielt über 6 Runden (solo / 2 Spieler), 5 (3 Spieler) oder 4 (4 Spieler)."
+          }
+        }
+      }
+    },
+    "Final score = yellow + blue + green + orange + purple + (foxes × lowest area). Highest total wins.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eindscore = geel + blauw + groen + oranje + paars + (vossen × laagste gebied). Hoogste totaal wint."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Endpunktzahl = Gelb + Blau + Grün + Orange + Violett + (Füchse × niedrigster Bereich). Höchste Summe gewinnt."
+          }
+        }
+      }
+    },
+    "Same flow as That's Pretty Clever: roll 6 dice, take up to 3 (setting aside lower dice for others), and record each in its colour area. White is wild.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zelfde verloop als That's Pretty Clever: gooi 6 dobbelstenen, neem er maximaal 3 (lagere dobbelstenen leg je apart voor de anderen) en noteer elke in zijn kleurgebied. Wit is joker."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gleicher Ablauf wie bei That's Pretty Clever: würfle 6 Würfel, nimm bis zu 3 (niedrigere Würfel legst du für die anderen beiseite) und trage jeden in seinem Farbbereich ein. Weiß ist Joker."
+          }
+        }
+      }
+    },
+    "This app is a scorecard: it enforces each area's structure and totals your score. Apply re-roll / return / +1 / extra-die bonuses yourself.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze app is een scorekaart: hij bewaakt de structuur van elk gebied en telt je score op. Pas de bonussen opnieuw gooien / teruggeven / +1 / extra dobbelsteen zelf toe."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese App ist ein Spielzettel: sie wacht über die Struktur jedes Bereichs und zählt deine Punkte zusammen. Wende die Boni Neu würfeln / Zurücklegen / +1 / Extra-Würfel selbst an."
+          }
+        }
+      }
+    },
+    "Cross the die value in any of the four colour rows (the colour is free).": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streep de dobbelsteenwaarde weg in een van de vier kleurenrijen (de kleur is vrij)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kreuze den Würfelwert in einer der vier Farbreihen an (die Farbe ist frei)."
+          }
+        }
+      }
+    },
+    "Each row scores by how many marks it has: 2, 4, 7, 11, 16, 22. Add all four rows.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elke rij scoort naar het aantal kruisjes: 2, 4, 7, 11, 16, 22. Tel alle vier rijen op."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jede Reihe zählt nach der Anzahl ihrer Kreuze: 2, 4, 7, 11, 16, 22. Addiere alle vier Reihen."
+          }
+        }
+      }
+    },
+    "Tap once to circle a number, twice to cross it (you may only cross what's circled).": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tik één keer om een getal te omcirkelen, twee keer om het te kruisen (je mag alleen kruisen wat omcirkeld is)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einmal tippen, um eine Zahl einzukreisen, zweimal, um sie anzukreuzen (du darfst nur Eingekreistes ankreuzen)."
+          }
+        }
+      }
+    },
+    "Only crosses score: 3, 10, 21, 36, 55, 75, 96, 118, 141, 165 for 1–10 crosses. Circles enable bonuses.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alleen kruisjes scoren: 3, 10, 21, 36, 55, 75, 96, 118, 141, 165 voor 1–10 kruisjes. Cirkels activeren bonussen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur Kreuze zählen: 3, 10, 21, 36, 55, 75, 96, 118, 141, 165 für 1–10 Kreuze. Kreise ermöglichen Boni."
+          }
+        }
+      }
+    },
+    "Write blue + white (2–12) left to right; each number must be ≤ the previous one.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schrijf blauw + wit (2–12) van links naar rechts; elk getal moet ≤ het vorige zijn."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schreibe Blau + Weiß (2–12) von links nach rechts; jede Zahl muss ≤ der vorherigen sein."
+          }
+        }
+      }
+    },
+    "Score the value above the last filled box (up to 78).": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scoor de waarde boven het laatst gevulde vakje (tot 78)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Werte den Wert über dem zuletzt gefüllten Feld (bis 78)."
+          }
+        }
+      }
+    },
+    "Write the die × the printed multiplier, left to right. Cells are grouped in pairs.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schrijf de dobbelsteen × de afgedrukte vermenigvuldiger, van links naar rechts. Vakjes zijn gegroepeerd in paren."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schreibe den Würfel × den aufgedruckten Multiplikator, von links nach rechts. Die Felder sind paarweise gruppiert."
+          }
+        }
+      }
+    },
+    "Each completed pair scores (first − second); add all pair results. Put a high number first, a low number second.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elk voltooid paar scoort (eerste − tweede); tel alle paarresultaten op. Zet een hoog getal eerst, een laag getal als tweede."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jedes vollständige Paar zählt (erster − zweiter); addiere alle Paarergebnisse. Setze eine hohe Zahl zuerst, eine niedrige als zweite."
+          }
+        }
+      }
+    },
+    "Write the die value left to right (any value). Score the sum of all entries.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schrijf de dobbelsteenwaarde van links naar rechts (elke waarde). Scoor de som van alle invoeren."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schreibe den Würfelwert von links nach rechts (jeder Wert). Werte die Summe aller Einträge."
+          }
+        }
+      }
+    },
+    "A space's bonus is only earned if the value is ≥ the printed minimum.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De bonus van een vakje verdien je alleen als de waarde ≥ het afgedrukte minimum is."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Bonus eines Feldes wird nur gewährt, wenn der Wert ≥ dem aufgedruckten Minimum ist."
+          }
+        }
+      }
+    },
+    "Each fox scores your lowest area. Tap the fox stepper when you earn one.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elke vos scoort je laagste gebied. Tik op de vossenteller wanneer je er een verdient."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeder Fuchs zählt deinen niedrigsten Bereich. Tippe auf den Fuchs-Zähler, wenn du einen verdienst."
+          }
+        }
+      }
+    },
+    "Final score = silver + yellow + blue + green + pink + (foxes × lowest area).": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eindscore = zilver + geel + blauw + groen + roze + (vossen × laagste gebied)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Endpunktzahl = Silber + Gelb + Blau + Grün + Rosa + (Füchse × niedrigster Bereich)."
+          }
+        }
+      }
+    },
+    "Five areas: yellow, turquoise, brown (cross out) and blue, pink (write numbers). White is wild. The app auto-scores all five.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vijf gebieden: geel, turkoois, bruin (wegstrepen) en blauw, roze (getallen schrijven). Wit is joker. De app scoort alle vijf automatisch."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fünf Bereiche: Gelb, Türkis, Braun (ankreuzen) sowie Blau, Rosa (Zahlen schreiben). Weiß ist Joker. Die App wertet alle fünf automatisch."
+          }
+        }
+      }
+    },
+    "Three rows; cross the rolled number (active rows go I→II→III by roll). Each row scores 2, 6, 12, 20, 30, 42 by its number of crosses. Max 126.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drie rijen; streep het gegooide getal weg (actieve rijen gaan I→II→III per worp). Elke rij scoort 2, 6, 12, 20, 30, 42 naar het aantal kruisjes. Max. 126."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drei Reihen; kreuze die gewürfelte Zahl an (aktive Reihen gehen I→II→III je Wurf). Jede Reihe zählt 2, 6, 12, 20, 30, 42 nach ihrer Kreuzanzahl. Max. 126."
+          }
+        }
+      }
+    },
+    "Five rows; cross the rolled number — and one extra field per matching die. Each row scores 1, 3, 6, 10, 15, 21 by its crosses. Max 105.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vijf rijen; streep het gegooide getal weg — plus één extra vakje per passende dobbelsteen. Elke rij scoort 1, 3, 6, 10, 15, 21 naar haar kruisjes. Max. 105."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fünf Reihen; kreuze die gewürfelte Zahl an — plus ein zusätzliches Feld je passendem Würfel. Jede Reihe zählt 1, 3, 6, 10, 15, 21 nach ihren Kreuzen. Max. 105."
+          }
+        }
+      }
+    },
+    "A ±1 track around the central 7: tap left writing exactly one lower, right exactly one higher; a 7 resets the run.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een ±1-spoor rond de centrale 7: tik links om precies één lager te schrijven, rechts precies één hoger; een 7 herstart de reeks."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine ±1-Leiste um die zentrale 7: links tippen schreibt genau eins niedriger, rechts genau eins höher; eine 7 setzt die Reihe zurück."
+          }
+        }
+      }
+    },
+    "Score = points above the outermost-left and outermost-right entries (3/6/9/13/17/22), plus 4 per written 2/3/4/10/11/12. Max 68.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Score = punten boven de meest linkse en meest rechtse invoer (3/6/9/13/17/22), plus 4 per geschreven 2/3/4/10/11/12. Max. 68."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wert = Punkte über dem äußersten linken und äußersten rechten Eintrag (3/6/9/13/17/22), plus 4 je geschriebener 2/3/4/10/11/12. Max. 68."
+          }
+        }
+      }
+    },
+    "One row, left to right; you may skip but never go back. Scores 2, 5, 9, 14, 20, 27, 35, 44, 54, 65, 77, 90 by total crosses.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eén rij, van links naar rechts; je mag overslaan maar nooit terug. Scoort 2, 5, 9, 14, 20, 27, 35, 44, 54, 65, 77, 90 naar het totaal aantal kruisjes."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Reihe, von links nach rechts; du darfst überspringen, aber nie zurück. Zählt 2, 5, 9, 14, 20, 27, 35, 44, 54, 65, 77, 90 nach der Gesamtzahl der Kreuze."
+          }
+        }
+      }
+    },
+    "Fill left to right. Take the bonus (halve the die, round up) or the points (die × the printed multiplier). Enter each written value; score = their sum.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul van links naar rechts. Neem de bonus (halveer de dobbelsteen, naar boven afronden) of de punten (dobbelsteen × de afgedrukte vermenigvuldiger). Voer elke geschreven waarde in; score = hun som."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fülle von links nach rechts. Nimm den Bonus (Würfel halbieren, aufrunden) oder die Punkte (Würfel × aufgedruckter Multiplikator). Gib jeden geschriebenen Wert ein; Wert = ihre Summe."
+          }
+        }
+      }
+    },
+    "Each fox scores your lowest area. Total = yellow + turquoise + blue + brown + pink + (foxes × lowest area).": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elke vos scoort je laagste gebied. Totaal = geel + turkoois + blauw + bruin + roze + (vossen × laagste gebied)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeder Fuchs zählt deinen niedrigsten Bereich. Gesamt = Gelb + Türkis + Blau + Braun + Rosa + (Füchse × niedrigster Bereich)."
+          }
+        }
+      }
+    },
+    "Five areas: yellow, blue, grey, green and pink. The white die is a joker. The app auto-scores all five.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vijf gebieden: geel, blauw, grijs, groen en roze. De witte dobbelsteen is joker. De app scoort alle vijf automatisch."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fünf Bereiche: Gelb, Blau, Grau, Grün und Rosa. Der weiße Würfel ist Joker. Die App wertet alle fünf automatisch."
+          }
+        }
+      }
+    },
+    "Three rows of five fields. The top row must strictly ascend (it closes after a 6) and scores 0 itself — it only grants bonuses.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drie rijen van vijf vakjes. De bovenste rij moet strikt oplopen (sluit na een 6) en scoort zelf 0 — hij geeft alleen bonussen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drei Reihen mit fünf Feldern. Die obere Reihe muss streng aufsteigen (schließt nach einer 6) und zählt selbst 0 — sie gewährt nur Boni."
+          }
+        }
+      }
+    },
+    "The middle row counts as negative; the bottom row as positive. Each fully-filled column scores its yellow star (10, 10, 15, 15, 20).": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De middelste rij telt negatief; de onderste rij positief. Elke volledig gevulde kolom scoort haar gele ster (10, 10, 15, 15, 20)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die mittlere Reihe zählt negativ, die untere positiv. Jede vollständig gefüllte Spalte zählt ihren gelben Stern (10, 10, 15, 15, 20)."
+          }
+        }
+      }
+    },
+    "Score = (sum of bottom) − (sum of middle) + completed-column stars.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Score = (som onderste) − (som middelste) + sterren van voltooide kolommen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wert = (Summe unten) − (Summe Mitte) + Sterne vollständiger Spalten."
+          }
+        }
+      }
+    },
+    "A 6×6 grid: cross a cell at (blue die = row, white die = column). A column with two or more crosses scores its value (7, 8, 9, 10, 11, 12).": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een 6×6-rooster: kruis een vakje aan op (blauwe dobbelsteen = rij, witte dobbelsteen = kolom). Een kolom met twee of meer kruisjes scoort haar waarde (7, 8, 9, 10, 11, 12)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein 6×6-Gitter: kreuze ein Feld bei (blauer Würfel = Zeile, weißer Würfel = Spalte) an. Eine Spalte mit zwei oder mehr Kreuzen zählt ihren Wert (7, 8, 9, 10, 11, 12)."
+          }
+        }
+      }
+    },
+    "The top-right→bottom-left diagonal scores +6 when it has two or more crosses.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De diagonaal rechtsboven→linksonder scoort +6 wanneer hij twee of meer kruisjes heeft."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Diagonale oben rechts→unten links zählt +6, wenn sie zwei oder mehr Kreuze hat."
+          }
+        }
+      }
+    },
+    "Cross polyomino cells across a 4×16 grid (cross freely here). Each fully-crossed column scores the value printed above it (1…11).": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kruis polyominovakjes aan over een 4×16-rooster (hier vrij kruisen). Elke volledig aangekruiste kolom scoort de waarde erboven (1…11)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kreuze Polyomino-Felder über ein 4×16-Gitter an (hier frei ankreuzen). Jede vollständig angekreuzte Spalte zählt den darüber gedruckten Wert (1…11)."
+          }
+        }
+      }
+    },
+    "Eleven fields, each split into an upper and a lower triangle; fill both rows left→right. When both triangles of a field are filled, its box = their sum, doubled from the 4th field onward (×2).": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elf vakjes, elk verdeeld in een boven- en onderdriehoek; vul beide rijen links→rechts. Als beide driehoeken van een vakje gevuld zijn, is de vakwaarde hun som, vanaf het 4e vak verdubbeld (×2)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elf Felder, jedes in ein oberes und unteres Dreieck geteilt; fülle beide Reihen von links→rechts. Sind beide Dreiecke eines Feldes gefüllt, ist der Feldwert ihre Summe, ab dem 4. Feld verdoppelt (×2)."
+          }
+        }
+      }
+    },
+    "One bar of twelve fields, filled left→right with no skips. Score = the value above the last filled field (up to 42), plus circled bonuses: each 2 → +2, each 4 → +4, each 6 → +3.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eén balk van twaalf vakjes, links→rechts gevuld zonder overslaan. Score = de waarde boven het laatst gevulde vak (tot 42), plus omcirkelde bonussen: elke 2 → +2, elke 4 → +4, elke 6 → +3."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Balken mit zwölf Feldern, von links→rechts ohne Überspringen gefüllt. Wert = Zahl über dem zuletzt gefüllten Feld (bis 42), plus eingekreiste Boni: jede 2 → +2, jede 4 → +4, jede 6 → +3."
+          }
+        }
+      }
+    },
+    "Foxes are tracked with the stepper; each scores your lowest area. Total = yellow + blue + grey + green + pink + (foxes × lowest area).": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vossen worden bijgehouden met de teller; elke scoort je laagste gebied. Totaal = geel + blauw + grijs + groen + roze + (vossen × laagste gebied)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Füchse werden mit dem Zähler erfasst; jeder zählt deinen niedrigsten Bereich. Gesamt = Gelb + Blau + Grau + Grün + Rosa + (Füchse × niedrigster Bereich)."
+          }
+        }
+      }
+    },
+    "List layout": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lijstweergave"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listenansicht"
+          }
+        }
+      }
+    },
+    "Sheet layout": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scoreblad-weergave"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blattansicht"
+          }
+        }
       }
     }
   }
