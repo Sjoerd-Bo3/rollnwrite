@@ -60,7 +60,8 @@ struct Connect15BoardView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(outerPad)
         }
-        .ignoresSafeArea(.container, edges: .bottom)
+        // Content stays inside the bottom safe area so the bar never collides
+        // with the home indicator (the window background fills behind us).
         .confirmationDialog("Start a new game?", isPresented: $confirmReset, titleVisibility: .visible) {
             Button("New game", role: .destructive) { game.reset() }
             Button("Cancel", role: .cancel) {}
@@ -154,11 +155,16 @@ struct Connect15BoardView: View {
 
     /// The eleven number tiles with the row's three connection squares overlaid
     /// on the gaps at their printed positions. Within the strip, the gap after
-    /// number column `i` is centred at `i·(w+gap) + w + gap/2`; the square is
-    /// vertically centred (the overlay's `.leading` alignment) and offset there.
+    /// number column `i` is centred at `i·(w+gap) + w + gap/2`. The square is
+    /// kept small (0.42×min) and nudged toward the band's LOWER edge so the
+    /// two-digit numbers keep a clear zone; its tap target stays bigger than
+    /// the visual (contentShape inside `ConnectionTile`).
     private func numberStrip(_ color: GameColor, w: CGFloat, th: CGFloat) -> some View {
         let columns = Connect15Layout.columns(for: color)
-        let s = min(w, th) * 0.52
+        let s = min(w, th) * 0.42
+        // Push the square down so its bottom edge sits just above the tile's:
+        // centre offset from the strip's vertical centre.
+        let yOff = (th - s) / 2 - th * 0.06
         return HStack(spacing: tileGap) {
             ForEach(0..<11, id: \.self) { i in
                 numberTile(color, i, w: w, th: th)
@@ -168,17 +174,22 @@ struct Connect15BoardView: View {
             ForEach(Array(columns.enumerated()), id: \.offset) { field, column in
                 let gapCenter = CGFloat(column) * (w + tileGap) + w + tileGap / 2
                 connectionTile(color, field: field, size: s)
-                    .offset(x: gapCenter - s / 2)
+                    .offset(x: gapCenter - s / 2, y: yOff)
             }
         }
     }
 
     private func numberTile(_ color: GameColor, _ i: Int, w: CGFloat, th: CGFloat) -> some View {
-        let marked = game.row(for: color).marks.contains(i)
+        let row = game.row(for: color)
+        let marked = row.marks.contains(i)
         let undoable = marked && game.isLastColorMark(color, i)
+        // Skipped-forever: this number's interleaved position is left of the
+        // row's front (numbers + connection fields), or the row is locked.
+        let forfeited = !marked
+            && (Connect15Layout.numberPosition(column: i) < game.maxMarkedPosition(color) || row.locked)
         return NumberTile("\(color.numbers[i])", tint: color.tint,
                           marked: marked, legal: game.canMarkColor(color, i),
-                          undoable: undoable, w: w, h: th) {
+                          undoable: undoable, forfeited: forfeited, w: w, h: th) {
             if undoable { game.undo() } else { game.markColor(color, i) }
         }
         .accessibilityLabel("\(color.displayName) \(color.numbers[i])")
@@ -210,8 +221,9 @@ struct Connect15BoardView: View {
     // right — echoing the corner buttons on the printed card.
 
     private func bottomBar(w: CGFloat, h: CGFloat) -> some View {
+        // One shared control height `b` and one baseline for every element.
         let b = min(h, 64)
-        return HStack(spacing: tileGap) {
+        return HStack(alignment: .center, spacing: tileGap) {
             BoardControlButton("arrow.uturn.backward", size: b) { game.undo() }
                 .disabled(!game.canUndo)
                 .opacity(game.canUndo ? 1 : 0.4)
@@ -234,12 +246,15 @@ struct Connect15BoardView: View {
             }
             if game.isGameOver {
                 Image(systemName: "flag.checkered").foregroundStyle(.secondary)
+                    .frame(height: b)
             }
             Text("Total")
                 .font(.system(size: b * 0.34, weight: .semibold))
                 .foregroundStyle(.secondary)
+                .frame(height: b)
             Text("\(game.totalScore)")
                 .font(.system(size: b * 0.55, weight: .heavy, design: .rounded).monospacedDigit())
+                .frame(height: b)
         }
         .frame(maxWidth: .infinity)
         .frame(height: h)
@@ -282,7 +297,8 @@ private struct ConnectionTile: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
                             .strokeBorder(tint,
-                                          style: StrokeStyle(lineWidth: s * 0.07, dash: [s * 0.16, s * 0.1]))
+                                          style: StrokeStyle(lineWidth: BoardStroke.small(s),
+                                                             dash: [s * 0.16, s * 0.1]))
                     )
                 if marked {
                     Image(systemName: "xmark")
@@ -298,11 +314,16 @@ private struct ConnectionTile: View {
             .shadow(color: .black.opacity(0.2), radius: 1)
             .overlay(
                 RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
-                    .strokeBorder(tint, lineWidth: undoable ? 2.5 : 0)
+                    .strokeBorder(tint, lineWidth: undoable ? BoardStroke.medium(s) : 0)
             )
+            // The visual square is small so it clears the tile digits; keep the
+            // tap target comfortably bigger than the visual.
+            .contentShape(Rectangle().inset(by: -s * 0.3))
         }
         .buttonStyle(.plain)
-        .disabled(!(legal || undoable))
+        // Not `.disabled` — the plain style dims disabled labels, which faded
+        // crossed-but-not-last squares (see NumberTile). Hit testing already
+        // gates interaction, and lets inert squares pass touches through.
         .allowsHitTesting(legal || undoable)
         .opacity(dimmed ? 0.35 : 1)
         .accessibilityValue(marked ? "marked" : (legal ? "available" : "blocked"))

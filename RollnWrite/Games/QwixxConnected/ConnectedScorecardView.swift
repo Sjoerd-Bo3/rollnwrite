@@ -58,7 +58,8 @@ struct ConnectedBoardView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(outerPad)
         }
-        .ignoresSafeArea(.container, edges: .bottom)
+        // Content stays inside the bottom safe area so the bar never collides
+        // with the home indicator (the window background fills behind us).
         .confirmationDialog("Start a new game?", isPresented: $confirmReset, titleVisibility: .visible) {
             Button("New game", role: .destructive) { game.reset() }
             Button("Cancel", role: .cancel) {}
@@ -191,13 +192,15 @@ struct ConnectedBoardView: View {
     /// shows the undo ring.
     @ViewBuilder
     private func numberTile(_ color: GameColor, index i: Int, w: CGFloat, th: CGFloat) -> some View {
+        let row = game.row(for: color)
         let marked = game.isMarked(color, i)
         let undoable = marked && game.isLastColorMark(color, i)
         let isChain = game.isChainSpace(color, i)
+        let forfeited = !marked && (i < row.maxMarkedIndex || row.locked)
         ZStack {
             NumberTile("\(color.numbers[i])", tint: color.tint,
                        marked: marked, legal: game.canMarkColor(color, i),
-                       undoable: undoable, w: w, h: th) {
+                       undoable: undoable, forfeited: forfeited, w: w, h: th) {
                 if undoable { game.undo() } else { game.markColor(color, i) }
             }
             .accessibilityLabel("\(color.displayName) \(color.numbers[i])")
@@ -213,7 +216,7 @@ struct ConnectedBoardView: View {
                 Circle()
                     .strokeBorder(
                         color.tint,
-                        style: StrokeStyle(lineWidth: 2, dash: [3, 2.5])
+                        style: StrokeStyle(lineWidth: BoardStroke.small(min(w, th)), dash: [3, 2.5])
                     )
                     .frame(width: min(w, th), height: min(w, th))
                     .padding(2)
@@ -226,8 +229,9 @@ struct ConnectedBoardView: View {
     /// Controls (undo, new game) on the left, penalties + running total on the
     /// right — echoing the corner buttons on the printed card.
     private func bottomBar(w: CGFloat, h: CGFloat) -> some View {
+        // One shared control height `b` and one baseline for every element.
         let b = min(h, 64)
-        return HStack(spacing: tileGap) {
+        return HStack(alignment: .center, spacing: tileGap) {
             BoardControlButton("arrow.uturn.backward", size: b) { game.undo() }
                 .disabled(!game.canUndo)
                 .opacity(game.canUndo ? 1 : 0.4)
@@ -250,12 +254,15 @@ struct ConnectedBoardView: View {
             }
             if game.isGameOver {
                 Image(systemName: "flag.checkered").foregroundStyle(.secondary)
+                    .frame(height: b)
             }
             Text("Total")
                 .font(.system(size: b * 0.34, weight: .semibold))
                 .foregroundStyle(.secondary)
+                .frame(height: b)
             Text("\(game.totalScore)")
                 .font(.system(size: b * 0.55, weight: .heavy, design: .rounded).monospacedDigit())
+                .frame(height: b)
         }
         .frame(maxWidth: .infinity)
         .frame(height: h)

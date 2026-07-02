@@ -58,7 +58,8 @@ struct BonusBoardView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(outerPad)
         }
-        .ignoresSafeArea(.container, edges: .bottom)
+        // Content stays inside the bottom safe area so the bar never collides
+        // with the home indicator (the window background fills behind us).
         .confirmationDialog("Start a new game?", isPresented: $confirmReset, titleVisibility: .visible) {
             Button("New game", role: .destructive) { game.reset() }
             Button("Cancel", role: .cancel) {}
@@ -136,17 +137,18 @@ struct BonusBoardView: View {
             ForEach(0..<11, id: \.self) { i in
                 let marked = row.marks.contains(i)
                 let undoable = marked && game.isLastColorMark(color, i)
+                let forfeited = !marked && (i < row.maxMarkedIndex || row.locked)
                 ZStack {
                     NumberTile("\(color.numbers[i])", tint: color.tint,
                                marked: marked, legal: game.canMarkColor(color, i),
-                               undoable: undoable, w: w, h: th) {
+                               undoable: undoable, forfeited: forfeited, w: w, h: th) {
                         if undoable { game.undo() } else { game.markColor(color, i) }
                     }
                     // Boxed bonus numbers wear a heavy black outline, matching the
                     // printed sheet. Decorative only — it never blocks taps.
                     if game.isBoxed(color, i) {
                         RoundedRectangle(cornerRadius: min(w, th) * 0.18, style: .continuous)
-                            .strokeBorder(.black, lineWidth: 2.5)
+                            .strokeBorder(.black, lineWidth: BoardStroke.small(min(w, th)))
                             .frame(width: w, height: th)
                             .allowsHitTesting(false)
                     }
@@ -191,26 +193,30 @@ struct BonusBoardView: View {
         let isEarned = game.bar.earned.contains(idx)
         let isForfeited = game.bar.forfeited.contains(idx)
         return ZStack {
+            // Light base so an unearned field clearly shows its colour in dark
+            // mode too (a bare low-opacity tint sank into the black background).
             RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
-                .fill(color.tint)
-                .overlay(
-                    RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
-                        .strokeBorder(.black.opacity(0.25), lineWidth: 1)
-                )
+                .fill(Color.white.opacity(0.9))
+            RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
+                .fill(color.tint.opacity(isEarned ? 1 : 0.3))
+            RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
+                .strokeBorder(isEarned ? Color.black.opacity(0.25) : color.tint.opacity(0.9),
+                              lineWidth: BoardStroke.small(s))
             if isEarned {
                 Image(systemName: "xmark")
                     .font(.system(size: s * 0.6, weight: .black))
                     .foregroundStyle(color.textColor)
             } else if isForfeited {
-                // Forfeited fields read as struck-out and dead: a thin slash on
-                // a heavily dimmed tile, clearly distinct from an earned cross.
+                // Forfeited fields keep the slash but stay identifiable by
+                // colour: the slash is drawn in the field's own tint on the
+                // light-tinted base.
                 Image(systemName: "line.diagonal")
                     .font(.system(size: s * 0.7, weight: .regular))
-                    .foregroundStyle(color.textColor.opacity(0.7))
+                    .foregroundStyle(color.tint)
             }
         }
         .frame(width: w, height: h)
-        .opacity(isEarned ? 1 : (isForfeited ? 0.3 : 0.5))
+        .opacity(isEarned ? 1 : (isForfeited ? 0.55 : 0.9))
         .accessibilityLabel("Bonus \(color.displayName)")
         .accessibilityValue(isEarned ? "crossed" : (isForfeited ? "forfeited" : "open"))
     }
@@ -218,8 +224,9 @@ struct BonusBoardView: View {
     /// Controls (undo, new game) on the left; penalties + running total on the
     /// right — echoing the printed card's corner buttons.
     private func bottomBar(w: CGFloat, h: CGFloat) -> some View {
+        // One shared control height `b` and one baseline for every element.
         let b = min(h, 64)
-        return HStack(spacing: tileGap) {
+        return HStack(alignment: .center, spacing: tileGap) {
             BoardControlButton("arrow.uturn.backward", size: b) { game.undo() }
                 .disabled(!game.canUndo)
                 .opacity(game.canUndo ? 1 : 0.4)
@@ -242,12 +249,15 @@ struct BonusBoardView: View {
             }
             if game.isGameOver {
                 Image(systemName: "flag.checkered").foregroundStyle(.secondary)
+                    .frame(height: b)
             }
             Text("Total")
                 .font(.system(size: b * 0.34, weight: .semibold))
                 .foregroundStyle(.secondary)
+                .frame(height: b)
             Text("\(game.totalScore)")
                 .font(.system(size: b * 0.55, weight: .heavy, design: .rounded).monospacedDigit())
+                .frame(height: b)
         }
         .frame(maxWidth: .infinity)
         .frame(height: h)

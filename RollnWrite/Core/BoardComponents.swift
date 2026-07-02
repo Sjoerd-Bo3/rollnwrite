@@ -14,22 +14,39 @@
 
 import SwiftUI
 
+/// Shared stroke weights for board decorations, relative to the tile size
+/// (`min(w, h)`), so rings, dashes and outlines keep one consistent visual
+/// scale on every board and screen size.
+public enum BoardStroke {
+    /// Thin outline weight: slot dashes, boxed-number outlines, chain rings,
+    /// tile borders.
+    public static func small(_ tile: CGFloat) -> CGFloat { max(1.5, tile * 0.05) }
+    /// Emphasis weight: the tap-to-undo ring around the most-recent mark.
+    public static func medium(_ tile: CGFloat) -> CGFloat { max(2.5, tile * 0.09) }
+}
+
 /// A markable number tile: light rounded cell, coloured number, crossed when
 /// marked. Tapping calls `onTap` (the engine decides mark-vs-undo).
+/// `forfeited` marks a skipped-forever cell (left of the row's front, or in a
+/// locked row) with a subtle diagonal slash so it reads differently from a
+/// cell that is merely not-yet-legal.
 public struct NumberTile: View {
     let text: String
     let tint: Color
     let marked: Bool
     let legal: Bool
     let undoable: Bool
+    let forfeited: Bool
     let w: CGFloat
     let h: CGFloat
     let onTap: () -> Void
 
     public init(_ text: String, tint: Color, marked: Bool, legal: Bool,
-                undoable: Bool = false, w: CGFloat, h: CGFloat, onTap: @escaping () -> Void) {
+                undoable: Bool = false, forfeited: Bool = false,
+                w: CGFloat, h: CGFloat, onTap: @escaping () -> Void) {
         self.text = text; self.tint = tint; self.marked = marked; self.legal = legal
-        self.undoable = undoable; self.w = w; self.h = h; self.onTap = onTap
+        self.undoable = undoable; self.forfeited = forfeited
+        self.w = w; self.h = h; self.onTap = onTap
     }
 
     public var body: some View {
@@ -46,6 +63,14 @@ public struct NumberTile: View {
                     .foregroundStyle(tint)
                     .minimumScaleFactor(0.3)
                     .lineLimit(1)
+                // A forfeited (skipped-forever) cell wears a subtle diagonal
+                // slash in the row tint — still dim, but visibly "dead" rather
+                // than merely not-yet-legal.
+                if forfeited && !marked {
+                    Image(systemName: "line.diagonal")
+                        .font(.system(size: s * 0.72, weight: .regular))
+                        .foregroundStyle(tint.opacity(0.5))
+                }
                 if marked {
                     Image(systemName: "xmark")
                         .font(.system(size: s * 0.74, weight: .black))
@@ -57,14 +82,18 @@ public struct NumberTile: View {
             .frame(width: w, height: h)
             .overlay(
                 RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
-                    .strokeBorder(tint, lineWidth: undoable ? 2.5 : 0)
+                    .strokeBorder(tint, lineWidth: undoable ? BoardStroke.medium(s) : 0)
             )
             .animation(.spring(response: 0.26, dampingFraction: 0.6), value: marked)
         }
         .buttonStyle(.plain)
-        .disabled(!(legal || undoable))
+        // NOT `.disabled` — the plain button style dims a disabled label, which
+        // made every crossed-but-not-last tile fade toward the band colour (the
+        // two-tier crossed look). Crossed cells must all be the SAME near-opaque
+        // white; only the undo ring may distinguish the last one.
+        .allowsHitTesting(legal || undoable)
         .opacity(marked || legal ? 1 : 0.4)
-        .accessibilityValue(marked ? "crossed" : (legal ? "available" : "blocked"))
+        .accessibilityValue(marked ? "crossed" : (legal ? "available" : (forfeited ? "forfeited" : "blocked")))
         .accessibilityHint(undoable ? "Tap to undo" : "")
     }
 }
@@ -118,7 +147,7 @@ public struct LockTile: View {
                 .fill(Color.white.opacity(locked ? 0.95 : 0.42))
                 .overlay(
                     RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
-                        .strokeBorder(tint, lineWidth: undoable ? 2.5 : 0)
+                        .strokeBorder(tint, lineWidth: undoable ? BoardStroke.medium(s) : 0)
                 )
             Image(systemName: locked ? "lock.fill" : "lock.open")
                 .font(.system(size: s * 0.5, weight: .bold))
@@ -157,16 +186,22 @@ public struct BonusTile: View {
         self.undoable = undoable; self.onTap = onTap
     }
 
-    // A half lights up when its colour can reach this number (or it's crossed);
-    // the colour that can't stays dim, so you can see which side makes the bonus
-    // available.
-    private var aOpacity: Double { (marked || aActive) ? 1 : 0.22 }
-    private var bOpacity: Double { (marked || bActive) ? 1 : 0.22 }
+    // A half lights up (full tint) when its colour can reach this number, or the
+    // space is crossed. Inactive halves stay a light wash over the near-white
+    // base, so an idle bonus space reads as a light tile with a hint of its two
+    // colours — never a black hole in dark mode.
+    private var aOpacity: Double { (marked || aActive) ? 1 : 0.16 }
+    private var bOpacity: Double { (marked || bActive) ? 1 : 0.16 }
+    /// Both halves lit (or crossed) → white number on strong colour; otherwise a
+    /// dark neutral that stays readable on the light base and the yellow half.
+    private var litForWhiteText: Bool { marked || (aActive && bActive) }
 
     public var body: some View {
         ZStack {
+            // Light base, like `NumberTile`: identical in light and dark mode.
+            Circle().fill(Color.white.opacity(0.95))
             // Upper-left half = colour A, lower-right half = colour B; each is lit
-            // or dimmed independently to show which side enables the bonus.
+            // or washed-out independently to show which side enables the bonus.
             Circle().fill(tintA.opacity(aOpacity)).mask(DiagonalHalf(upperLeft: true))
             Circle().fill(tintB.opacity(bOpacity)).mask(DiagonalHalf(upperLeft: false))
             Circle().strokeBorder(.black.opacity(0.18), lineWidth: 1)
@@ -175,10 +210,11 @@ public struct BonusTile: View {
                 .font(.system(size: 13, weight: .bold, design: .rounded))
                 .minimumScaleFactor(0.4)
                 .lineLimit(1)
-                .foregroundStyle(.white)
-                .shadow(radius: 0.5)
+                .foregroundStyle(litForWhiteText ? Color.white : Color.black.opacity(0.55))
+                .shadow(color: .black.opacity(litForWhiteText ? 0.35 : 0), radius: 0.5)
             if marked {
                 Image(systemName: "xmark").font(.system(size: 18, weight: .black)).foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.3), radius: 0.5)
                     .transition(.scale(scale: 0.4).combined(with: .opacity))
             }
         }
@@ -234,7 +270,8 @@ public struct PenaltyBox: View {
                 .fill(filled ? Color.red.opacity(0.85) : Color.gray.opacity(0.28))
                 .overlay(
                     RoundedRectangle(cornerRadius: h * 0.2, style: .continuous)
-                        .strokeBorder(undoable ? .white : .red.opacity(0.7), lineWidth: undoable ? 2.5 : 1.5)
+                        .strokeBorder(undoable ? .white : .red.opacity(0.7),
+                                      lineWidth: undoable ? BoardStroke.medium(h) : BoardStroke.small(h))
                 )
             if filled {
                 Image(systemName: "xmark").font(.system(size: h * 0.5, weight: .black)).foregroundStyle(.white)
@@ -244,7 +281,8 @@ public struct PenaltyBox: View {
             }
         }
         .frame(width: h, height: h)
-        .opacity(filled || isNext ? 1 : 0.5)
+        // Idle boxes stay clearly readable (was 0.5 — the −5 sank into the bar).
+        .opacity(filled || isNext ? 1 : 0.62)
         .onTapGesture { if isNext || undoable { onTap() } }
         .animation(.spring(response: 0.28, dampingFraction: 0.62), value: filled)
         .accessibilityHint(undoable ? "Tap to undo" : "")
@@ -273,6 +311,36 @@ public struct BoardControlButton: View {
             .frame(width: size, height: size)
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// The diamond field printed on several official sheets (X-Change's swap row,
+/// Lucky 15's bonus track): a square rotated 45°, with softly rounded points,
+/// centred in — and inscribed within — the rect it is given (point-to-point
+/// extent = `min(width, height)` minus the inset). `InsettableShape` so
+/// `strokeBorder` keeps borders fully inside the tile slot and off the
+/// neighbouring tiles.
+public struct Diamond: InsettableShape {
+    var insetAmount: CGFloat
+
+    public init() { insetAmount = 0 }
+
+    public func path(in rect: CGRect) -> Path {
+        // Point-to-point extent of the diamond = the square's diagonal.
+        let d = max(0, min(rect.width, rect.height) - 2 * insetAmount)
+        let side = d / sqrt(2)
+        let square = CGRect(x: -side / 2, y: -side / 2, width: side, height: side)
+        // A rounded square at the origin, rotated 45°, moved to the centre.
+        let transform = CGAffineTransform(translationX: rect.midX, y: rect.midY)
+            .rotated(by: .pi / 4)
+        return Path(roundedRect: square, cornerRadius: side * 0.14, style: .continuous)
+            .applying(transform)
+    }
+
+    public func inset(by amount: CGFloat) -> Diamond {
+        var shape = self
+        shape.insetAmount += amount
+        return shape
     }
 }
 

@@ -51,7 +51,8 @@ struct Lucky15BoardView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(outerPad)
         }
-        .ignoresSafeArea(.container, edges: .bottom)
+        // Content stays inside the bottom safe area so the bar never collides
+        // with the home indicator (the window background fills behind us).
         .confirmationDialog("Start a new game?", isPresented: $confirmReset, titleVisibility: .visible) {
             Button("New game", role: .destructive) { game.reset() }
             Button("Cancel", role: .cancel) {}
@@ -125,14 +126,16 @@ struct Lucky15BoardView: View {
     /// One full-width colour band: a direction chevron, the eleven number tiles,
     /// the lock, and that colour's running score — all reusable Core components.
     private func band(_ color: GameColor, w: CGFloat, tile th: CGFloat) -> some View {
-        HStack(spacing: tileGap) {
+        let row = game.row(for: color)
+        return HStack(spacing: tileGap) {
             BandChevron(w: w, h: th)
             ForEach(0..<11, id: \.self) { i in
-                let marked = game.row(for: color).marks.contains(i)
+                let marked = row.marks.contains(i)
                 let undoable = marked && game.isLastColorMark(color, i)
+                let forfeited = !marked && (i < row.maxMarkedIndex || row.locked)
                 NumberTile("\(color.numbers[i])", tint: color.tint,
                            marked: marked, legal: game.canMarkColor(color, i),
-                           undoable: undoable, w: w, h: th) {
+                           undoable: undoable, forfeited: forfeited, w: w, h: th) {
                     if undoable { game.undo() } else { game.markColor(color, i) }
                 }
                 .accessibilityLabel("\(color.displayName) \(color.numbers[i])")
@@ -148,25 +151,31 @@ struct Lucky15BoardView: View {
         .colourBand(tint: color.tint, hPad: bandPad, vPad: th * 0.09, corner: min(w, th) * 0.3)
     }
 
-    /// The orange Lucky 15 bonus track: four diamond-value fields crossed
-    /// strictly left → right. Only the next uncrossed field is legal; the
-    /// right-most crossed field is the tap-to-undo cell.
+    /// The orange Lucky 15 bonus track: four diamond-value fields (the printed
+    /// sheet's diamonds) crossed strictly left → right. Only the next uncrossed
+    /// field is legal; the right-most crossed field is the tap-to-undo cell.
+    /// The chevron column matches the colour bands' (same leading position and
+    /// width), the diamonds distribute EVENLY across the band like the printed
+    /// sheet, and the track's score keeps the trailing score-chip column.
     private func luckyBand(w: CGFloat, h: CGFloat) -> some View {
         HStack(spacing: tileGap) {
             BandChevron(w: w, h: h)
-            ForEach(Array(Lucky15Track.values.enumerated()), id: \.offset) { idx, value in
-                let marked = idx < game.lucky.crossed
-                let isNext = idx == game.lucky.crossed && game.canMarkLucky()
-                let undoable = marked && idx == game.lucky.crossed - 1 && game.isLastLuckyMark()
-                NumberTile("\(value)", tint: Self.luckyTint,
-                           marked: marked, legal: isNext,
-                           undoable: undoable, w: w, h: h) {
-                    if undoable { game.undo() } else { game.markLucky() }
+            HStack(spacing: 0) {
+                ForEach(Array(Lucky15Track.values.enumerated()), id: \.offset) { idx, value in
+                    Spacer(minLength: 0)
+                    let marked = idx < game.lucky.crossed
+                    let isNext = idx == game.lucky.crossed && game.canMarkLucky()
+                    let undoable = marked && idx == game.lucky.crossed - 1 && game.isLastLuckyMark()
+                    LuckyDiamondTile(value: value, tint: Self.luckyTint,
+                                     marked: marked, legal: isNext,
+                                     undoable: undoable, w: w, h: h) {
+                        if undoable { game.undo() } else { game.markLucky() }
+                    }
+                    .accessibilityLabel("Lucky 15 field \(value)")
                 }
-                .accessibilityLabel("Lucky 15 field \(value)")
+                Spacer(minLength: 0)
             }
-            // Pad out the remaining columns so the track aligns under the rows.
-            Color.clear.frame(width: w * 7 + tileGap * 7, height: h)
+            .frame(maxWidth: .infinity)
             ScoreTile(game.luckyPoints, w: w, h: h)
                 .accessibilityLabel("Lucky 15 bonus")
         }
@@ -176,8 +185,9 @@ struct Lucky15BoardView: View {
     /// Controls (undo, new game) on the left, penalties + running total on the
     /// right — echoing the corner buttons on the printed card.
     private func bottomBar(w: CGFloat, h: CGFloat) -> some View {
+        // One shared control height `b` and one baseline for every element.
         let b = min(h, 64)
-        return HStack(spacing: tileGap) {
+        return HStack(alignment: .center, spacing: tileGap) {
             BoardControlButton("arrow.uturn.backward", size: b) { game.undo() }
                 .disabled(!game.canUndo)
                 .opacity(game.canUndo ? 1 : 0.4)
@@ -200,12 +210,15 @@ struct Lucky15BoardView: View {
             }
             if game.isGameOver {
                 Image(systemName: "flag.checkered").foregroundStyle(.secondary)
+                    .frame(height: b)
             }
             Text("Total")
                 .font(.system(size: b * 0.34, weight: .semibold))
                 .foregroundStyle(.secondary)
+                .frame(height: b)
             Text("\(game.totalScore)")
                 .font(.system(size: b * 0.55, weight: .heavy, design: .rounded).monospacedDigit())
+                .frame(height: b)
         }
         .frame(maxWidth: .infinity)
         .frame(height: h)
@@ -222,6 +235,54 @@ struct Lucky15BoardView: View {
         } else if game.canConcedeRow(color) {
             confirmConcede = color
         }
+    }
+}
+
+/// A Lucky 15 track field: a white diamond (the shared Core `Diamond` shape,
+/// exactly as printed on the official sheet and as used by X-Change) carrying
+/// the field's point value, crossed when marked. Follows the same sizing /
+/// crossed-out / undo-ring conventions as the Core tiles.
+private struct LuckyDiamondTile: View {
+    let value: Int
+    let tint: Color
+    let marked: Bool
+    let legal: Bool
+    let undoable: Bool
+    let w: CGFloat
+    let h: CGFloat
+    let onTap: () -> Void
+
+    var body: some View {
+        let d = min(w, h)
+        return Button(action: onTap) {
+            ZStack {
+                Diamond()
+                    .fill(Color.white.opacity(0.95))
+                Diamond()
+                    .strokeBorder(tint.opacity(0.85), lineWidth: BoardStroke.small(d))
+                Text("\(value)")
+                    .font(.system(size: d * 0.32, weight: .heavy, design: .rounded))
+                    .foregroundStyle(tint)
+                    .minimumScaleFactor(0.3)
+                    .lineLimit(1)
+                if marked {
+                    Image(systemName: "xmark")
+                        .font(.system(size: d * 0.5, weight: .black))
+                        .foregroundStyle(tint)
+                }
+            }
+            .frame(width: w, height: h)
+            .overlay(
+                Diamond()
+                    .strokeBorder(tint, lineWidth: undoable ? BoardStroke.medium(d) : 0)
+            )
+            .animation(.spring(response: 0.26, dampingFraction: 0.6), value: marked)
+        }
+        .buttonStyle(.plain)
+        .allowsHitTesting(legal || undoable)
+        .opacity(marked || legal ? 1 : 0.4)
+        .accessibilityValue(marked ? "crossed" : (legal ? "available" : "blocked"))
+        .accessibilityHint(undoable ? "Tap to undo" : "")
     }
 }
 
