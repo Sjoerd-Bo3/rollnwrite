@@ -1,0 +1,120 @@
+name: 6. Simulator Smoke Test
+
+# Boots an iOS Simulator on a macOS runner, screenshots the catalogue and every
+# playable game board, and uploads the shots as an artifact — the no-Mac way to
+# eyeball every screen without a TestFlight round-trip. MANUAL ONLY (macOS
+# minutes bill at 10×); trigger it from the Actions tab.
+#
+# How it drives the app: the Debug build of RootView understands a
+# `-smokeTestGame <id>` launch argument (see RollnWrite/App/RootView.swift) and
+# pushes that game's scorecard directly, so no UI scripting is needed. The game
+# id list is derived from the sources at run time, so new games are picked up
+# automatically (OCP, like everything else here).
+
+on:
+  workflow_dispatch:
+    inputs:
+      device:
+        description: "Simulator device name"
+        required: false
+        default: "iPhone 16 Pro"
+
+env:
+  BUNDLE_ID: dev.bo3.RollnWrite
+
+jobs:
+  smoke:
+    name: Screenshot every game
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select latest stable Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Build for iOS Simulator
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project RollnWrite.xcodeproj \
+            -scheme RollnWrite \
+            -destination 'generic/platform=iOS Simulator' \
+            -configuration Debug \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+
+      - name: Boot simulator
+        run: |
+          # Prefer the requested device; fall back to the first available iPhone.
+          UDID=$(xcrun simctl list -j devices available | jq -r --arg name "${{ inputs.device }}" '
+            [.devices[] | .[] | select(.isAvailable)]
+            | (map(select(.name == $name)) + map(select(.name | startswith("iPhone"))))
+            | .[0].udid')
+          if [ -z "$UDID" ] || [ "$UDID" = "null" ]; then
+            echo "No available iPhone simulator found:" && xcrun simctl list devices available
+            exit 1
+          fi
+          echo "UDID=$UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          # Clean status bar for presentable shots.
+          xcrun simctl status_bar "$UDID" override \
+            --time "9:41" --batteryState charged --batteryLevel 100 \
+            --cellularMode active --cellularBars 4 --wifiBars 3 || true
+
+      - name: Install app
+        run: xcrun simctl install "$UDID" build/Build/Products/Debug-iphonesimulator/RollnWrite.app
+
+      - name: Screenshot catalogue and every game
+        run: |
+          mkdir -p shots
+
+          # Cold start: the catalogue itself first.
+          xcrun simctl launch "$UDID" "$BUNDLE_ID"
+          sleep 8
+          xcrun simctl io "$UDID" screenshot shots/00-catalogue.png
+
+          # Every playable game, ids derived from the sources (uniform
+          # `public let id = "..."` pattern in each GameDefinition).
+          IDS=$(grep -rhoE 'public let id = "[a-z0-9-]+"' RollnWrite/Games | cut -d '"' -f 2 | sort -u)
+          echo "Games found:" $IDS
+          n=1
+          for id in $IDS; do
+            xcrun simctl launch --terminate-running-process "$UDID" "$BUNDLE_ID" -smokeTestGame "$id"
+            sleep 6
+            xcrun simctl io "$UDID" screenshot "shots/$(printf '%02d' "$n")-${id}.png"
+            n=$((n + 1))
+          done
+          xcrun simctl terminate "$UDID" "$BUNDLE_ID" || true
+
+      - name: Upright landscape-locked boards
+        run: |
+          # Landscape-locked boards render rotated inside the portrait
+          # framebuffer (every PNG is portrait-dimensioned, so this can't be
+          # sniffed from the file — keep the list explicit). 270° verified
+          # against a local simulator run. Today that's all of Qwixx plus the
+          # not-yet-redesigned Clever 2/3/4; drop those three when the #32
+          # redesign rollout makes them rotate freely like Clever 1.
+          for f in shots/*qwixx*.png shots/*clever-2.png shots/*clever-3.png shots/*clever-4.png; do
+            [ -e "$f" ] || continue
+            sips --rotate 270 "$f" >/dev/null
+          done
+
+      - name: Job summary
+        run: |
+          {
+            echo "## Simulator smoke test — $(ls shots | wc -l | tr -d ' ') screenshots"
+            echo ""
+            for f in shots/*.png; do echo "- $(basename "$f")"; done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulator-screenshots-${{ github.run_number }}
+          path: shots/
+          retention-days: 30

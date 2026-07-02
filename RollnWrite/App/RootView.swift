@@ -11,6 +11,9 @@ import SwiftUI
 struct RootView: View {
     @State private var rulesToShow: IdentifiedRules?
     @State private var showSettings = false
+    #if DEBUG
+    @State private var smokeTestGame: SmokeTestDestination?
+    #endif
 
     var body: some View {
         NavigationStack {
@@ -59,8 +62,29 @@ struct RootView: View {
             .sheet(isPresented: $showSettings) {
                 SettingsView()
             }
+            #if DEBUG
+            .navigationDestination(item: $smokeTestGame) { destination in
+                destination.game.makeScorecardView()
+            }
+            .onAppear { openSmokeTestGame() }
+            #endif
         }
     }
+
+    #if DEBUG
+    /// CI hook for the "6. Simulator Smoke Test" workflow: launching the app
+    /// with `-smokeTestGame <id>` pushes that game's scorecard directly so a
+    /// headless runner can screenshot every board without UI scripting.
+    /// Launch arguments register into the volatile `NSArgumentDomain`, so the
+    /// key never persists between launches. Debug builds only — TestFlight and
+    /// App Store binaries carry no trace of it.
+    private func openSmokeTestGame() {
+        guard let id = UserDefaults.standard.string(forKey: "smokeTestGame"),
+              let game = GameRegistry.playable.first(where: { $0.id == id })
+        else { return }
+        smokeTestGame = SmokeTestDestination(id: id, game: game)
+    }
+    #endif
 
     /// Playable games grouped by family (Qwixx, Clever) so the catalogue stays
     /// tidy as variants are added. Families appear in a fixed order; any others
@@ -86,6 +110,18 @@ private struct IdentifiedRules: Identifiable {
     let id = UUID()
     let document: RulesDocument
 }
+
+#if DEBUG
+/// Hashable wrapper so a `GameDefinition` (a non-Hashable existential) can
+/// drive `navigationDestination(item:)`. Identity is the stable game id.
+private struct SmokeTestDestination: Hashable {
+    let id: String
+    let game: GameDefinition
+
+    static func == (lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
+}
+#endif
 
 private struct GameRow: View {
     let game: GameDefinition

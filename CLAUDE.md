@@ -140,7 +140,16 @@ the engine) plus a thin wrapper that adds the header, orientation lock, rules
 sheet, and optional 2-player mirror — exactly like `QwixxBoardView` /
 `QwixxScorecardView`. This makes the mirror and fullscreen behaviour reusable.
 
-## Build & CI (no Mac anywhere in the loop)
+## Build & CI
+
+> **Update 2026-07-02:** the pipeline below was built when no Mac was
+> available; it remains the release path. The dev machine is now a Mac with
+> Xcode 26.5 and iOS simulators — run `xcodebuild build -project
+> RollnWrite.xcodeproj -scheme RollnWrite -destination 'generic/platform=iOS
+> Simulator' CODE_SIGNING_ALLOWED=NO` as the compile check before pushing,
+> and use the local Simulator (ios-simulator MCP: install/launch/screenshot/
+> tap; `-smokeTestGame <id>` launch arg opens any board directly in Debug
+> builds) to review screens without a TestFlight round-trip.
 
 - Open `RollnWrite.xcodeproj` in Xcode 16+ if a Mac is available; the project
   uses `objectVersion = 77` (file-system synchronized groups — new files under
@@ -151,7 +160,10 @@ sheet, and optional 2-player mirror — exactly like `QwixxBoardView` /
 - Manual workflows (Actions tab): "1. Validate Secrets", "3. iOS Build"
   (compile-only pre-merge check for risky branches), "4. Bump Version",
   "4. Renew Certs", "5. App Store Release" (builds the selected branch with
-  the `QWIXX_ONLY` flag and uploads the store candidate).
+  the `QWIXX_ONLY` flag and uploads the store candidate), "6. Simulator
+  Smoke Test" (boots a Simulator, screenshots the catalogue + every game via
+  the Debug-only `-smokeTestGame <id>` launch argument, uploads artifacts —
+  screens without a TestFlight round-trip).
 - **Releases:** `main` = full app → TestFlight; `release/1.0` = stability
   branch for the App Store, built Qwixx-only via the `QWIXX_ONLY` compilation
   condition (a build flag, never divergent code). Full checklist:
