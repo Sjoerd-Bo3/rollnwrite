@@ -20,8 +20,12 @@ public struct ThatsPrettyCleverV3Game: GameDefinition {
     public let accent = Color(red: 0.55, green: 0.28, blue: 0.72)
     public let availability: GameAvailability = .available
 
+    /// Same physical dice as the regular entry (one shared set).
+    public var diceSet: [DieSpec]? { cleverDice }
+
     public func makeScorecardView() -> AnyView {
-        AnyView(CleverV3ScorecardView(rules: rules))
+        AnyView(CleverV3ScorecardView(rules: rules)
+            .environment(\.gameDiceSet, diceSet))
     }
 
     /// The rules are identical to the regular entry — only the layout differs.

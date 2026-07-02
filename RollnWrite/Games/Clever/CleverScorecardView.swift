@@ -188,7 +188,10 @@ struct CleverSheetBoardView: View {
                 CleverOrangeRow(game: game, cell: rowCell, stretch: stretch) { entry = $0 }
             }
             rowBand(.purple, stretch) {
-                CleverPurpleRow(game: game, cell: purpleRowCell, stretch: stretch) { entry = $0 }
+                // `bonusCell: rowCell` — one shared badge size + cell→badge
+                // baseline distance across the green/orange/purple bands.
+                CleverPurpleRow(game: game, cell: purpleRowCell, stretch: stretch,
+                                bonusCell: rowCell) { entry = $0 }
             }
             cleverTotalStrip(game: game, height: 44 * min(stretch, 1.25))
         }
@@ -196,7 +199,7 @@ struct CleverSheetBoardView: View {
         .padding(.vertical, 14 * stretch)
         .frame(width: sheetW)
         .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
+            RoundedRectangle(cornerRadius: SheetRadius.card, style: .continuous)
                 .fill(cleverSheetGrey)
         )
     }
@@ -205,16 +208,20 @@ struct CleverSheetBoardView: View {
 
     private func headerBand(_ stretch: CGFloat) -> some View {
         VStack(spacing: 6 * stretch) {
-            SheetRoundsBar(rounds: 6, darkFrom: 4, cell: 30, ink: cleverInk, stretch: stretch) { r in
+            SheetRoundsBar(rounds: 6, darkFrom: 4, cell: 30, ink: cleverInk, stretch: stretch,
+                           crossed: game.state.roundsCrossed,
+                           tap: { game.toggleRound($0) }) { r in
                 cleverRoundBadge(r, game: game, size: 16)
             }
             SheetCircleTrack(slots: CleverLayout.rerollTrackSlots,
                              used: game.state.rerollUsed,
+                             earned: game.rerollsEarned,
                              diameter: 17, ink: cleverInk, stretch: stretch,
                              icon: { BonusBadge(icon: .reroll, game: game, size: 21) },
                              tap: { game.toggleReroll($0) })
             SheetCircleTrack(slots: CleverLayout.extraDieTrackSlots,
                              used: game.state.extraDieUsed,
+                             earned: game.extraDiceEarned,
                              diameter: 17, ink: cleverInk, stretch: stretch,
                              icon: { BonusBadge(icon: .plusOne, game: game, size: 21) },
                              tap: { game.toggleExtraDie($0) })
@@ -233,10 +240,10 @@ struct CleverSheetBoardView: View {
             .padding(.vertical, 10 * stretch)
             .frame(maxWidth: .infinity)
             .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                RoundedRectangle(cornerRadius: SheetRadius.panel, style: .continuous)
                     .fill(game.color(section.area!).color)
             )
-            .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: SheetRadius.panel, style: .continuous))
             .onTapGesture { open(section) }
     }
 
@@ -255,10 +262,10 @@ struct CleverSheetBoardView: View {
         .padding(.vertical, 8 * stretch)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
+            RoundedRectangle(cornerRadius: SheetRadius.panel, style: .continuous)
                 .fill(game.color(section.area!).color)
         )
-        .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: SheetRadius.panel, style: .continuous))
         .onTapGesture { open(section) }
     }
 }
@@ -280,22 +287,28 @@ func cleverTotalStrip(game: CleverGame, height: CGFloat) -> some View {
 
 /// The badge under a round number: the printed start-of-round bonus for
 /// rounds 1–3 (`CleverLayout.roundBonuses`), player-count end markers for
-/// rounds 5–6 (3 players → 5 rounds; 1–2 players → 6 rounds).
-@MainActor @ViewBuilder
+/// rounds 5–6 (3 players → 5 rounds; 1–2 players → 6 rounds). Every branch —
+/// including round 4's EMPTY slot — occupies the identical `size`×`size` box,
+/// so round tiles keep equal heights everywhere rounds render (header bar,
+/// list/editor bars, v3 rail).
+@MainActor
 func cleverRoundBadge(_ round: Int, game: CleverGame, size: CGFloat) -> some View {
-    if let bonus = CleverLayout.roundBonuses[round] {
-        BonusBadge(icon: bonus, game: game, size: size)
-    } else if round == 4 {
-        Image(systemName: "person.3.fill")
-            .font(.system(size: size * 0.55, weight: .bold))
-            .foregroundStyle(.white)
-    } else if round == 5 {
-        Image(systemName: "person.2.fill")
-            .font(.system(size: size * 0.6, weight: .bold))
-            .foregroundStyle(.white)
-    } else {
-        Color.clear.frame(width: size, height: size)
+    Group {
+        if let bonus = CleverLayout.roundBonuses[round] {
+            BonusBadge(icon: bonus, game: game, size: size)
+        } else if round == 4 {
+            Image(systemName: "person.3.fill")
+                .font(.system(size: size * 0.55, weight: .bold))
+                .foregroundStyle(.white)
+        } else if round == 5 {
+            Image(systemName: "person.2.fill")
+                .font(.system(size: size * 0.6, weight: .bold))
+                .foregroundStyle(.white)
+        } else {
+            Color.clear
+        }
     }
+    .frame(width: size, height: size)
 }
 
 // MARK: - Yellow area (4×4 grid + row bonuses + column points)
@@ -310,6 +323,12 @@ struct CleverYellowGrid: View {
     private var gap: CGFloat { cell * 0.1 }
     private var vgap: CGFloat { gap * stretch }
     private var cellH: CGFloat { cell * stretch }
+    // The trailing row-bonus column is ONE fixed-width column: an arrow slot,
+    // a gap and an equal badge box — every ▶+badge pair (and the +1 below)
+    // shares the same centreline.
+    private var arrowW: CGFloat { cell * 0.26 }
+    private var badgeBox: CGFloat { cell * 0.78 }
+    private var bonusColW: CGFloat { arrowW + cell * 0.06 + badgeBox }
 
     var body: some View {
         let tint = game.color(.yellow)
@@ -320,19 +339,27 @@ struct CleverYellowGrid: View {
             }
             VStack(spacing: vgap) {
                 ForEach(0..<4, id: \.self) { r in
-                    HStack(spacing: 2) {
+                    HStack(spacing: cell * 0.06) {
                         Image(systemName: "arrowtriangle.right.fill")
                             .font(.system(size: cell * 0.22, weight: .black))
                             .foregroundStyle(.black.opacity(0.55))
-                        BonusBadge(icon: CleverLayout.yellowRowBonus[r], game: game, size: cell * 0.78)
+                            .frame(width: arrowW)
+                        BonusBadge(icon: CleverLayout.yellowRowBonus[r], game: game, size: badgeBox)
+                            .frame(width: badgeBox, height: badgeBox)
                     }
-                    .frame(height: cellH)
+                    // Vertically centred against its grid row (same height).
+                    .frame(width: bonusColW, height: cellH)
                 }
-                // The main-diagonal +1 bonus, aligned with the points row.
-                BonusBadge(icon: .plusOne, game: game, size: cell * 0.7)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: cell * 0.9)
+                // The main-diagonal +1 bonus, aligned with the points row and
+                // on the badges' shared centreline (empty arrow slot).
+                HStack(spacing: cell * 0.06) {
+                    Color.clear.frame(width: arrowW, height: 1)
+                    BonusBadge(icon: .plusOne, game: game, size: cell * 0.7)
+                        .frame(width: badgeBox, height: badgeBox)
+                }
+                .frame(width: bonusColW, height: cell * 0.9)
             }
+            .frame(width: bonusColW)
         }
     }
 
@@ -364,7 +391,7 @@ struct CleverYellowGrid: View {
         .overlay {
             // The printed dashed main diagonal (its completion grants the +1).
             CleverDiagonalDash()
-                .stroke(style: StrokeStyle(lineWidth: cell * 0.06, lineCap: .round,
+                .stroke(style: StrokeStyle(lineWidth: SheetStroke.medium, lineCap: .round,
                                            dash: [cell * 0.14, cell * 0.12]))
                 .foregroundStyle(.black.opacity(0.4))
                 .allowsHitTesting(false)
@@ -409,6 +436,10 @@ struct CleverBluePanel: View {
     private var gap: CGFloat { cell * 0.1 }
     private var vgap: CGFloat { gap * stretch }
     private var cellH: CGFloat { cell * stretch }
+    // Same fixed-width row-bonus column as the yellow grid (shared centreline).
+    private var arrowW: CGFloat { cell * 0.26 }
+    private var badgeBox: CGFloat { cell * 0.78 }
+    private var bonusColW: CGFloat { arrowW + cell * 0.06 + badgeBox }
 
     var body: some View {
         let tint = game.color(.blue)
@@ -421,16 +452,19 @@ struct CleverBluePanel: View {
                 }
                 VStack(spacing: vgap) {
                     ForEach(0..<3, id: \.self) { r in
-                        HStack(spacing: 2) {
+                        HStack(spacing: cell * 0.06) {
                             Image(systemName: "arrowtriangle.right.fill")
                                 .font(.system(size: cell * 0.22, weight: .black))
                                 .foregroundStyle(.black.opacity(0.55))
-                            BonusBadge(icon: CleverLayout.blueRowBonus[r], game: game, size: cell * 0.78)
+                                .frame(width: arrowW)
+                            BonusBadge(icon: CleverLayout.blueRowBonus[r], game: game, size: badgeBox)
+                                .frame(width: badgeBox, height: badgeBox)
                         }
-                        .frame(height: cellH)
+                        .frame(width: bonusColW, height: cellH)
                     }
-                    Color.clear.frame(width: 1, height: cell * 0.6)
+                    Color.clear.frame(width: bonusColW, height: cell * 0.6)
                 }
+                .frame(width: bonusColW)
             }
         }
     }
@@ -454,11 +488,15 @@ struct CleverBluePanel: View {
             }
         }
         .padding(.vertical, cell * 0.06)
-        .padding(.horizontal, cell * 0.05)
+        .padding(.horizontal, cell * 0.1)
         .background(
-            RoundedRectangle(cornerRadius: cell * 0.18, style: .continuous)
+            RoundedRectangle(cornerRadius: SheetRadius.pill, style: .continuous)
                 .fill(.black.opacity(0.32))
         )
+        // Inset the strip clear of the surrounding panel's corner rounding
+        // (panel radius 14 − panel content padding 10), so seal #1 never
+        // tucks under the top-left curve.
+        .padding(.horizontal, SheetRadius.panel - 10)
     }
 
     private func grid(_ tint: DiceColor) -> some View {
@@ -639,7 +677,14 @@ struct CleverPurpleRow: View {
     var split = false
     /// Vertical stretch — multiplies cell heights and vertical gaps only.
     var stretch: CGFloat = 1
+    /// Metric for the under-cell bonus badges (size + baseline distance).
+    /// Purple's cells are narrower than green/orange's (the "<" separators);
+    /// pass the sibling bands' cell so all three bands share ONE badge size
+    /// and ONE cell→badge distance. Defaults to `cell`.
+    var bonusCell: CGFloat? = nil
     let requestEntry: (ValueEntry) -> Void
+
+    private var bCell: CGFloat { bonusCell ?? cell }
 
     var body: some View {
         let tint = game.color(.purple)
@@ -667,7 +712,7 @@ struct CleverPurpleRow: View {
                         .frame(width: cell * 0.24, height: cell * stretch)
                 }
                 let undoable = game.isLastPurple(i)
-                VStack(spacing: cell * 0.06 * stretch) {
+                VStack(spacing: bCell * 0.06 * stretch) {
                     SheetWriteCell(
                         value: game.state.purple[i],
                         tint: tint.color,
@@ -686,7 +731,7 @@ struct CleverPurpleRow: View {
                             })
                         }
                     }
-                    cleverBonusSlot(CleverLayout.purpleBonus[i], game: game, size: cell * 0.6)
+                    cleverBonusSlot(CleverLayout.purpleBonus[i], game: game, size: bCell * 0.6)
                 }
             }
         }
@@ -748,7 +793,7 @@ struct CleverListBoardView: View {
                             .padding(12)
                     }
                     .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        RoundedRectangle(cornerRadius: SheetRadius.panel, style: .continuous)
                             .fill(cleverSheetGrey)
                     )
                 }
@@ -783,7 +828,7 @@ struct CleverListBoardView: View {
                     .padding(14)
             }
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: SheetRadius.panel, style: .continuous)
                     .fill(section.area.map { game.color($0).color } ?? cleverSheetGrey)
             )
         }
@@ -791,20 +836,29 @@ struct CleverListBoardView: View {
 
     private var tracksContent: some View {
         VStack(spacing: 10) {
-            SheetRoundsBar(rounds: 6, darkFrom: 4, cell: 42, ink: cleverInk) { r in
+            SheetRoundsBar(rounds: 6, darkFrom: 4, cell: 42, ink: cleverInk,
+                           crossed: game.state.roundsCrossed,
+                           tap: { game.toggleRound($0) }) { r in
                 cleverRoundBadge(r, game: game, size: 21)
             }
             SheetCircleTrack(slots: CleverLayout.rerollTrackSlots,
                              used: game.state.rerollUsed,
+                             earned: game.rerollsEarned,
                              diameter: 26, ink: cleverInk,
                              icon: { BonusBadge(icon: .reroll, game: game, size: 30) },
                              tap: { game.toggleReroll($0) })
             SheetCircleTrack(slots: CleverLayout.extraDieTrackSlots,
                              used: game.state.extraDieUsed,
+                             earned: game.extraDiceEarned,
                              diameter: 26, ink: cleverInk,
                              icon: { BonusBadge(icon: .plusOne, game: game, size: 30) },
                              tap: { game.toggleExtraDie($0) })
         }
+        // A definite design width (just past the bars' natural size) so the
+        // round tiles and the track circles DISTRIBUTE evenly across their
+        // pills instead of hugging the leading edge; the enclosing
+        // ScaledSheet/WidthScaledCard scales the block to fit as usual.
+        .frame(width: 360)
     }
 }
 
@@ -853,7 +907,7 @@ struct CleverEditorSheet: View {
                 pageContent(section)
                     .padding(18)
                     .background(
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        RoundedRectangle(cornerRadius: SheetRadius.panel, style: .continuous)
                             .fill(section == .tracks ? cleverSheetGrey : tint(for: section))
                     )
             }
@@ -884,20 +938,29 @@ struct CleverEditorSheet: View {
         // The printed sheet's three scratch boxes are pen-and-paper artifacts
         // and are deliberately omitted (owner request) — rounds + tracks only.
         VStack(spacing: 10) {
-            SheetRoundsBar(rounds: 6, darkFrom: 4, cell: 42, ink: cleverInk) { r in
+            SheetRoundsBar(rounds: 6, darkFrom: 4, cell: 42, ink: cleverInk,
+                           crossed: game.state.roundsCrossed,
+                           tap: { game.toggleRound($0) }) { r in
                 cleverRoundBadge(r, game: game, size: 21)
             }
             SheetCircleTrack(slots: CleverLayout.rerollTrackSlots,
                              used: game.state.rerollUsed,
+                             earned: game.rerollsEarned,
                              diameter: 26, ink: cleverInk,
                              icon: { BonusBadge(icon: .reroll, game: game, size: 30) },
                              tap: { game.toggleReroll($0) })
             SheetCircleTrack(slots: CleverLayout.extraDieTrackSlots,
                              used: game.state.extraDieUsed,
+                             earned: game.extraDiceEarned,
                              diameter: 26, ink: cleverInk,
                              icon: { BonusBadge(icon: .plusOne, game: game, size: 30) },
                              tap: { game.toggleExtraDie($0) })
         }
+        // A definite design width (just past the bars' natural size) so the
+        // round tiles and the track circles DISTRIBUTE evenly across their
+        // pills instead of hugging the leading edge; the enclosing
+        // ScaledSheet/WidthScaledCard scales the block to fit as usual.
+        .frame(width: 360)
     }
 
     @ViewBuilder private func footer(_ section: CleverSheetSection) -> some View {
@@ -914,7 +977,7 @@ struct CleverEditorSheet: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .background(Color.white.opacity(0.7), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .background(Color.white.opacity(0.7), in: RoundedRectangle(cornerRadius: SheetRadius.pill, style: .continuous))
         } else {
             VStack(spacing: 2) {
                 Text("🦊 Foxes earned: \(game.foxCount)")
@@ -924,7 +987,7 @@ struct CleverEditorSheet: View {
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
-            .background(Color.white.opacity(0.7), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .background(Color.white.opacity(0.7), in: RoundedRectangle(cornerRadius: SheetRadius.pill, style: .continuous))
         }
     }
 }
@@ -957,10 +1020,10 @@ struct CleverBonusBanner: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(.white.opacity(0.92), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .background(.white.opacity(0.92), in: RoundedRectangle(cornerRadius: SheetRadius.pill, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(.black.opacity(0.08), lineWidth: 1)
+                RoundedRectangle(cornerRadius: SheetRadius.pill, style: .continuous)
+                    .strokeBorder(.black.opacity(0.08), lineWidth: SheetStroke.small)
             )
             .frame(maxWidth: .infinity)
         }
@@ -1011,7 +1074,7 @@ struct BonusBadge: View {
     var body: some View {
         ZStack {
             Circle().fill(background)
-            Circle().strokeBorder(.white.opacity(0.85), lineWidth: size * 0.06)
+            Circle().strokeBorder(.white.opacity(0.85), lineWidth: SheetStroke.small)
             content
         }
         .frame(width: size, height: size)

@@ -165,9 +165,15 @@ colours (cap 15 → 120). See `Games/Qwixx`.
   increasing with the after-6 exception) and computes every area score.
 - **Foxes are auto-detected**: every fox sits at a row/column/reach-this-cell
   completion, and foxes only matter at scoring time, so the engine derives the
-  fox count rather than asking the player to track it. Other bonuses (re-roll,
-  +1, extra marks, coloured numbers) are applied manually — consistent with the
-  pure-scorecard model (no in-app dice).
+  fox count rather than asking the player to track it.
+- **Re-roll/+1 are auto-counted onto the tracks**: earned counts are DERIVED
+  from state (like foxes) — crossed rounds 1–3 (`roundsCrossed`) plus completed
+  area triggers with a printed re-roll/+1 — so undo can never desync them. A
+  track slot can only be spent once earned (uncrossing is always allowed);
+  circles render used / available / not-earned. The 1–6 rounds bar is crossable
+  as pure bookkeeping: `toggleRound` never enters the LIFO history. Remaining
+  bonuses (extra marks of the player's choice) are applied manually —
+  consistent with the pure-scorecard model (no in-app dice).
 - **Dice-colour mapping**: the player's physical dice colours are an APP-WIDE
   setting (`Core/DiceTheme.swift`, edited in Settings — six colour slots,
   classic Clever dice by default). Every Clever game derives each area's

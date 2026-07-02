@@ -7,6 +7,20 @@
 
 import SwiftUI
 
+/// The six physical Clever 1 dice (white + the five area colours), shared by
+/// the regular entry and the "(v3)" layout. THEMED: like the board areas, the
+/// dice resolve through the player's app-wide dice palette (`DiceTheme`), so
+/// the strip always shows the dice the player actually owns. Informational
+/// roller only; never any rule.
+let cleverDice: [DieSpec] = [
+    .white(themed: true),
+    DieSpec(name: "Yellow", color: CleverArea.yellow.standardColor, isLight: true, themed: true),
+    DieSpec(name: "Blue", color: CleverArea.blue.standardColor, themed: true),
+    DieSpec(name: "Green", color: CleverArea.green.standardColor, themed: true),
+    DieSpec(name: "Orange", color: CleverArea.orange.standardColor, themed: true),
+    DieSpec(name: "Purple", color: CleverArea.purple.standardColor, themed: true),
+]
+
 public struct ThatsPrettyCleverGame: GameDefinition {
     public init() {}
 
@@ -17,8 +31,11 @@ public struct ThatsPrettyCleverGame: GameDefinition {
     public let accent = Color(red: 0.55, green: 0.28, blue: 0.72)
     public let availability: GameAvailability = .available
 
+    public var diceSet: [DieSpec]? { cleverDice }
+
     public func makeScorecardView() -> AnyView {
-        AnyView(CleverScorecardView(rules: rules))
+        AnyView(CleverScorecardView(rules: rules)
+            .environment(\.gameDiceSet, diceSet))
     }
 
     public var rules: RulesDocument { cleverRulesDocument() }
@@ -59,6 +76,7 @@ func cleverRulesDocument() -> RulesDocument {
             ]),
             RulesSection(heading: "Bonuses & foxes", body: [
                 "Printed bonuses (re-roll, +1, extra cross, a coloured number) are earned as you mark spaces; apply them by tapping the granted space yourself. Bonuses can chain.",
+                "Tap a round number to cross it off as you play. The re-roll and +1 tracks count what you have earned — from crossed rounds 1–3 and from area bonuses — and only earned circles can be spent.",
                 "Each fox scores the value of your lowest-scoring area. The app detects foxes automatically and counts them for you.",
             ]),
             RulesSection(heading: "Game end & scoring", body: [

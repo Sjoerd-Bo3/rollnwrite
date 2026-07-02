@@ -34,12 +34,23 @@ public protocol GameDefinition {
     var availability: GameAvailability { get }
     var rules: RulesDocument { get }
 
+    /// The physical dice this game is played with, powering the OPTIONAL,
+    /// purely informational in-app dice roller (`DiceRoller.swift`). `nil`
+    /// (the default) means the game offers no roller. Never consulted by any
+    /// engine or rule — the app remains a pure scorecard.
+    var diceSet: [DieSpec]? { get }
+
     /// Factory for the game's scorecard screen.
     ///
     /// Returning `AnyView` keeps the protocol free of associated types so a
     /// heterogeneous `[GameDefinition]` registry is possible (type erasure is the
     /// deliberate trade-off for an open, list-driven catalogue).
     @MainActor func makeScorecardView() -> AnyView
+}
+
+public extension GameDefinition {
+    /// Games that don't declare dice never show the roller (or its toggle).
+    var diceSet: [DieSpec]? { nil }
 }
 
 /// The single source of truth for which games exist.

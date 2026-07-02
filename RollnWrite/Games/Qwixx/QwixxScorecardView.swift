@@ -39,7 +39,9 @@ struct QwixxBoardView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(outerPad)
         }
-        .ignoresSafeArea(.container, edges: .bottom)
+        // Content stays inside the bottom safe area so the bar's controls and
+        // penalties never collide with the home indicator (the window background
+        // already fills the full screen behind us).
         .confirmationDialog("Start a new game?", isPresented: $confirmReset, titleVisibility: .visible) {
             Button("New game", role: .destructive) { game.reset() }
             Button("Cancel", role: .cancel) {}
@@ -111,11 +113,18 @@ struct QwixxBoardView: View {
         let availW = size.width - 2 * outerPad
         let w = max(14, (availW - (columns - 1) * tileGap - 2 * bandPad) / columns)
 
-        // Each row's height as a multiple of the tile height `th`: a colour band
-        // is the tile plus its vertical band padding (≈1.18·th), a bonus row
-        // ≈0.82·th, the bottom bar ≈1.05·th. Solve for the `th` that fills the
-        // available height exactly, then cap at the width and floor at the min.
-        let units = bandCount * 1.18 + bonusRows * 0.82 + 1.05
+        // Each row's height as a multiple of the tile height `th`:
+        //   • colour band  = tile + its vertical band padding (2×0.09·th)
+        //                                                   → 1.18·th
+        //   • bonus row    = 0.82·th of circles + 2×0.09·th vertical breathing
+        //     pad, so the tile↔circle visual gap (0.09·th band pad + rowGap +
+        //     0.09·th bonus pad) EQUALS the tile↔tile gap across two plain
+        //     bands (0.09 + rowGap + 0.09) — one vertical rhythm
+        //                                                   → 1.00·th
+        //   • bottom bar   = 1.05·th (fixed frame, no padding)
+        // Solve for the `th` that fills the available height exactly, then cap
+        // at the width and floor at the min.
+        let units = bandCount * 1.18 + bonusRows * 1.00 + 1.05
         let availH = size.height - 2 * outerPad
         let fill = (availH - gaps * rowGap) / units
         let th = max(20, min(fill, w))
@@ -126,13 +135,14 @@ struct QwixxBoardView: View {
 
     private func boardStack(w: CGFloat, th: CGFloat) -> some View {
         let bonusH = th * 0.82
+        let bonusVPad = th * 0.09   // matches the bands' vPad → equal rhythm (see sizing)
         let bottomH = th * 1.05
         return VStack(spacing: rowGap) {
             band(.red, w: w, tile: th)
-            if game.hasBonusRows { bonusBand(.redYellow, w: w, h: bonusH) }
+            if game.hasBonusRows { bonusBand(.redYellow, w: w, h: bonusH, vPad: bonusVPad) }
             band(.yellow, w: w, tile: th)
             band(.green, w: w, tile: th)
-            if game.hasBonusRows { bonusBand(.greenBlue, w: w, h: bonusH) }
+            if game.hasBonusRows { bonusBand(.greenBlue, w: w, h: bonusH, vPad: bonusVPad) }
             band(.blue, w: w, tile: th)
             bottomBar(w: w, h: bottomH)
         }
@@ -141,14 +151,18 @@ struct QwixxBoardView: View {
     /// One full-width colour band: a direction chevron, the eleven number tiles,
     /// the lock, and that colour's running score — all reusable Core components.
     private func band(_ color: GameColor, w: CGFloat, tile th: CGFloat) -> some View {
-        HStack(spacing: tileGap) {
+        let row = game.row(for: color)
+        return HStack(spacing: tileGap) {
             BandChevron(w: w, h: th)
             ForEach(0..<11, id: \.self) { i in
-                let marked = game.row(for: color).marks.contains(i)
+                let marked = row.marks.contains(i)
                 let undoable = marked && game.isLastColorMark(color, i)
+                // Skipped-forever: left of the row's front, or unmarked in a
+                // locked row (nothing right of the front can ever be marked).
+                let forfeited = !marked && (i < row.maxMarkedIndex || row.locked)
                 NumberTile("\(color.numbers[i])", tint: color.tint,
                            marked: marked, legal: game.canMarkColor(color, i),
-                           undoable: undoable, w: w, h: th) {
+                           undoable: undoable, forfeited: forfeited, w: w, h: th) {
                     if undoable { game.undo() } else { game.markColor(color, i) }
                 }
                 .accessibilityLabel("\(color.displayName) \(color.numbers[i])")
@@ -165,8 +179,9 @@ struct QwixxBoardView: View {
     }
 
     /// Big-Points bonus row: the two-colour spaces, aligned under the number
-    /// tiles (offset past the chevron column).
-    private func bonusBand(_ id: BonusRowID, w: CGFloat, h: CGFloat) -> some View {
+    /// tiles (offset past the chevron column). `vPad` is the same 0.09·th the
+    /// colour bands use, so the board keeps one vertical rhythm (see sizing).
+    private func bonusBand(_ id: BonusRowID, w: CGFloat, h: CGFloat, vPad: CGFloat) -> some View {
         let bonus = game.bonus(id)
         let (a, b) = id.colors
         return HStack(spacing: tileGap) {
@@ -185,14 +200,18 @@ struct QwixxBoardView: View {
             Color.clear.frame(width: w * 2 + tileGap, height: h) // lock + score columns
         }
         .padding(.horizontal, bandPad)
+        .padding(.vertical, vPad)
         .frame(maxWidth: .infinity)
     }
 
     /// Controls (undo, new game) on the left, penalties + running total on the
     /// right — echoing the corner buttons on the printed card.
     private func bottomBar(w: CGFloat, h: CGFloat) -> some View {
+        // One shared control height `b` and one baseline: buttons, penalty
+        // boxes, flag, the Total label and the score all centre in the same
+        // fixed-height strip.
         let b = min(h, 64)
-        return HStack(spacing: tileGap) {
+        return HStack(alignment: .center, spacing: tileGap) {
             BoardControlButton("arrow.uturn.backward", size: b) { game.undo() }
                 .disabled(!game.canUndo)
                 .opacity(game.canUndo ? 1 : 0.4)
@@ -215,14 +234,17 @@ struct QwixxBoardView: View {
             }
             if game.isGameOver {
                 Image(systemName: "flag.checkered").foregroundStyle(.secondary)
+                    .frame(height: b)
             }
             Text("Total")
                 .font(.system(size: b * 0.34, weight: .semibold))
                 .foregroundStyle(.secondary)
+                .frame(height: b)
             Text("\(game.totalScore)")
                 .font(.system(size: b * 0.55, weight: .heavy, design: .rounded).monospacedDigit())
                 .contentTransition(.numericText())
                 .animation(.snappy, value: game.totalScore)
+                .frame(height: b)
         }
         .frame(maxWidth: .infinity)
         .frame(height: h)

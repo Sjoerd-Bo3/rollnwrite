@@ -24,8 +24,15 @@ public struct ScorecardScaffold<Board: View, Accessory: View>: View {
     private let accessory: Accessory
 
     @Environment(\.dismiss) private var dismiss
+    /// The hosting game's physical dice, injected by its
+    /// `GameDefinition.makeScorecardView()` (see `DiceRoller.swift`).
+    /// `nil` — the default — hides the roller and its header toggle entirely.
+    @Environment(\.gameDiceSet) private var gameDiceSet
     @State private var showRules = false
     @State private var twoPlayer = false
+    /// Whether the informational dice strip is shown — an OPT-IN that
+    /// persists per game (keyed by title), default off.
+    @AppStorage private var showDice: Bool
 
     /// - Parameters:
     ///   - locksLandscape: whether single-player pins iPhone to landscape
@@ -52,6 +59,7 @@ public struct ScorecardScaffold<Board: View, Accessory: View>: View {
         self.board = board()
         self.opponentBoard = opponent?()
         self.accessory = headerAccessory()
+        _showDice = AppStorage(wrappedValue: false, "diceRoller." + title)
     }
 
     private var canMirror: Bool { opponentBoard != nil }
@@ -59,6 +67,11 @@ public struct ScorecardScaffold<Board: View, Accessory: View>: View {
     public var body: some View {
         VStack(spacing: 0) {
             header
+            // Optional informational dice strip (issue #30). Boards below are
+            // GeometryReader-driven, so they simply adapt to the shorter space.
+            if showDice, let diceSet = gameDiceSet {
+                DiceRollerStrip(dice: diceSet)
+            }
             content
         }
         .navigationBarBackButtonHidden(true)
@@ -106,6 +119,12 @@ public struct ScorecardScaffold<Board: View, Accessory: View>: View {
             Spacer(minLength: 12)
             accessory
             Spacer(minLength: 12)
+            if gameDiceSet != nil {
+                Button { showDice.toggle() } label: {
+                    Image(systemName: showDice ? "dice.fill" : "dice")
+                }
+                .accessibilityLabel(showDice ? "Hide dice" : "Show dice")
+            }
             if canMirror {
                 Button { twoPlayer.toggle() } label: {
                     Image(systemName: twoPlayer ? "person.fill" : "person.2.fill")

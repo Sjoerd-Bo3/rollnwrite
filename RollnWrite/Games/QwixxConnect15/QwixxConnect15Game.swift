@@ -19,8 +19,11 @@ public struct QwixxConnect15Game: GameDefinition {
     public let accent = Color(red: 0.93, green: 0.45, blue: 0.13)
     public let availability: GameAvailability = .available
 
+    public var diceSet: [DieSpec]? { qwixxDice }
+
     public func makeScorecardView() -> AnyView {
-        AnyView(QwixxConnect15ScorecardView(rules: rules))
+        AnyView(QwixxConnect15ScorecardView(rules: rules)
+            .environment(\.gameDiceSet, diceSet))
     }
 
     public var rules: RulesDocument {

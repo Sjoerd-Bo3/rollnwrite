@@ -3,9 +3,9 @@
 //  RollnWrite – Clever
 //
 //  Engine for "That's Pretty Clever". Enforces each area's structure and
-//  computes every score, including foxes (= lowest area score). Bonus actions
-//  (reroll / +1 / extra marks) are applied manually by the player; foxes are the
-//  one bonus detected automatically because they only matter at scoring time.
+//  computes every score, including foxes (= lowest area score). Foxes and the
+//  reroll/+1 EARNED counts are derived automatically from the state; spending
+//  a reroll/+1 (and applying extra marks) stays a manual player action.
 //
 //  SRP: rules + transitions + scoring delegation only. DIP/LSP: conforms to the
 //  generic `Scoreboard` protocol from Core.
@@ -297,17 +297,75 @@ public final class CleverGame: ObservableObject, Scoreboard {
         earnedBonuses.removeAll()
     }
 
-    // MARK: - Action trackers (reference only; not scored)
+    // MARK: - Rounds bar (bookkeeping, not a game move)
 
-    public func toggleReroll(_ slot: Int) {
-        if state.rerollUsed.contains(slot) { state.rerollUsed.remove(slot) }
-        else { state.rerollUsed.insert(slot); state.history.append(.reroll(slot)) }
+    /// Cross / uncross a round tile (index 0…5). This is BOOKKEEPING, not a
+    /// move: it never enters the LIFO `history` (so undo skips it entirely)
+    /// and is never blocked by game rules. Crossing a round with a printed
+    /// start-of-round bonus (rounds 1–3) feeds the reroll/+1 earned counts.
+    public func toggleRound(_ index: Int) {
+        guard CleverLayout.roundBonuses.indices.contains(index) else { return }
+        if state.roundsCrossed.contains(index) { state.roundsCrossed.remove(index) }
+        else { state.roundsCrossed.insert(index) }
         save()
     }
 
+    // MARK: - Reroll / +1 tracks (earned counted, spending tracked)
+
+    /// Rerolls earned from completed AREA triggers. DERIVED from the current
+    /// state (exactly like `foxCount`) rather than stored: the engine's bonus
+    /// model never persists triggers (see `Trigger`), so undoing the mark that
+    /// completed a row/column/cell automatically un-earns its reroll/+1, and
+    /// re-completing re-earns it — no counter can ever drift from the card.
+    public var areaRerollsEarned: Int { earnedBonusCount(.reroll) }
+
+    /// +1s earned from completed AREA triggers (derived; see `areaRerollsEarned`).
+    public var areaExtraDiceEarned: Int { earnedBonusCount(.plusOne) }
+
+    private func earnedBonusCount(_ icon: BonusIcon) -> Int {
+        completedTriggers().filter { bonus(for: $0) == icon }.count
+    }
+
+    /// Rerolls granted by crossed rounds with a printed start-of-round bonus.
+    public var roundRerollsEarned: Int { roundGrantCount(.reroll) }
+    public var roundExtraDiceEarned: Int { roundGrantCount(.plusOne) }
+
+    private func roundGrantCount(_ icon: BonusIcon) -> Int {
+        state.roundsCrossed.filter {
+            CleverLayout.roundBonuses.indices.contains($0) && CleverLayout.roundBonuses[$0] == icon
+        }.count
+    }
+
+    /// Total rerolls the player has EARNED so far (rounds + area bonuses).
+    /// Track slots at indices below this are spendable.
+    public var rerollsEarned: Int { roundRerollsEarned + areaRerollsEarned }
+
+    /// Total +1s the player has EARNED so far (rounds + area bonuses).
+    public var extraDiceEarned: Int { roundExtraDiceEarned + areaExtraDiceEarned }
+
+    /// Spend / unspend a reroll slot. Only earned slots (index < `rerollsEarned`)
+    /// can be crossed; uncrossing is always allowed.
+    public func toggleReroll(_ slot: Int) {
+        if state.rerollUsed.contains(slot) {
+            state.rerollUsed.remove(slot)
+        } else {
+            guard slot < rerollsEarned else { return }
+            state.rerollUsed.insert(slot)
+            state.history.append(.reroll(slot))
+        }
+        save()
+    }
+
+    /// Spend / unspend a +1 slot. Only earned slots (index < `extraDiceEarned`)
+    /// can be crossed; uncrossing is always allowed.
     public func toggleExtraDie(_ slot: Int) {
-        if state.extraDieUsed.contains(slot) { state.extraDieUsed.remove(slot) }
-        else { state.extraDieUsed.insert(slot); state.history.append(.extraDie(slot)) }
+        if state.extraDieUsed.contains(slot) {
+            state.extraDieUsed.remove(slot)
+        } else {
+            guard slot < extraDiceEarned else { return }
+            state.extraDieUsed.insert(slot)
+            state.history.append(.extraDie(slot))
+        }
         save()
     }
 

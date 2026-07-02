@@ -65,7 +65,8 @@ struct DoubleBoardView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(outerPad)
         }
-        .ignoresSafeArea(.container, edges: .bottom)
+        // Content stays inside the bottom safe area so the bar never collides
+        // with the home indicator (the window background fills behind us).
         .confirmationDialog("Start a new game?", isPresented: $confirmReset, titleVisibility: .visible) {
             Button("New game", role: .destructive) { game.reset() }
             Button("Cancel", role: .cancel) {}
@@ -146,9 +147,10 @@ struct DoubleBoardView: View {
                 ForEach(0..<11, id: \.self) { i in
                     let marked = row.marks.contains(i)
                     let undoable = marked && game.isLastColorMark(color, i)
+                    let forfeited = !marked && (i < row.maxMarkedIndex || row.locked)
                     NumberTile("\(color.numbers[i])", tint: color.tint,
                                marked: marked, legal: game.canMarkColor(color, i),
-                               undoable: undoable, w: w, h: th) {
+                               undoable: undoable, forfeited: forfeited, w: w, h: th) {
                         if undoable { game.undo() } else { game.markColor(color, i) }
                     }
                     .accessibilityLabel("\(color.displayName) \(color.numbers[i])")
@@ -186,12 +188,18 @@ struct DoubleBoardView: View {
         let s = min(w, h)
         return ZStack {
             RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
-                .fill(Color.white.opacity(active ? 0.85 : 0.0))
+                // A doubled cell is the SAME near-opaque white as a crossed
+                // number tile (uniform crossed whiteness across the board).
+                .fill(Color.white.opacity(isDoubled ? 0.95 : (active ? 0.85 : 0.0)))
                 .overlay(
                     RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
-                        .strokeBorder(undoable ? color.tint : Color.white.opacity(active ? 0.6 : 0.25),
-                                      style: StrokeStyle(lineWidth: undoable ? 2.5 : 1,
-                                                         dash: (isDoubled || undoable) ? [] : [2, 2]))
+                        // Empty slots must clearly read as slots on every band
+                        // colour (band tints are identical in light and dark
+                        // mode, so one white works for both).
+                        .strokeBorder(undoable ? color.tint : Color.white.opacity(active ? 0.7 : 0.45),
+                                      style: StrokeStyle(lineWidth: undoable ? BoardStroke.medium(s)
+                                                                             : BoardStroke.small(s),
+                                                         dash: (isDoubled || undoable) ? [] : [s * 0.16, s * 0.12]))
                 )
             if isDoubled {
                 Image(systemName: "xmark")
@@ -206,7 +214,10 @@ struct DoubleBoardView: View {
             }
         }
         .frame(width: w, height: h)
-        .opacity(active ? 1 : 0.25)
+        // Idle slots keep most of their opacity so the dashed outline stays
+        // clearly visible (≈0.36 effective white) — the band's extra height
+        // must read as slots, not padding.
+        .opacity(active ? 1 : 0.8)
         .contentShape(Rectangle())
         .onTapGesture {
             if undoable { game.undo() }
@@ -220,8 +231,9 @@ struct DoubleBoardView: View {
     /// Controls (undo, new game) on the left, penalties + running total on the
     /// right — echoing the corner buttons on the printed card.
     private func bottomBar(w: CGFloat, h: CGFloat) -> some View {
+        // One shared control height `b` and one baseline for every element.
         let b = min(h, 64)
-        return HStack(spacing: tileGap) {
+        return HStack(alignment: .center, spacing: tileGap) {
             BoardControlButton("arrow.uturn.backward", size: b) { game.undo() }
                 .disabled(!game.canUndo)
                 .opacity(game.canUndo ? 1 : 0.4)
@@ -244,12 +256,15 @@ struct DoubleBoardView: View {
             }
             if game.isGameOver {
                 Image(systemName: "flag.checkered").foregroundStyle(.secondary)
+                    .frame(height: b)
             }
             Text("Total")
                 .font(.system(size: b * 0.34, weight: .semibold))
                 .foregroundStyle(.secondary)
+                .frame(height: b)
             Text("\(game.totalScore)")
                 .font(.system(size: b * 0.55, weight: .heavy, design: .rounded).monospacedDigit())
+                .frame(height: b)
         }
         .frame(maxWidth: .infinity)
         .frame(height: h)

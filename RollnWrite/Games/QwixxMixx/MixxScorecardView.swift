@@ -60,7 +60,8 @@ struct MixxBoardView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(outerPad)
         }
-        .ignoresSafeArea(.container, edges: .bottom)
+        // Content stays inside the bottom safe area so the bar never collides
+        // with the home indicator (the window background fills behind us).
         .confirmationDialog("Start a new game?", isPresented: $confirmReset, titleVisibility: .visible) {
             Button("New game", role: .destructive) { game.reset() }
             Button("Cancel", role: .cancel) {}
@@ -150,9 +151,10 @@ struct MixxBoardView: View {
                 let cell = layout.cells[i]
                 let marked = row.marks.contains(i)
                 let undoable = marked && game.isLastMark(rowIndex, i)
+                let forfeited = !marked && (i < row.maxMarkedIndex || row.locked)
                 NumberTile("\(cell.number)", tint: cell.color.tint,
                            marked: marked, legal: game.canMark(rowIndex, i),
-                           undoable: undoable, w: w, h: th) {
+                           undoable: undoable, forfeited: forfeited, w: w, h: th) {
                     if undoable { game.undo() } else { game.mark(rowIndex, i) }
                 }
                 .accessibilityLabel("\(lock.displayName) row \(cell.color.displayName) \(cell.number)")
@@ -172,8 +174,9 @@ struct MixxBoardView: View {
     /// Controls (undo, new game) on the left, penalties + running total on the
     /// right — echoing the corner buttons on the printed card.
     private func bottomBar(w: CGFloat, h: CGFloat) -> some View {
+        // One shared control height `b` and one baseline for every element.
         let b = min(h, 64)
-        return HStack(spacing: tileGap) {
+        return HStack(alignment: .center, spacing: tileGap) {
             BoardControlButton("arrow.uturn.backward", size: b) { game.undo() }
                 .disabled(!game.canUndo)
                 .opacity(game.canUndo ? 1 : 0.4)
@@ -196,12 +199,15 @@ struct MixxBoardView: View {
             }
             if game.isGameOver {
                 Image(systemName: "flag.checkered").foregroundStyle(.secondary)
+                    .frame(height: b)
             }
             Text("Total")
                 .font(.system(size: b * 0.34, weight: .semibold))
                 .foregroundStyle(.secondary)
+                .frame(height: b)
             Text("\(game.totalScore)")
                 .font(.system(size: b * 0.55, weight: .heavy, design: .rounded).monospacedDigit())
+                .frame(height: b)
         }
         .frame(maxWidth: .infinity)
         .frame(height: h)

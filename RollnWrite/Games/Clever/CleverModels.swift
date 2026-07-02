@@ -131,11 +131,39 @@ public struct CleverState: Codable, Equatable {
     public var purple: [Int?] = Array(repeating: nil, count: CleverLayout.rowLength)
     public var rerollUsed: Set<Int> = []
     public var extraDieUsed: Set<Int> = []
+    /// Rounds crossed off on the 1–6 bar (indices 0…5). Pure BOOKKEEPING, not
+    /// a game move: it never enters `history` (see `CleverGame.toggleRound`).
+    /// Crossing a round with a printed bonus feeds the reroll/+1 earned counts.
+    public var roundsCrossed: Set<Int> = []
     public var history: [CleverAction] = []
     // Note: older saves carry a per-game `theme` key; the decoder ignores it
     // (dice colours are an app-wide setting now — see `DiceTheme`).
 
     public init() {}
+
+    private enum CodingKeys: String, CodingKey {
+        case yellowCrossed, blueCrossed, greenCount, orange, purple
+        case rerollUsed, extraDieUsed, roundsCrossed, history
+    }
+
+    // Tolerant decode so saved games from earlier builds (which lack newer
+    // fields like `roundsCrossed`) still load instead of resetting. Swift's
+    // synthesized decode throws on any missing key, so every stored field is
+    // decoded with `decodeIfPresent(...) ?? default`.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        yellowCrossed = try c.decodeIfPresent(Set<Int>.self, forKey: .yellowCrossed) ?? []
+        blueCrossed = try c.decodeIfPresent(Set<Int>.self, forKey: .blueCrossed) ?? []
+        greenCount = try c.decodeIfPresent(Int.self, forKey: .greenCount) ?? 0
+        orange = try c.decodeIfPresent([Int?].self, forKey: .orange)
+            ?? Array(repeating: nil, count: CleverLayout.rowLength)
+        purple = try c.decodeIfPresent([Int?].self, forKey: .purple)
+            ?? Array(repeating: nil, count: CleverLayout.rowLength)
+        rerollUsed = try c.decodeIfPresent(Set<Int>.self, forKey: .rerollUsed) ?? []
+        extraDieUsed = try c.decodeIfPresent(Set<Int>.self, forKey: .extraDieUsed) ?? []
+        roundsCrossed = try c.decodeIfPresent(Set<Int>.self, forKey: .roundsCrossed) ?? []
+        history = try c.decodeIfPresent([CleverAction].self, forKey: .history) ?? []
+    }
 }
 
 /// Reversible action for exact LIFO undo.

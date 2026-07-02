@@ -69,7 +69,8 @@ struct XChangeBoardView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(outerPad)
         }
-        .ignoresSafeArea(.container, edges: .bottom)
+        // Content stays inside the bottom safe area so the bar never collides
+        // with the home indicator (the window background fills behind us).
         .confirmationDialog("Start a new game?", isPresented: $confirmReset, titleVisibility: .visible) {
             Button("New game", role: .destructive) { game.reset() }
             Button("Cancel", role: .cancel) {}
@@ -141,14 +142,16 @@ struct XChangeBoardView: View {
     /// One full-width colour band: a direction chevron, the eleven number tiles,
     /// the lock, and that colour's running score — all reusable Core components.
     private func band(_ color: GameColor, w: CGFloat, tile th: CGFloat) -> some View {
-        HStack(spacing: tileGap) {
+        let row = game.row(for: color)
+        return HStack(spacing: tileGap) {
             BandChevron(w: w, h: th)
             ForEach(0..<11, id: \.self) { i in
-                let marked = game.row(for: color).marks.contains(i)
+                let marked = row.marks.contains(i)
                 let undoable = marked && game.isLastColorMark(color, i)
+                let forfeited = !marked && (i < row.maxMarkedIndex || row.locked)
                 NumberTile("\(color.numbers[i])", tint: color.tint,
                            marked: marked, legal: game.canMarkColor(color, i),
-                           undoable: undoable, w: w, h: th) {
+                           undoable: undoable, forfeited: forfeited, w: w, h: th) {
                     if undoable { game.undo() } else { game.markColor(color, i) }
                 }
                 .accessibilityLabel("\(color.displayName) \(color.numbers[i])")
@@ -164,27 +167,35 @@ struct XChangeBoardView: View {
         .colourBand(tint: color.tint, hPad: bandPad, vPad: th * 0.09, corner: min(w, th) * 0.3)
     }
 
-    /// The X-Change swap row: nine two-number diamonds, aligned under the number
-    /// columns (offset past the chevron). Scores no points — it is a swap tool.
+    /// The X-Change swap row: nine two-number diamonds, distributed EVENLY
+    /// across the full band width like the printed sheet, with a leading
+    /// direction chevron aligned with the colour bands' chevron column (the
+    /// row is crossed strictly left → right). Scores no points — a swap tool.
     private func xchangeBand(w: CGFloat, h: CGFloat) -> some View {
         HStack(spacing: tileGap) {
-            Color.clear.frame(width: w, height: h) // chevron column
-            ForEach(0..<XChangeRow.count, id: \.self) { i in
-                let marked = game.xchange.marks.contains(i)
-                let undoable = marked && game.isLastXChangeMark(i)
-                XChangeTile(
-                    pair: XChangeRow.pair(i),
-                    tint: Self.xchangeTint,
-                    marked: marked,
-                    legal: game.canMarkXChange(i),
-                    undoable: undoable,
-                    w: w,
-                    h: h
-                ) {
-                    if undoable { game.undo() } else { game.markXChange(i) }
+            BandChevron(w: w, h: h)
+            HStack(spacing: 0) {
+                ForEach(0..<XChangeRow.count, id: \.self) { i in
+                    Spacer(minLength: 0)
+                    let marked = game.xchange.marks.contains(i)
+                    let undoable = marked && game.isLastXChangeMark(i)
+                    let forfeited = !marked && i < game.xchange.maxMarkedIndex
+                    XChangeTile(
+                        pair: XChangeRow.pair(i),
+                        tint: Self.xchangeTint,
+                        marked: marked,
+                        legal: game.canMarkXChange(i),
+                        undoable: undoable,
+                        forfeited: forfeited,
+                        w: w,
+                        h: h
+                    ) {
+                        if undoable { game.undo() } else { game.markXChange(i) }
+                    }
                 }
+                Spacer(minLength: 0)
             }
-            Spacer(minLength: 0)
+            .frame(maxWidth: .infinity)
         }
         .colourBand(tint: Self.xchangeTint, hPad: bandPad, vPad: h * 0.07,
                     corner: min(w, h) * 0.3)
@@ -193,8 +204,9 @@ struct XChangeBoardView: View {
     /// Controls (undo, new game) on the left, penalties + running total on the
     /// right — echoing the corner buttons on the printed card.
     private func bottomBar(w: CGFloat, h: CGFloat) -> some View {
+        // One shared control height `b` and one baseline for every element.
         let b = min(h, 64)
-        return HStack(spacing: tileGap) {
+        return HStack(alignment: .center, spacing: tileGap) {
             BoardControlButton("arrow.uturn.backward", size: b) { game.undo() }
                 .disabled(!game.canUndo)
                 .opacity(game.canUndo ? 1 : 0.4)
@@ -217,12 +229,15 @@ struct XChangeBoardView: View {
             }
             if game.isGameOver {
                 Image(systemName: "flag.checkered").foregroundStyle(.secondary)
+                    .frame(height: b)
             }
             Text("Total")
                 .font(.system(size: b * 0.34, weight: .semibold))
                 .foregroundStyle(.secondary)
+                .frame(height: b)
             Text("\(game.totalScore)")
                 .font(.system(size: b * 0.55, weight: .heavy, design: .rounded).monospacedDigit())
+                .frame(height: b)
         }
         .frame(maxWidth: .infinity)
         .frame(height: h)
@@ -242,44 +257,19 @@ struct XChangeBoardView: View {
     }
 }
 
-/// The diamond shape printed on the official X-Change sheet: a square rotated
-/// 45°, with softly rounded points, centred in — and inscribed within — the
-/// rect it is given (point-to-point extent = `min(width, height)` minus the
-/// inset). `InsettableShape` so `strokeBorder` keeps borders fully inside the
-/// tile slot and off the neighbouring tiles.
-private struct Diamond: InsettableShape {
-    var insetAmount: CGFloat = 0
-
-    func path(in rect: CGRect) -> Path {
-        // Point-to-point extent of the diamond = the square's diagonal.
-        let d = max(0, min(rect.width, rect.height) - 2 * insetAmount)
-        let side = d / sqrt(2)
-        let square = CGRect(x: -side / 2, y: -side / 2, width: side, height: side)
-        // A rounded square at the origin, rotated 45°, moved to the centre.
-        let transform = CGAffineTransform(translationX: rect.midX, y: rect.midY)
-            .rotated(by: .pi / 4)
-        return Path(roundedRect: square, cornerRadius: side * 0.14, style: .continuous)
-            .applying(transform)
-    }
-
-    func inset(by amount: CGFloat) -> Diamond {
-        var shape = self
-        shape.insetAmount += amount
-        return shape
-    }
-}
-
-/// A single X-Change diamond: a white diamond (rotated square, as printed on
-/// the official sheet) with the deep-magenta border, the top number above the
-/// swap arrows and the bottom number below, crossed when marked. Follows the
-/// same sizing / crossed-out / undo-ring conventions as the Core tiles, but is
-/// X-Change-specific (two numbers + swap glyph) so it stays in this module.
+/// A single X-Change diamond: a white diamond (the shared Core `Diamond`
+/// shape, as printed on the official sheet) with the deep-magenta border, the
+/// top number above the swap arrows and the bottom number below, crossed when
+/// marked. Follows the same sizing / crossed-out / undo-ring conventions as
+/// the Core tiles, but is X-Change-specific (two numbers + swap glyph) so it
+/// stays in this module.
 private struct XChangeTile: View {
     let pair: (top: Int, bottom: Int)
     let tint: Color
     let marked: Bool
     let legal: Bool
     let undoable: Bool
+    let forfeited: Bool
     let w: CGFloat
     let h: CGFloat
     let onTap: () -> Void
@@ -292,10 +282,12 @@ private struct XChangeTile: View {
         let d = min(w, h)
         return Button(action: onTap) {
             ZStack {
+                // Uniform near-opaque white whether crossed or not — only the
+                // undo ring distinguishes the last cross (no two-tier look).
                 Diamond()
-                    .fill(Color.white.opacity(marked ? 0.7 : 0.95))
+                    .fill(Color.white.opacity(0.95))
                 Diamond()
-                    .strokeBorder(tint.opacity(0.85), lineWidth: max(1, d * 0.03))
+                    .strokeBorder(tint.opacity(0.85), lineWidth: BoardStroke.small(d))
                 // The numbers sit in the diamond's narrow vertical points, so
                 // they are scaled to the width available there (≈0.54·d at the
                 // top number's line), not to the full tile.
@@ -310,6 +302,12 @@ private struct XChangeTile: View {
                 .foregroundStyle(tint)
                 .minimumScaleFactor(0.3)
                 .lineLimit(1)
+                // Skipped-forever diamonds wear a subtle slash (still dim).
+                if forfeited && !marked {
+                    Image(systemName: "line.diagonal")
+                        .font(.system(size: d * 0.62, weight: .regular))
+                        .foregroundStyle(tint.opacity(0.5))
+                }
                 if marked {
                     Image(systemName: "xmark")
                         .font(.system(size: d * 0.5, weight: .black))
@@ -319,15 +317,17 @@ private struct XChangeTile: View {
             .frame(width: w, height: h)
             .overlay(
                 Diamond()
-                    .strokeBorder(tint, lineWidth: undoable ? 2.5 : 0)
+                    .strokeBorder(tint, lineWidth: undoable ? BoardStroke.medium(d) : 0)
             )
         }
         .buttonStyle(.plain)
-        .disabled(!(legal || undoable))
+        // Not `.disabled` — the plain style dims disabled labels, which faded
+        // crossed-but-not-last diamonds (see NumberTile).
+        .allowsHitTesting(legal || undoable)
         .opacity(dimmed ? 0.4 : 1)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("X-Change \(pair.top) swap \(pair.bottom)")
-        .accessibilityValue(marked ? "crossed" : (legal ? "available" : "blocked"))
+        .accessibilityValue(marked ? "crossed" : (legal ? "available" : (forfeited ? "forfeited" : "blocked")))
         .accessibilityHint(undoable ? "Tap to undo" : "")
     }
 }
