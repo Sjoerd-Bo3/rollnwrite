@@ -236,10 +236,11 @@ Clever 2/3/4 adopt them verbatim when their redesign lands):
   on-device three-layout comparison, 2026-07-02): PORTRAIT = the faithful
   sheet miniature + paged editor modal (tap an area's chrome; swipe cycles
   areas); LANDSCAPE = a direct-tap multi-column reflow at large cell sizes
-  (no editor, no totals strip); rotation free. Clever 1 hosts it in
-  `CleverScorecardView` (+ `CleverV3ScorecardView.swift`'s board views); the
-  old list mode and the separate "(v3)" catalogue entry are gone. All Clever
-  games follow this concept.
+  (no editor, no totals strip); rotation free. The scrolling LIST layout
+  stays as a first-class option behind the header toggle (owner request) —
+  default v3, toggle to list. Clever 1 hosts this in `CleverScorecardView`
+  (+ `CleverV3ScorecardView.swift`'s board views); the separate "(v3)"
+  catalogue entry is gone. All Clever games follow this concept.
 - Clever screens force a light colour scheme via `.environment(\.colorScheme,
   .light)` (a nested `.preferredColorScheme` loses to the app root's).
 
