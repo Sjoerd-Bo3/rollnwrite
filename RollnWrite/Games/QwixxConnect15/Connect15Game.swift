@@ -103,10 +103,9 @@ public final class Connect15Game: ObservableObject, Scoreboard {
               Connect15Layout.numberPosition(column: index) > maxMarkedPosition(color)
         else { return false }
         if index == ColorRow.lockIndex {
-            // UNVERIFIED reading: the official Connect 15 leaflet isn't online,
-            // so we keep the conservative classic-Qwixx rule — locking needs at
-            // least 5 crossed NUMBERS in the row; crossed connection fields do
-            // not count toward the five.
+            // Confirmed by the game's owner against the paper rules: locking
+            // needs at least 5 crossed NUMBERS in the row — connection fields
+            // do not count toward the five ("just count normally").
             return r.marks.count >= 5
         }
         return true
