@@ -35,7 +35,7 @@ public struct RGBAColor: Codable, Equatable, Hashable {
     /// Bridge from SwiftUI `Color` via `UIColor` components.
     public init(_ color: Color) {
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-        UIColor(color).getRed(&r, &g, &b, &a)
+        UIColor(color).getRed(&r, green: &g, blue: &b, alpha: &a)
         self.init(red: Double(r), green: Double(g), blue: Double(b), alpha: Double(a))
     }
 
