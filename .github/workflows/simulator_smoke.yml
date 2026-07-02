@@ -93,15 +93,15 @@ jobs:
 
       - name: Upright landscape-locked boards
         run: |
-          # Qwixx boards pin iPhone to landscape, so their content renders
-          # rotated inside the portrait framebuffer. Rotate those shots so they
-          # read upright. Direction chosen for UIKit's default landscape pick;
-          # if a first run shows them upside down, flip 90 → 270 here.
-          for f in shots/*qwixx*.png; do
+          # Landscape-locked boards render rotated inside the portrait
+          # framebuffer (every PNG is portrait-dimensioned, so this can't be
+          # sniffed from the file — keep the list explicit). 270° verified
+          # against a local simulator run. Today that's all of Qwixx plus the
+          # not-yet-redesigned Clever 2/3/4; drop those three when the #32
+          # redesign rollout makes them rotate freely like Clever 1.
+          for f in shots/*qwixx*.png shots/*clever-2.png shots/*clever-3.png shots/*clever-4.png; do
             [ -e "$f" ] || continue
-            w=$(sips -g pixelWidth  "$f" | awk '/pixelWidth/  {print $2}')
-            h=$(sips -g pixelHeight "$f" | awk '/pixelHeight/ {print $2}')
-            if [ "$h" -gt "$w" ]; then sips --rotate 90 "$f" >/dev/null; fi
+            sips --rotate 270 "$f" >/dev/null
           done
 
       - name: Job summary

@@ -40,9 +40,17 @@ Keep this file updated at the end of significant sessions.
 - #41 Qwixx Double & Bonus official Version B variants (A/B switch like Mixx)
 - "6. Simulator Smoke Test" workflow SHIPPED (manual, Actions tab): boots a
   Simulator, screenshots the catalogue + every game (Debug-only
-  `-smokeTestGame <id>` launch arg in RootView), uploads artifacts. First
-  run pending — check that the rotated Qwixx shots read upright (the
-  workflow rotates them 90°; flip to 270° if they come out upside down).
+  `-smokeTestGame <id>` launch arg in RootView), uploads artifacts.
+  Verified end-to-end on a LOCAL simulator: all 15 screens render
+  correctly; landscape-locked boards (all Qwixx + Clever 2/3/4 until #32)
+  need a 270° rotation, which the workflow applies.
+- NEW: the dev machine is now a Mac with Xcode 26.5 + iOS 26.5 simulators
+  (license accepted 2026-07-02). `xcodebuild build` locally is the fastest
+  compile check, and the ios-simulator MCP tools (install/launch/screenshot/
+  tap) close the design loop without TestFlight. The no-compiler checklist
+  still applies before pushing; CI remains the signing/upload path. First
+  local build surfaced 28 Swift-6-mode concurrency warnings (Scoreboard
+  conformances vs @MainActor) — benign today, tracked for cleanup.
 
 ## How to work here
 
