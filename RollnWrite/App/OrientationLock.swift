@@ -29,19 +29,31 @@ private struct LockOrientation: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .onAppear {
-                OrientationGate.mask = mask
-                guard let scene = UIApplication.shared.connectedScenes
-                    .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene else { return }
-                // Nudge the system to re-evaluate now (so it rotates immediately,
-                // not just on the next physical turn).
-                scene.requestGeometryUpdate(.iOS(interfaceOrientations: mask))
-                scene.keyWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
-            }
+            .onAppear { Self.apply(mask) }
+            // The mask can change while the screen is visible (e.g. the
+            // two-player toggle flips the lock off). `onAppear` only fires
+            // once, so re-apply whenever it changes.
+            .onChange(of: mask.rawValue) { Self.apply(mask) }
             .onDisappear {
-                // Hand rotation freedom back to whatever comes next (the menu).
-                OrientationGate.mask = .all
+                // Hand rotation freedom back to whatever comes next (the
+                // menu). Must prod the system too: iOS 16+ caches supported
+                // orientations, so just resetting the gate leaves the app
+                // stuck in landscape until the next lock.
+                Self.apply(.all)
             }
+    }
+
+    /// Set the app-wide gate and prod UIKit to re-evaluate immediately —
+    /// `requestGeometryUpdate` snaps the interface to an allowed orientation
+    /// (e.g. back to portrait when the phone is upright) and
+    /// `setNeedsUpdateOfSupportedInterfaceOrientations` makes the system
+    /// re-read the delegate's mask instead of its cached copy.
+    static func apply(_ mask: UIInterfaceOrientationMask) {
+        OrientationGate.mask = mask
+        guard let scene = UIApplication.shared.connectedScenes
+            .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene else { return }
+        scene.requestGeometryUpdate(.iOS(interfaceOrientations: mask))
+        scene.keyWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
     }
 }
 

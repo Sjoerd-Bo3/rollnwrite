@@ -48,12 +48,19 @@ struct XChangeBoardView: View {
 
     var body: some View {
         GeometryReader { geo in
-            // 4 colour bands + 1 X-Change row (≈1.15× a colour tile to fit two
-            // stacked numbers) + bottom bar (≈0.95×) → 6 weighted rows.
+            // Weighted row units = the TRUE rendered height of each row in tile
+            // heights `h`, so the six rows fill the screen with no overflow:
+            //   • colour band ×4 — tile h + `.colourBand` vPad (h·0.09 top and
+            //     bottom)                          → 1.18 h each (cf. QwixxBoardView)
+            //   • X-Change band  — content 1.15 h (two stacked numbers) + ITS
+            //     vPad (1.15h·0.07 top and bottom) → 1.15 × 1.14 = 1.311 h
+            //   • bottom bar     — frame(height: h·1.05), no vertical padding
+            //                                       → 1.05 h
+            //   Σ = 4×1.18 + 1.15×1.14 + 1.05 = 7.081 units across 6 rows (5 gaps).
             let t = BoardMetrics.tile(
                 in: geo.size,
                 columns: columns,
-                rowUnits: 4 + 1.15 + 0.95,
+                rowUnits: 4 * 1.18 + 1.15 * 1.14 + 1.05,
                 rowCount: 6,
                 gap: tileGap,
                 pad: outerPad
@@ -235,10 +242,38 @@ struct XChangeBoardView: View {
     }
 }
 
-/// A single X-Change diamond: a light tile showing two numbers (top ↔ bottom)
-/// split by the swap arrow, crossed when marked. Follows the same sizing /
-/// crossed-out / undo-ring conventions as the Core tiles, but is X-Change-
-/// specific (two numbers + swap glyph) so it stays in this module.
+/// The diamond shape printed on the official X-Change sheet: a square rotated
+/// 45°, with softly rounded points, centred in — and inscribed within — the
+/// rect it is given (point-to-point extent = `min(width, height)` minus the
+/// inset). `InsettableShape` so `strokeBorder` keeps borders fully inside the
+/// tile slot and off the neighbouring tiles.
+private struct Diamond: InsettableShape {
+    var insetAmount: CGFloat = 0
+
+    func path(in rect: CGRect) -> Path {
+        // Point-to-point extent of the diamond = the square's diagonal.
+        let d = max(0, min(rect.width, rect.height) - 2 * insetAmount)
+        let side = d / sqrt(2)
+        let square = CGRect(x: -side / 2, y: -side / 2, width: side, height: side)
+        // A rounded square at the origin, rotated 45°, moved to the centre.
+        let transform = CGAffineTransform(translationX: rect.midX, y: rect.midY)
+            .rotated(by: .pi / 4)
+        return Path(roundedRect: square, cornerRadius: side * 0.14, style: .continuous)
+            .applying(transform)
+    }
+
+    func inset(by amount: CGFloat) -> Diamond {
+        var shape = self
+        shape.insetAmount += amount
+        return shape
+    }
+}
+
+/// A single X-Change diamond: a white diamond (rotated square, as printed on
+/// the official sheet) with the deep-magenta border, the top number above the
+/// swap arrows and the bottom number below, crossed when marked. Follows the
+/// same sizing / crossed-out / undo-ring conventions as the Core tiles, but is
+/// X-Change-specific (two numbers + swap glyph) so it stays in this module.
 private struct XChangeTile: View {
     let pair: (top: Int, bottom: Int)
     let tint: Color
@@ -252,31 +287,38 @@ private struct XChangeTile: View {
     private var dimmed: Bool { !marked && !legal }
 
     var body: some View {
-        let s = min(w, h)
+        // The diamond's point-to-point extent: the largest rotated square that
+        // fits the w×h slot without clipping the neighbouring tiles.
+        let d = min(w, h)
         return Button(action: onTap) {
             ZStack {
-                RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
+                Diamond()
                     .fill(Color.white.opacity(marked ? 0.7 : 0.95))
-                VStack(spacing: 0) {
+                Diamond()
+                    .strokeBorder(tint.opacity(0.85), lineWidth: max(1, d * 0.03))
+                // The numbers sit in the diamond's narrow vertical points, so
+                // they are scaled to the width available there (≈0.54·d at the
+                // top number's line), not to the full tile.
+                VStack(spacing: d * 0.02) {
                     Text("\(pair.top)")
                     Image(systemName: "arrow.up.arrow.down")
-                        .font(.system(size: s * 0.22, weight: .bold))
+                        .font(.system(size: d * 0.16, weight: .bold))
                         .foregroundStyle(tint.opacity(0.7))
                     Text("\(pair.bottom)")
                 }
-                .font(.system(size: s * 0.3, weight: .heavy, design: .rounded))
+                .font(.system(size: d * 0.23, weight: .heavy, design: .rounded))
                 .foregroundStyle(tint)
                 .minimumScaleFactor(0.3)
                 .lineLimit(1)
                 if marked {
                     Image(systemName: "xmark")
-                        .font(.system(size: s * 0.72, weight: .black))
+                        .font(.system(size: d * 0.5, weight: .black))
                         .foregroundStyle(tint)
                 }
             }
             .frame(width: w, height: h)
             .overlay(
-                RoundedRectangle(cornerRadius: s * 0.18, style: .continuous)
+                Diamond()
                     .strokeBorder(tint, lineWidth: undoable ? 2.5 : 0)
             )
         }

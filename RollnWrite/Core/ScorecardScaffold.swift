@@ -18,6 +18,7 @@ import SwiftUI
 public struct ScorecardScaffold<Board: View, Accessory: View>: View {
     private let title: String
     private let rules: RulesDocument
+    private let locksLandscape: Bool
     private let board: Board
     private let opponentBoard: Board?
     private let accessory: Accessory
@@ -27,6 +28,10 @@ public struct ScorecardScaffold<Board: View, Accessory: View>: View {
     @State private var twoPlayer = false
 
     /// - Parameters:
+    ///   - locksLandscape: whether single-player pins iPhone to landscape
+    ///     (the default, right for the wide Qwixx-style bands). Sheet-shaped
+    ///     boards that scale to fit (e.g. the Clever sheets) pass `false` so
+    ///     the screen rotates freely.
     ///   - board: the player's pure board view (no nav chrome).
     ///   - opponent: an independent second board for the across-the-table
     ///     mirror; pass `nil` to disable two-player.
@@ -36,12 +41,14 @@ public struct ScorecardScaffold<Board: View, Accessory: View>: View {
     public init(
         title: String,
         rules: RulesDocument,
+        locksLandscape: Bool = true,
         @ViewBuilder board: () -> Board,
         opponent: (() -> Board)? = nil,
         @ViewBuilder headerAccessory: () -> Accessory
     ) {
         self.title = title
         self.rules = rules
+        self.locksLandscape = locksLandscape
         self.board = board()
         self.opponentBoard = opponent?()
         self.accessory = headerAccessory()
@@ -57,9 +64,9 @@ public struct ScorecardScaffold<Board: View, Accessory: View>: View {
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $showRules) { RulesView(document: rules) }
-        // Single player pins iPhone to landscape; two-player frees rotation so
-        // the mirrored boards can stack in portrait.
-        .landscapeLockediPhone(when: !twoPlayer)
+        // Single player pins iPhone to landscape (unless the game opts out);
+        // two-player frees rotation so the mirrored boards can stack in portrait.
+        .landscapeLockediPhone(when: locksLandscape && !twoPlayer)
         // Don't let the screen auto-lock mid-game.
         .keepsScreenAwake()
     }
@@ -121,11 +128,12 @@ public extension ScorecardScaffold where Accessory == EmptyView {
     init(
         title: String,
         rules: RulesDocument,
+        locksLandscape: Bool = true,
         @ViewBuilder board: () -> Board,
         opponent: (() -> Board)? = nil
     ) {
-        self.init(title: title, rules: rules, board: board,
-                  opponent: opponent, headerAccessory: { EmptyView() })
+        self.init(title: title, rules: rules, locksLandscape: locksLandscape,
+                  board: board, opponent: opponent, headerAccessory: { EmptyView() })
     }
 }
 

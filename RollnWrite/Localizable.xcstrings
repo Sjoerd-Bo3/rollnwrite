@@ -236,6 +236,24 @@
         "de" : { "stringUnit" : { "state" : "translated", "value" : "Extra-Würfel" } }
       }
     },
+    "Rounds & bonuses" : {
+      "localizations" : {
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Rondes & bonussen" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Runden & Boni" } }
+      }
+    },
+    "Undo" : {
+      "localizations" : {
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Ongedaan maken" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Rückgängig" } }
+      }
+    },
+    "Tap to undo" : {
+      "localizations" : {
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Tik om ongedaan te maken" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zum Rückgängigmachen tippen" } }
+      }
+    },
     "Foxes score the lowest area (%lld) each" : {
       "localizations" : {
         "nl" : { "stringUnit" : { "state" : "translated", "value" : "Elke vos scoort het laagste gebied (%lld)" } },
