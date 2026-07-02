@@ -43,16 +43,23 @@ struct DoubleBoardView: View {
 
     var body: some View {
         GeometryReader { geo in
-            // Four colour bands, each with a half-height second-cross strip
-            // (≈0.55× a tile), plus the bottom bar.
+            // Sizing must model the TRUE rendered height so the board fills the
+            // screen exactly (no overflow, no dead space). Per colour band:
+            //   number row 1.00·h + strip 0.55·h + colourBand vPad 2×0.09·h
+            //   = 1.73·h, plus the band's inner VStack(spacing: 2) = rowGap/2.
+            // Bottom bar = 1.05·h. Fixed gaps: 4 stack gaps (rowGap) between the
+            // 5 VStack children + 4 intra-band 2pt spacings = 6·rowGap total,
+            // i.e. rowCount 7. minTile 22 keeps 0.55·h ≥ the strip's 12pt floor
+            // so the unit math stays exact.
+            //   → 4 × 1.73 + 1.05 = 7.97 units, 6 × rowGap fixed.
             let (w, h) = BoardMetrics.tile(
                 in: geo.size,
                 columns: columns,
-                rowUnits: 4 * (1 + 0.55) + 1.05,
-                rowCount: 4 * 2 + 1,
+                rowUnits: 4 * (1 + 0.55 + 2 * 0.09) + 1.05,
+                rowCount: 7,
                 gap: rowGap,
                 pad: outerPad,
-                minTile: 18
+                minTile: 22
             )
             boardStack(w: w, h: h)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -115,6 +122,8 @@ struct DoubleBoardView: View {
     // MARK: - Board
 
     private func boardStack(w: CGFloat, h: CGFloat) -> some View {
+        // 12pt legibility floor; inert while h ≥ minTile (22 × 0.55 ≥ 12), so
+        // the sizing above stays exact.
         let stripH = max(12, h * 0.55)
         let bottomH = h * 1.05
         return VStack(spacing: rowGap) {
@@ -131,7 +140,7 @@ struct DoubleBoardView: View {
     /// second-cross strip drawn directly beneath the number tiles.
     private func band(_ color: GameColor, w: CGFloat, tile th: CGFloat, strip stripH: CGFloat) -> some View {
         let row = game.row(for: color)
-        return VStack(spacing: 2) {
+        return VStack(spacing: rowGap / 2) {   // counted as half a gap in sizing
             HStack(spacing: tileGap) {
                 BandChevron(w: w, h: th)
                 ForEach(0..<11, id: \.self) { i in
