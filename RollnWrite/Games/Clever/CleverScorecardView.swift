@@ -19,11 +19,12 @@ private let cleverInk = Color(red: 0.13, green: 0.13, blue: 0.15)
 
 public struct CleverScorecardView: View {
     @StateObject private var game = CleverGame()
+    /// Observed so an open board recolours when Settings changes the palette.
+    @ObservedObject private var diceTheme = DiceTheme.shared
     let rules: RulesDocument
 
     @Environment(\.dismiss) private var dismiss
     @State private var showRules = false
-    @State private var showColors = false
     @State private var confirmNewGame = false
     @State private var entry: ValueEntry?
 
@@ -45,12 +46,11 @@ public struct CleverScorecardView: View {
         .toolbar(.hidden, for: .navigationBar)
         .landscapeLockediPhone(when: true)
         .sheet(isPresented: $showRules) { RulesView(document: rules) }
-        .sheet(isPresented: $showColors) { CleverColorSettingsView(game: game) }
         .confirmationDialog("Start a new game?", isPresented: $confirmNewGame, titleVisibility: .visible) {
             Button("New game", role: .destructive) { game.reset() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This clears the scorecard. Your dice-colour mapping is kept.")
+            Text("This clears the scorecard.")
         }
         .confirmationDialog(
             entry?.title ?? "",
@@ -75,7 +75,6 @@ public struct CleverScorecardView: View {
             Button { game.undo() } label: { Image(systemName: "arrow.uturn.backward") }
                 .disabled(!game.canUndo)
                 .opacity(game.canUndo ? 1 : 0.4)
-            Button { showColors = true } label: { Image(systemName: "paintpalette") }
             Button { showRules = true } label: { Image(systemName: "info.circle") }
             Button(role: .destructive) { confirmNewGame = true } label: { Image(systemName: "trash") }
         }
@@ -302,7 +301,7 @@ public struct CleverScorecardView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func yellowCell(_ idx: Int, tint: ThemeColor, size: CGFloat) -> some View {
+    private func yellowCell(_ idx: Int, tint: DiceColor, size: CGFloat) -> some View {
         let free = game.isYellowFree(idx)
         let crossed = game.state.yellowCrossed.contains(idx)
         let undoable = crossed && game.isLastYellow(idx)
@@ -355,7 +354,7 @@ public struct CleverScorecardView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func blueCell(_ value: Int?, tint: ThemeColor, size: CGFloat) -> some View {
+    private func blueCell(_ value: Int?, tint: DiceColor, size: CGFloat) -> some View {
         let crossed = value != nil && game.state.blueCrossed.contains(value!)
         let undoable = value != nil && game.isLastBlue(value!)
         return ZStack {
@@ -512,6 +511,8 @@ private struct ValueEntry: Identifiable {
 private struct BonusBadge: View {
     let icon: BonusIcon
     @ObservedObject var game: CleverGame
+    /// Observed so badges recolour with the app-wide dice palette.
+    @ObservedObject private var diceTheme = DiceTheme.shared
     let size: CGFloat
 
     var body: some View {
@@ -541,46 +542,3 @@ private struct BonusBadge: View {
     }
 }
 
-// MARK: - Colour mapping (map physical dice → areas)
-
-private struct CleverColorSettingsView: View {
-    @ObservedObject var game: CleverGame
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    ForEach(CleverArea.allCases) { area in
-                        Picker(selection: Binding(
-                            get: { game.color(area) },
-                            set: { game.setColor($0, for: area) }
-                        )) {
-                            ForEach(ThemeColor.allCases) { c in
-                                HStack {
-                                    Circle().fill(c.color).frame(width: 16, height: 16)
-                                    Text(c.displayName)
-                                }.tag(c)
-                            }
-                        } label: {
-                            HStack {
-                                Circle().fill(game.color(area).color).frame(width: 18, height: 18)
-                                Text(area.title)
-                            }
-                        }
-                    }
-                } header: {
-                    Text("Match each area to your physical dice colour")
-                } footer: {
-                    Text("Scoring is unchanged — only the colours shown are remapped.")
-                }
-                Section {
-                    Button("Reset to official colours") { game.resetColors() }
-                }
-            }
-            .navigationTitle("Dice colours")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
-        }
-    }
-}

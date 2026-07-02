@@ -19,43 +19,15 @@ public enum Clever4Area: String, Codable, CaseIterable, Identifiable {
     public var id: String { rawValue }
     public var title: String { rawValue.capitalized }
 
-    public var defaultColor: ThemeColor {
+    /// The area's STANDARD colour as printed on the official card — the input
+    /// to the app-wide `DiceTheme` nearest-colour matching, never shown as-is.
+    public var standardColor: Color {
         switch self {
-        case .yellow: return .yellow
-        case .blue:   return .blue
-        case .grey:   return .gray
-        case .green:  return .green
-        case .pink:   return .pink
-        }
-    }
-}
-
-public struct Clever4ColorTheme: Codable, Equatable {
-    public var yellow: ThemeColor = .yellow
-    public var blue: ThemeColor = .blue
-    public var grey: ThemeColor = .gray
-    public var green: ThemeColor = .green
-    public var pink: ThemeColor = .pink
-
-    public init() {}
-
-    public func value(for area: Clever4Area) -> ThemeColor {
-        switch area {
-        case .yellow: return yellow
-        case .blue:   return blue
-        case .grey:   return grey
-        case .green:  return green
-        case .pink:   return pink
-        }
-    }
-
-    public mutating func set(_ c: ThemeColor, for area: Clever4Area) {
-        switch area {
-        case .yellow: yellow = c
-        case .blue:   blue = c
-        case .grey:   grey = c
-        case .green:  green = c
-        case .pink:   pink = c
+        case .yellow: return Color(red: 0.96, green: 0.80, blue: 0.10)
+        case .blue:   return Color(red: 0.16, green: 0.45, blue: 0.82)
+        case .grey:   return Color(red: 0.45, green: 0.47, blue: 0.50)
+        case .green:  return Color(red: 0.18, green: 0.62, blue: 0.30)
+        case .pink:   return Color(red: 0.86, green: 0.28, blue: 0.56)
         }
     }
 }
@@ -244,7 +216,8 @@ public struct Clever4State: Codable, Equatable {
     public var pink: [Int?] = Array(repeating: nil, count: Clever4Layout.pinkFields)
 
     public var foxes: Int = 0
-    public var theme = Clever4ColorTheme()
+    // Note: older saves carry a per-game `theme` key; the decoder ignores it
+    // (dice colours are an app-wide setting now — see `DiceTheme`).
 
     public init() {}
 }

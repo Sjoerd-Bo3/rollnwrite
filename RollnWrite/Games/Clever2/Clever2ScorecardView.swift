@@ -22,6 +22,8 @@ private let c2Ink = Color(red: 0.12, green: 0.12, blue: 0.14)
 /// (`Clever2ScorecardView`) adds the compact header, landscape lock and sheets.
 struct Clever2BoardView: View {
     @ObservedObject var game: Clever2Game
+    /// Observed so an open board recolours when Settings changes the palette.
+    @ObservedObject private var diceTheme = DiceTheme.shared
     @Binding var entry: C2ValueEntry?
 
     private let spacing: CGFloat = 3
@@ -317,7 +319,6 @@ public struct Clever2ScorecardView: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var showRules = false
-    @State private var showColors = false
     @State private var confirmNewGame = false
     @State private var entry: C2ValueEntry?
 
@@ -334,11 +335,10 @@ public struct Clever2ScorecardView: View {
         .toolbar(.hidden, for: .navigationBar)
         .landscapeLockediPhone(when: true)
         .sheet(isPresented: $showRules) { RulesView(document: rules) }
-        .sheet(isPresented: $showColors) { Clever2ColorSettingsView(game: game) }
         .confirmationDialog("Start a new game?", isPresented: $confirmNewGame, titleVisibility: .visible) {
             Button("New game", role: .destructive) { game.reset() }
             Button("Cancel", role: .cancel) {}
-        } message: { Text("This clears the scorecard. Your dice-colour mapping is kept.") }
+        } message: { Text("This clears the scorecard.") }
         .confirmationDialog(
             entry?.title ?? "",
             isPresented: Binding(get: { entry != nil }, set: { if !$0 { entry = nil } }),
@@ -352,14 +352,13 @@ public struct Clever2ScorecardView: View {
     }
 
     /// Compact in-board header replacing the system nav bar, keeping every Clever2
-    /// control: back, title, undo, dice-colour palette, rules, new game.
+    /// control: back, title, undo, rules, new game.
     private var header: some View {
         HStack(spacing: 14) {
             Button { dismiss() } label: { Image(systemName: "chevron.left") }
             Text("Twice as Clever").font(.headline).lineLimit(1).minimumScaleFactor(0.7)
             Spacer()
             Button { game.undo() } label: { Image(systemName: "arrow.uturn.backward") }.disabled(!game.canUndo)
-            Button { showColors = true } label: { Image(systemName: "paintpalette") }
             Button { showRules = true } label: { Image(systemName: "info.circle") }
             Button(role: .destructive) { confirmNewGame = true } label: { Image(systemName: "trash") }
         }
@@ -384,6 +383,8 @@ struct C2ValueEntry: Identifiable {
 private struct C2Badge: View {
     let bonus: Clever2Bonus
     @ObservedObject var game: Clever2Game
+    /// Observed so badges recolour with the app-wide dice palette.
+    @ObservedObject private var diceTheme = DiceTheme.shared
     let size: CGFloat
 
     @ViewBuilder static func slot(_ bonus: Clever2Bonus?, game: Clever2Game) -> some View {
@@ -418,33 +419,3 @@ private struct C2Badge: View {
     }
 }
 
-private struct Clever2ColorSettingsView: View {
-    @ObservedObject var game: Clever2Game
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    ForEach(Clever2Area.allCases) { area in
-                        Picker(selection: Binding(get: { game.color(area) }, set: { game.setColor($0, for: area) })) {
-                            ForEach(ThemeColor.allCases) { c in
-                                HStack { Circle().fill(c.color).frame(width: 16, height: 16); Text(c.displayName) }.tag(c)
-                            }
-                        } label: {
-                            HStack { Circle().fill(game.color(area).color).frame(width: 18, height: 18); Text(area.title) }
-                        }
-                    }
-                } header: {
-                    Text("Match each area to your physical dice colour")
-                } footer: {
-                    Text("Scoring is unchanged — only the colours shown are remapped.")
-                }
-                Section { Button("Reset to official colours") { game.resetColors() } }
-            }
-            .navigationTitle("Dice colours")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
-        }
-    }
-}

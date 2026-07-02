@@ -2,11 +2,13 @@
 //  AppSettings.swift
 //  RollnWrite – App
 //
-//  App-wide preferences. Currently the appearance (Light / Dark / System), which
-//  the user picks in Settings and which is applied at the app root via
-//  `.preferredColorScheme`. Light mode gives the board a white page so the
-//  coloured bands read like the official printed card; dark mode keeps the
-//  modern edge-to-edge look. Persisted with `@AppStorage`.
+//  App-wide preferences: the appearance (Light / Dark / System), applied at the
+//  app root via `.preferredColorScheme`, and the dice colours — the player's
+//  physical dice set (`DiceTheme`), which every Clever board maps its areas
+//  onto. Light mode gives the board a white page so the coloured bands read
+//  like the official printed card; dark mode keeps the modern edge-to-edge
+//  look. Appearance is persisted with `@AppStorage`; the dice palette persists
+//  itself (see `DiceTheme`).
 //
 
 import SwiftUI
@@ -40,6 +42,7 @@ enum AppearanceMode: String, CaseIterable, Identifiable {
 /// Settings sheet — presented from the catalogue.
 struct SettingsView: View {
     @AppStorage(AppearanceMode.storageKey) private var appearanceRaw = AppearanceMode.system.rawValue
+    @ObservedObject private var diceTheme = DiceTheme.shared
     @Environment(\.dismiss) private var dismiss
     @State private var scores: [(name: String, best: Int)] = []
 
@@ -47,6 +50,14 @@ struct SettingsView: View {
         Binding(
             get: { AppearanceMode(rawValue: appearanceRaw) ?? .system },
             set: { appearanceRaw = $0.rawValue }
+        )
+    }
+
+    /// A `ColorPicker` binding onto one dice-palette slot.
+    private func dieColor(_ slot: Int) -> Binding<Color> {
+        Binding(
+            get: { diceTheme.palette[slot].color },
+            set: { diceTheme.palette[slot] = RGBAColor($0) }
         )
     }
 
@@ -66,6 +77,17 @@ struct SettingsView: View {
                         }
                     }
                     .pickerStyle(.segmented)
+                }
+
+                Section {
+                    ForEach(0..<DiceTheme.slotCount, id: \.self) { i in
+                        ColorPicker("Die \(i + 1)", selection: dieColor(i), supportsOpacity: false)
+                    }
+                    Button("Reset to standard colours") { diceTheme.resetToDefault() }
+                } header: {
+                    Text("Dice colours")
+                } footer: {
+                    Text("Set the colours of your physical dice once; every game shows each of its areas in the nearest of your dice colours. Scoring is unchanged.")
                 }
 
                 if !scores.isEmpty {
