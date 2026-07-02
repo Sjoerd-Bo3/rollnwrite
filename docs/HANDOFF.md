@@ -57,6 +57,9 @@ are the ground truth for any rules/layout question.
 ## Paste-able prompt for a new session
 
 ```
+If the repo isn't present yet, clone it first:
+  git clone https://github.com/Sjoerd-Bo3/rollnwrite.git && cd rollnwrite
+
 Read CLAUDE.md, docs/HANDOFF.md, and the two skills under .claude/skills/
 (rollnwrite-dev-loop and ios-testflight-no-mac) before doing anything.
 
