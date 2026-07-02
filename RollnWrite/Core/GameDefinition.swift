@@ -59,6 +59,7 @@ public enum GameRegistry {
         QwixxBonusGame(),
         QwixxMixxGame(),
         ThatsPrettyCleverGame(),
+        ThatsPrettyCleverV3Game(),
         TwiceAsCleverGame(),
         CleverCubedGame(),
         Clever4everGame(),
