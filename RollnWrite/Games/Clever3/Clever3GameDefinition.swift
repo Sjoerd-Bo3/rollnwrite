@@ -5,6 +5,18 @@
 
 import SwiftUI
 
+/// The six physical Clever 3 dice: white plus the five area colours. Themed —
+/// resolved through the player's app-wide dice palette, like the board areas.
+/// Informational roller only; never any rule.
+private let clever3Dice: [DieSpec] = [
+    .white(themed: true),
+    DieSpec(name: "Yellow", color: Clever3Area.yellow.standardColor, isLight: true, themed: true),
+    DieSpec(name: "Turquoise", color: Clever3Area.turquoise.standardColor, themed: true),
+    DieSpec(name: "Blue", color: Clever3Area.blue.standardColor, themed: true),
+    DieSpec(name: "Brown", color: Clever3Area.brown.standardColor, themed: true),
+    DieSpec(name: "Pink", color: Clever3Area.pink.standardColor, themed: true),
+]
+
 public struct CleverCubedGame: GameDefinition {
     public init() {}
 
@@ -15,7 +27,12 @@ public struct CleverCubedGame: GameDefinition {
     public let accent = Color(red: 0.10, green: 0.60, blue: 0.55)
     public let availability: GameAvailability = .available
 
-    public func makeScorecardView() -> AnyView { AnyView(Clever3ScorecardView(rules: rules)) }
+    public var diceSet: [DieSpec]? { clever3Dice }
+
+    public func makeScorecardView() -> AnyView {
+        AnyView(Clever3ScorecardView(rules: rules)
+            .environment(\.gameDiceSet, diceSet))
+    }
 
     public var rules: RulesDocument {
         RulesDocument(

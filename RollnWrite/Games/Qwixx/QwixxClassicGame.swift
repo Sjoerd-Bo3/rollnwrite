@@ -10,6 +10,20 @@
 
 import SwiftUI
 
+/// The six physical Qwixx dice — two white plus one per colour row — shared by
+/// every Qwixx flavour (they all use the same dice). Fixed colours matching
+/// the row tints, NOT themed: Qwixx dice are always these, unlike the Clever
+/// dice which follow the player's palette. Powers the optional informational
+/// dice roller only; never any rule.
+let qwixxDice: [DieSpec] = [
+    .white(),
+    .white(),
+    DieSpec(name: "Red", color: GameColor.red.tint),
+    DieSpec(name: "Yellow", color: GameColor.yellow.tint, isLight: true),
+    DieSpec(name: "Green", color: GameColor.green.tint),
+    DieSpec(name: "Blue", color: GameColor.blue.tint),
+]
+
 public struct QwixxClassicGame: GameDefinition {
     public init() {}
 
@@ -20,8 +34,11 @@ public struct QwixxClassicGame: GameDefinition {
     public let accent = Color.orange
     public let availability: GameAvailability = .available
 
+    public var diceSet: [DieSpec]? { qwixxDice }
+
     public func makeScorecardView() -> AnyView {
-        AnyView(QwixxClassicScorecardView(rules: rules))
+        AnyView(QwixxClassicScorecardView(rules: rules)
+            .environment(\.gameDiceSet, diceSet))
     }
 
     public var rules: RulesDocument {

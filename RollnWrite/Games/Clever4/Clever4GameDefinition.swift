@@ -5,6 +5,18 @@
 
 import SwiftUI
 
+/// The six physical Clever 4 dice: white plus the five area colours. Themed —
+/// resolved through the player's app-wide dice palette, like the board areas.
+/// Informational roller only; never any rule.
+private let clever4Dice: [DieSpec] = [
+    .white(themed: true),
+    DieSpec(name: "Yellow", color: Clever4Area.yellow.standardColor, isLight: true, themed: true),
+    DieSpec(name: "Blue", color: Clever4Area.blue.standardColor, themed: true),
+    DieSpec(name: "Grey", color: Clever4Area.grey.standardColor, themed: true),
+    DieSpec(name: "Green", color: Clever4Area.green.standardColor, themed: true),
+    DieSpec(name: "Pink", color: Clever4Area.pink.standardColor, themed: true),
+]
+
 public struct Clever4everGame: GameDefinition {
     public init() {}
 
@@ -15,7 +27,12 @@ public struct Clever4everGame: GameDefinition {
     public let accent = Color(red: 0.20, green: 0.62, blue: 0.30)
     public let availability: GameAvailability = .available
 
-    public func makeScorecardView() -> AnyView { AnyView(Clever4ScorecardView(rules: rules)) }
+    public var diceSet: [DieSpec]? { clever4Dice }
+
+    public func makeScorecardView() -> AnyView {
+        AnyView(Clever4ScorecardView(rules: rules)
+            .environment(\.gameDiceSet, diceSet))
+    }
 
     public var rules: RulesDocument {
         RulesDocument(
