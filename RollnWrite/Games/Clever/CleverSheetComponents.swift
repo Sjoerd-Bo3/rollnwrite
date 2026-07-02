@@ -8,42 +8,111 @@
 //  here is parameterised by plain values (`Color`, closures, generic views) —
 //  no Clever 1 types — so Clever 2/3/4 can adopt the same idioms verbatim.
 //
-//  Pieces: `ScaledSheet` (uniform scale-to-fit container), `SheetCell` /
+//  Pieces: `ScaledSheet` (stretch + scale-to-fit container), `SheetCell` /
 //  `SheetWriteCell` (printed-style tiles), `SheetPointsBadge` (starburst points
 //  seal), `SheetRoundsBar`, `SheetCircleTrack` (reroll/+1 tracks),
-//  `SheetScratchBoxes`, `SheetTotalStrip` (bottom summary) and
-//  `SheetEditorPager` (the swipeable editor scaffold).
+//  `SheetTotalStrip` (bottom summary) and `SheetEditorPager` (the swipeable
+//  editor scaffold).
 //
 
 import SwiftUI
 
-// MARK: - Scale-to-fit container
+// MARK: - Scale-to-fit container (with vertical stretch)
 
 /// Renders `content` at its NATURAL (design-space) size, then applies ONE
 /// uniform scale so the whole sheet fits the available space — the faithful
 /// miniature behaviour of the Clever overviews. No scrolling; works in both
-/// orientations; leftover space centres the sheet. Hit-testing is transformed
-/// with the scale, so the miniature stays fully interactive.
+/// orientations; the sheet is TOP-aligned (leftover height goes below, never
+/// as a blank band above). Hit-testing is transformed with the scale, so the
+/// miniature stays fully interactive.
+///
+/// **Vertical stretch.** When the available space is taller (relative to its
+/// width) than the design, plain uniform scaling leaves a large slack band.
+/// Pass `maxStretch > 1` and build the content from the `stretch` factor the
+/// closure receives: multiply cell/track/band HEIGHTS and vertical paddings by
+/// it (keep the design WIDTH fixed, and never apply a non-uniform
+/// `scaleEffect` — that would distort glyphs). The factor is
+/// `clamp(availableAspect / naturalAspect, 1...maxStretch)`, derived from an
+/// invisible probe of the content at `stretch == 1`, so the stretched sheet
+/// consumes the height and the remaining fit is still one uniform scale.
 struct ScaledSheet<Content: View>: View {
+    /// Natural size of the design at `stretch == 1` (the probe).
+    @State private var base: CGSize = .zero
+    /// Natural size of the design at the current stretch factor.
     @State private var natural: CGSize = .zero
-    private let content: Content
+    private let maxStretch: CGFloat
+    private let content: (CGFloat) -> Content
 
-    init(@ViewBuilder content: () -> Content) {
-        self.content = content()
+    init(maxStretch: CGFloat = 1, @ViewBuilder content: @escaping (CGFloat) -> Content) {
+        self.maxStretch = maxStretch
+        self.content = content
+    }
+
+    /// Convenience for stretch-agnostic content (pure scale-to-fit).
+    init(@ViewBuilder content: @escaping () -> Content) {
+        self.init { _ in content() }
     }
 
     var body: some View {
         GeometryReader { geo in
+            let stretch = stretchFactor(for: geo.size)
             let scale: CGFloat = natural == .zero ? 1 :
                 min(geo.size.width / natural.width, geo.size.height / natural.height)
-            content
-                .fixedSize()
-                .onGeometryChange(for: CGSize.self) { $0.size } action: { natural = $0 }
-                .scaleEffect(scale, anchor: .center)
-                .position(x: geo.size.width / 2, y: geo.size.height / 2)
-                // Hide the single un-scaled frame before the first measurement.
-                .opacity(natural == .zero ? 0 : 1)
+            ZStack(alignment: .top) {
+                if maxStretch > 1 {
+                    // Invisible probe: measures the natural (stretch 1) size
+                    // that the stretch factor is derived from.
+                    content(1)
+                        .fixedSize()
+                        .hidden()
+                        .allowsHitTesting(false)
+                        .onGeometryChange(for: CGSize.self) { $0.size } action: { base = $0 }
+                }
+                content(stretch)
+                    .fixedSize()
+                    .onGeometryChange(for: CGSize.self) { $0.size } action: { natural = $0 }
+                    .scaleEffect(scale, anchor: .top)
+            }
+            .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
+            // Hide the un-scaled frames before the first measurements land.
+            .opacity(natural == .zero || (maxStretch > 1 && base == .zero) ? 0 : 1)
         }
+    }
+
+    private func stretchFactor(for avail: CGSize) -> CGFloat {
+        guard maxStretch > 1, base.width > 0, base.height > 0, avail.width > 0 else { return 1 }
+        let naturalAspect = base.height / base.width
+        let availAspect = avail.height / avail.width
+        return min(max(availAspect / naturalAspect, 1), maxStretch)
+    }
+}
+
+/// Width-only scale-to-fit for SCROLLING contexts, where `ScaledSheet`'s
+/// `GeometryReader` cannot work (a `ScrollView` proposes no usable height).
+/// Renders `content` at its natural size, scales it down uniformly to the
+/// GIVEN width if needed (never up), and reserves exactly the scaled height —
+/// so list rows stack tightly with no dead space. Hit-testing scales along.
+struct WidthScaledCard<Content: View>: View {
+    @State private var natural: CGSize = .zero
+    let width: CGFloat
+    private let content: Content
+
+    init(width: CGFloat, @ViewBuilder content: () -> Content) {
+        self.width = width
+        self.content = content()
+    }
+
+    var body: some View {
+        let scale: CGFloat = natural.width > 0 ? min(1, width / natural.width) : 1
+        content
+            .fixedSize()
+            .onGeometryChange(for: CGSize.self) { $0.size } action: { natural = $0 }
+            .scaleEffect(scale, anchor: .top)
+            .frame(width: width,
+                   height: natural == .zero ? nil : natural.height * scale,
+                   alignment: .top)
+            // Hide the un-scaled frame before the first measurement lands.
+            .opacity(natural == .zero ? 0 : 1)
     }
 }
 
@@ -60,8 +129,16 @@ struct SheetCell: View {
     let legal: Bool
     var undoable: Bool = false
     let size: CGFloat
+    /// Cell height; defaults to `size` (square). A stretched sheet passes a
+    /// taller value — the width stays the design width.
+    var height: CGFloat? = nil
     var fontScale: CGFloat = 0.5
     let onTap: () -> Void
+
+    private var h: CGFloat { height ?? size }
+    /// Font reference: the width, stepped up modestly (capped) as the cell
+    /// stretches taller — glyphs scale uniformly, never distort.
+    private var fontBase: CGFloat { size * min(1 + 0.35 * (max(h / size, 1) - 1), 1.25) }
 
     var body: some View {
         Button(action: onTap) {
@@ -69,19 +146,19 @@ struct SheetCell: View {
                 RoundedRectangle(cornerRadius: size * 0.2, style: .continuous)
                     .fill(Color.white)
                 Text(label)
-                    .font(.system(size: size * fontScale, weight: .heavy, design: .rounded))
+                    .font(.system(size: fontBase * fontScale, weight: .heavy, design: .rounded))
                     .foregroundStyle(tint)
                     .minimumScaleFactor(0.3)
                     .lineLimit(1)
                     .padding(1)
                 if marked {
                     Image(systemName: "xmark")
-                        .font(.system(size: size * 0.6, weight: .black))
+                        .font(.system(size: fontBase * 0.6, weight: .black))
                         .foregroundStyle(ink.opacity(0.88))
                         .transition(.scale(scale: 0.4).combined(with: .opacity))
                 }
             }
-            .frame(width: size, height: size)
+            .frame(width: size, height: h)
             .overlay(
                 RoundedRectangle(cornerRadius: size * 0.2, style: .continuous)
                     .strokeBorder(ink, lineWidth: undoable ? size * 0.06 : 0)
@@ -108,7 +185,12 @@ struct SheetWriteCell: View {
     let isNext: Bool
     var undoable: Bool = false
     let size: CGFloat
+    /// Cell height; defaults to `size` (square). See `SheetCell.height`.
+    var height: CGFloat? = nil
     let onTap: () -> Void
+
+    private var h: CGFloat { height ?? size }
+    private var fontBase: CGFloat { size * min(1 + 0.35 * (max(h / size, 1) - 1), 1.25) }
 
     var body: some View {
         Button(action: onTap) {
@@ -117,18 +199,18 @@ struct SheetWriteCell: View {
                     .fill(Color.white)
                 if let value {
                     Text("\(value)")
-                        .font(.system(size: size * 0.52, weight: .heavy, design: .rounded))
+                        .font(.system(size: fontBase * 0.52, weight: .heavy, design: .rounded))
                         .foregroundStyle(ink)
                         .minimumScaleFactor(0.4)
                         .lineLimit(1)
                         .contentTransition(.numericText())
                 } else if let hint {
                     Text(hint)
-                        .font(.system(size: size * 0.42, weight: .heavy, design: .rounded))
+                        .font(.system(size: fontBase * 0.42, weight: .heavy, design: .rounded))
                         .foregroundStyle(tint.opacity(0.45))
                 }
             }
-            .frame(width: size, height: size)
+            .frame(width: size, height: h)
             .overlay {
                 if isNext, value == nil {
                     RoundedRectangle(cornerRadius: size * 0.2, style: .continuous)
@@ -179,29 +261,6 @@ struct SheetPointsBadge: View {
 
 // MARK: - Header chrome
 
-/// The big empty "extra dice" scratch boxes at the sheet's top-left. Purely
-/// decorative, exactly as printed (players jot leftover dice there on paper).
-struct SheetScratchBoxes: View {
-    var count: Int = 3
-    var box: CGFloat = 48
-    var ink: Color = .black
-
-    var body: some View {
-        VStack(spacing: box * 0.18) {
-            ForEach(0..<count, id: \.self) { _ in
-                RoundedRectangle(cornerRadius: box * 0.22, style: .continuous)
-                    .fill(Color.white)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: box * 0.22, style: .continuous)
-                            .strokeBorder(ink, lineWidth: box * 0.07)
-                    )
-                    .frame(width: box, height: box)
-            }
-        }
-        .accessibilityHidden(true)
-    }
-}
-
 /// The "1 2 3 4 5 6" rounds bar: a white number tile per round with a badge
 /// slot underneath (bonus icon or player-count marker). Rounds from
 /// `darkFrom` render on black, as printed (they only happen with fewer
@@ -211,24 +270,30 @@ struct SheetRoundsBar<Badge: View>: View {
     let darkFrom: Int
     let cell: CGFloat
     var ink: Color = .black
+    /// Vertical stretch factor — multiplies tile heights and vertical
+    /// paddings only (widths and glyph geometry stay the design's).
+    var stretch: CGFloat = 1
     @ViewBuilder let badge: (Int) -> Badge
+
+    private var fontBase: CGFloat { cell * min(1 + 0.35 * (max(stretch, 1) - 1), 1.25) }
 
     var body: some View {
         HStack(spacing: cell * 0.12) {
             ForEach(0..<rounds, id: \.self) { r in
-                VStack(spacing: cell * 0.1) {
+                VStack(spacing: cell * 0.1 * stretch) {
                     ZStack {
                         RoundedRectangle(cornerRadius: cell * 0.2, style: .continuous)
                             .fill(Color.white)
                         Text("\(r + 1)")
-                            .font(.system(size: cell * 0.52, weight: .heavy, design: .rounded))
+                            .font(.system(size: fontBase * 0.52, weight: .heavy, design: .rounded))
                             .foregroundStyle(ink)
                     }
-                    .frame(width: cell, height: cell * 0.85)
+                    .frame(width: cell, height: cell * 0.85 * stretch)
                     badge(r)
                         .frame(height: cell * 0.5)
                 }
-                .padding(cell * 0.12)
+                .padding(.horizontal, cell * 0.12)
+                .padding(.vertical, cell * 0.12 * stretch)
                 .frame(maxWidth: .infinity)
                 .background(
                     RoundedRectangle(cornerRadius: cell * 0.18, style: .continuous)
@@ -246,15 +311,20 @@ struct SheetCircleTrack<Icon: View>: View {
     let used: Set<Int>
     let diameter: CGFloat
     var ink: Color = .black
+    /// Vertical stretch — multiplies the track's vertical padding only
+    /// (circles stay circular).
+    var stretch: CGFloat = 1
     private let icon: Icon
     private let tap: (Int) -> Void
 
     init(slots: Int, used: Set<Int>, diameter: CGFloat, ink: Color = .black,
+         stretch: CGFloat = 1,
          @ViewBuilder icon: () -> Icon, tap: @escaping (Int) -> Void) {
         self.slots = slots
         self.used = used
         self.diameter = diameter
         self.ink = ink
+        self.stretch = stretch
         self.icon = icon()
         self.tap = tap
     }
@@ -282,7 +352,7 @@ struct SheetCircleTrack<Icon: View>: View {
             Spacer(minLength: 0)
         }
         .padding(.horizontal, diameter * 0.45)
-        .padding(.vertical, diameter * 0.3)
+        .padding(.vertical, diameter * 0.3 * stretch)
         .background(
             RoundedRectangle(cornerRadius: diameter * 0.55, style: .continuous)
                 .fill(Color(white: 0.62))
