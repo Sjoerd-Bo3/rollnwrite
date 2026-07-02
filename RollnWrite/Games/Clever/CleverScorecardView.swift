@@ -6,15 +6,17 @@
 //  printed sheet. Presentation + touch only; all rules and scoring live in
 //  `CleverGame`.
 //
-//  Layout model (the PILOT for the whole Clever family):
-//  • The board is a faithful one-screen MINIATURE of the sheet — header
-//    (scratch boxes, rounds bar, reroll/+1 tracks), yellow + blue side by
-//    side, full-width green/orange/purple bands, and the bottom total strip.
-//    `ScaledSheet` scales the whole sheet uniformly to fit — no scrolling,
-//    both orientations (the scaffold's landscape lock is opted out of).
-//  • The miniature is directly interactive; tapping anywhere else in an area
-//    opens a paged EDITOR sheet (`SheetEditorPager`) with a big, comfortable
-//    page per area — swipe to move between areas without closing.
+//  Layout model (the CANONICAL v3 concept for the whole Clever family —
+//  the owner's verdict after the three-layout on-device comparison):
+//  • PORTRAIT: a faithful one-screen MINIATURE of the sheet — header
+//    (rounds bar, reroll/+1 tracks), yellow + blue side by side, full-width
+//    green/orange/purple bands, and the bottom total strip. `ScaledSheet`
+//    scales the whole sheet uniformly to fit — no scrolling. The miniature
+//    is directly interactive; tapping anywhere else in an area opens a paged
+//    EDITOR sheet (`SheetEditorPager`) with a big, comfortable page per
+//    area — swipe to move between areas without closing.
+//  • LANDSCAPE: the direct-tap two-column reflow (`CleverV3LandscapeBoard`
+//    in CleverV3ScorecardView.swift) — no editor needed at that cell size.
 //  • Tapping the most-recent mark un-checks it (LIFO undo), as everywhere.
 //
 
@@ -43,16 +45,6 @@ enum CleverSheetSection: String, CaseIterable, Identifiable, Hashable {
     var title: String { area?.title ?? "Rounds & bonuses" }
 }
 
-// MARK: - Board layout (A/B experiment)
-
-/// The two board layouts under test: the faithful sheet miniature (+ modal
-/// editor) versus one vertical scrolling list of full-size areas (inline
-/// editing — an owner-approved exception to the no-scroll rule).
-enum CleverBoardLayout: String {
-    case sheet, list
-    static let storageKey = "clever.layout"
-}
-
 // MARK: - Scorecard (scaffold wrapper)
 
 public struct CleverScorecardView: View {
@@ -60,37 +52,20 @@ public struct CleverScorecardView: View {
     let rules: RulesDocument
 
     @State private var confirmNewGame = false
-    @AppStorage(CleverBoardLayout.storageKey) private var layoutRaw = CleverBoardLayout.sheet.rawValue
 
     public init(rules: RulesDocument) {
         self.rules = rules
     }
 
-    private var layout: CleverBoardLayout { CleverBoardLayout(rawValue: layoutRaw) ?? .sheet }
-
     public var body: some View {
         ScorecardScaffold(
             title: "That's Pretty Clever",
             rules: rules,
-            // The sheet is portrait-shaped and scales to fit — let it rotate.
+            // Both orientations scale to fit — let the screen rotate freely.
             locksLandscape: false,
-            board: {
-                Group {
-                    switch layout {
-                    case .sheet: CleverSheetBoardView(game: game)
-                    case .list: CleverListBoardView(game: game)
-                    }
-                }
-            },
+            board: { CleverV3BoardView(game: game) },
             headerAccessory: {
                 HStack(spacing: 16) {
-                    Button {
-                        layoutRaw = (layout == .sheet ? CleverBoardLayout.list : .sheet).rawValue
-                    } label: {
-                        // The icon shows the layout the tap switches TO.
-                        Image(systemName: layout == .sheet ? "list.bullet" : "rectangle.grid.1x2")
-                    }
-                    .accessibilityLabel(layout == .sheet ? "List layout" : "Sheet layout")
                     Button { game.undo() } label: { Image(systemName: "arrow.uturn.backward") }
                         .disabled(!game.canUndo)
                         .opacity(game.canUndo ? 1 : 0.5)
@@ -270,8 +245,7 @@ struct CleverSheetBoardView: View {
     }
 }
 
-/// The bottom summary strip (per-area scores + foxes + total) — shared by the
-/// sheet overview and the list layout.
+/// The bottom summary strip (per-area scores + foxes + total).
 @MainActor
 func cleverTotalStrip(game: CleverGame, height: CGFloat) -> some View {
     var entries: [SheetTotalStrip.Entry] = CleverArea.allCases.map {
@@ -751,117 +725,6 @@ func cleverBonusSlot(_ icon: BonusIcon?, game: CleverGame, size: CGFloat) -> som
 
 // MARK: - Editor sheet (big, comfortable, paged)
 
-// MARK: - Layout B: one scrolling list of full-size areas
-
-/// The "list" side of the A/B layout experiment: every area stacked in ONE
-/// vertical scrolling list at full interactive size — inline editing, no
-/// modal. (A ScrollView here is an owner-approved exception to the no-scroll
-/// rule, specifically so the two layouts can be compared on-device.) Uses the
-/// SAME area views as the editor pages; each card scales down to the screen
-/// width via `WidthScaledCard` (a `ScaledSheet` cannot measure available
-/// space inside a scroll view).
-struct CleverListBoardView: View {
-    @ObservedObject var game: CleverGame
-    /// Observed so an open board recolours when Settings changes the palette.
-    @ObservedObject var diceTheme = DiceTheme.shared
-    @State private var entry: ValueEntry?
-
-    var body: some View {
-        GeometryReader { geo in
-            let cardW = geo.size.width - 24
-            ScrollView {
-                VStack(spacing: 14) {
-                    CleverBonusBanner(game: game)
-                    card(.tracks, width: cardW) { tracksContent }
-                    card(.yellow, width: cardW) {
-                        CleverYellowGrid(game: game, cell: 54)
-                    }
-                    card(.blue, width: cardW) {
-                        CleverBluePanel(game: game, cell: 52, showCounts: true)
-                    }
-                    card(.green, width: cardW) {
-                        CleverGreenRow(game: game, cell: 52, split: true)
-                    }
-                    card(.orange, width: cardW) {
-                        CleverOrangeRow(game: game, cell: 52, split: true) { entry = $0 }
-                    }
-                    card(.purple, width: cardW) {
-                        CleverPurpleRow(game: game, cell: 52, split: true) { entry = $0 }
-                    }
-                    WidthScaledCard(width: cardW) {
-                        cleverTotalStrip(game: game, height: 46)
-                            .padding(12)
-                    }
-                    .background(
-                        RoundedRectangle(cornerRadius: SheetRadius.panel, style: .continuous)
-                            .fill(cleverSheetGrey)
-                    )
-                }
-                .padding(.horizontal, 12)
-                .padding(.top, 4)
-                .padding(.bottom, 16)
-            }
-        }
-        .cleverValueEntry($entry)
-    }
-
-    /// One list card: the area's title + live score above the area content on
-    /// its coloured panel — the editor-page look, inline in the list.
-    private func card<Content: View>(
-        _ section: CleverSheetSection, width: CGFloat,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        VStack(spacing: 6) {
-            HStack {
-                Text(LocalizedStringKey(section.title))
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                Spacer()
-                if let area = section.area {
-                    Text("\(game.score(for: area))")
-                        .font(.headline.monospacedDigit())
-                }
-            }
-            .padding(.horizontal, 4)
-            WidthScaledCard(width: width) {
-                content()
-                    .padding(14)
-            }
-            .background(
-                RoundedRectangle(cornerRadius: SheetRadius.panel, style: .continuous)
-                    .fill(section.area.map { game.color($0).color } ?? cleverSheetGrey)
-            )
-        }
-    }
-
-    private var tracksContent: some View {
-        VStack(spacing: 10) {
-            SheetRoundsBar(rounds: 6, darkFrom: 4, cell: 42, ink: cleverInk,
-                           crossed: game.state.roundsCrossed,
-                           tap: { game.toggleRound($0) }) { r in
-                cleverRoundBadge(r, game: game, size: 21)
-            }
-            SheetCircleTrack(slots: CleverLayout.rerollTrackSlots,
-                             used: game.state.rerollUsed,
-                             earned: game.rerollsEarned,
-                             diameter: 26, ink: cleverInk,
-                             icon: { BonusBadge(icon: .reroll, game: game, size: 30) },
-                             tap: { game.toggleReroll($0) })
-            SheetCircleTrack(slots: CleverLayout.extraDieTrackSlots,
-                             used: game.state.extraDieUsed,
-                             earned: game.extraDiceEarned,
-                             diameter: 26, ink: cleverInk,
-                             icon: { BonusBadge(icon: .plusOne, game: game, size: 30) },
-                             tap: { game.toggleExtraDie($0) })
-        }
-        // A definite design width (just past the bars' natural size) so the
-        // round tiles and the track circles DISTRIBUTE evenly across their
-        // pills instead of hugging the leading edge; the enclosing
-        // ScaledSheet/WidthScaledCard scales the block to fit as usual.
-        .frame(width: 360)
-    }
-}
-
 struct CleverEditorSheet: View {
     @ObservedObject var game: CleverGame
     @ObservedObject var diceTheme = DiceTheme.shared
@@ -959,7 +822,7 @@ struct CleverEditorSheet: View {
         // A definite design width (just past the bars' natural size) so the
         // round tiles and the track circles DISTRIBUTE evenly across their
         // pills instead of hugging the leading edge; the enclosing
-        // ScaledSheet/WidthScaledCard scales the block to fit as usual.
+        // ScaledSheet scales the block to fit as usual.
         .frame(width: 360)
     }
 

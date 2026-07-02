@@ -82,7 +82,6 @@ public enum GameRegistry {
     #else
     private static let cleverGames: [GameDefinition] = [
         ThatsPrettyCleverGame(),
-        ThatsPrettyCleverV3Game(),
         TwiceAsCleverGame(),
         CleverCubedGame(),
         Clever4everGame(),

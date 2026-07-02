@@ -232,12 +232,14 @@ Clever 2/3/4 adopt them verbatim when their redesign lands):
   0.2×cell) and `SheetStroke` (small 1.5 / medium 2.5). Qwixx's counterpart is
   `BoardStroke` in `Core/BoardComponents.swift`. Use the tokens; don't invent
   radii or line widths.
-- Clever 1 currently ships THREE layouts while the owner picks a winner: the
-  sheet miniature + paged editor modal (swipe cycles areas), a scrolling list
-  mode (header toggle), and a separate catalogue entry "(v3)" with a
-  landscape two-column reflow (portrait falls back to the sheet). v3 shares
-  the regular entry's persistence key — two lenses on one game. The verdict
-  decides the Clever 2/3/4 rollout; do not roll out before it.
+- **The v3 concept is the canonical Clever design** (owner verdict from the
+  on-device three-layout comparison, 2026-07-02): PORTRAIT = the faithful
+  sheet miniature + paged editor modal (tap an area's chrome; swipe cycles
+  areas); LANDSCAPE = a direct-tap multi-column reflow at large cell sizes
+  (no editor, no totals strip); rotation free. Clever 1 hosts it in
+  `CleverScorecardView` (+ `CleverV3ScorecardView.swift`'s board views); the
+  old list mode and the separate "(v3)" catalogue entry are gone. All Clever
+  games follow this concept.
 - Clever screens force a light colour scheme via `.environment(\.colorScheme,
   .light)` (a nested `.preferredColorScheme` loses to the app root's).
 
