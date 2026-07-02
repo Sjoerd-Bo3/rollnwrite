@@ -163,10 +163,16 @@ struct ConnectedBoardView: View {
             .accessibilityLabel("\(color.displayName) \(color.numbers[i])")
             .accessibilityHint(isChain ? "Chain field — crossing it also crosses its partner" : "")
 
+            // Dashed chain ring in the ROW'S TINT — the same colour as the
+            // tile's number, which is known-legible on the tile's fixed
+            // near-white fill in both light and dark mode. (`textColor` is the
+            // legible colour over the BAND, i.e. white for red/green/blue — on
+            // the white tile that made the ring invisible everywhere but the
+            // yellow row.)
             if isChain {
                 Circle()
                     .strokeBorder(
-                        color.textColor.opacity(0.9),
+                        color.tint,
                         style: StrokeStyle(lineWidth: 2, dash: [3, 2.5])
                     )
                     .frame(width: min(w, th), height: min(w, th))
