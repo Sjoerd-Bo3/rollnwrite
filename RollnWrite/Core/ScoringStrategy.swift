@@ -47,6 +47,10 @@ public struct TriangularScoring: ScoringStrategy {
 ///
 /// ISP: deliberately tiny — hosts that only need a headline score and a
 /// game-over flag don't have to know any game-specific detail.
+///
+/// Main-actor isolated: every conformer is a `@MainActor` engine driving
+/// SwiftUI, so the protocol carries the isolation (required in Swift 6).
+@MainActor
 public protocol Scoreboard: ObservableObject {
     /// The current overall score.
     var totalScore: Int { get }

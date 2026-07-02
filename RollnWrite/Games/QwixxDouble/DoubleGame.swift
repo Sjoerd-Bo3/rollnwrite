@@ -38,7 +38,9 @@ public final class DoubleGame: ObservableObject, Scoreboard {
     }
 
     /// Maximum valued crosses scored per row (16 → 136 points).
-    public static let scoringCap = 16
+    /// `nonisolated` so the init's default argument (evaluated at the call
+    /// site) can read it without hopping to the main actor.
+    public nonisolated static let scoringCap = 16
 
     // MARK: - Accessors
 
