@@ -15,43 +15,15 @@ public enum Clever3Area: String, Codable, CaseIterable, Identifiable {
     public var id: String { rawValue }
     public var title: String { rawValue.capitalized }
 
-    public var defaultColor: ThemeColor {
+    /// The area's STANDARD colour as printed on the official card — the input
+    /// to the app-wide `DiceTheme` nearest-colour matching, never shown as-is.
+    public var standardColor: Color {
         switch self {
-        case .yellow:    return .yellow
-        case .turquoise: return .teal
-        case .blue:      return .blue
-        case .brown:     return .brown
-        case .pink:      return .pink
-        }
-    }
-}
-
-public struct Clever3ColorTheme: Codable, Equatable {
-    public var yellow: ThemeColor = .yellow
-    public var turquoise: ThemeColor = .teal
-    public var blue: ThemeColor = .blue
-    public var brown: ThemeColor = .brown
-    public var pink: ThemeColor = .pink
-
-    public init() {}
-
-    public func value(for area: Clever3Area) -> ThemeColor {
-        switch area {
-        case .yellow:    return yellow
-        case .turquoise: return turquoise
-        case .blue:      return blue
-        case .brown:     return brown
-        case .pink:      return pink
-        }
-    }
-
-    public mutating func set(_ c: ThemeColor, for area: Clever3Area) {
-        switch area {
-        case .yellow:    yellow = c
-        case .turquoise: turquoise = c
-        case .blue:      blue = c
-        case .brown:     brown = c
-        case .pink:      pink = c
+        case .yellow:    return Color(red: 0.96, green: 0.80, blue: 0.10)
+        case .turquoise: return Color(red: 0.10, green: 0.60, blue: 0.55)
+        case .blue:      return Color(red: 0.16, green: 0.45, blue: 0.82)
+        case .brown:     return Color(red: 0.55, green: 0.40, blue: 0.26)
+        case .pink:      return Color(red: 0.86, green: 0.28, blue: 0.56)
         }
     }
 }
@@ -201,7 +173,8 @@ public struct Clever3State: Codable, Equatable {
     public var brown: Set<Int> = []       // crossed indices 0…11
     public var pink: [Int?] = Array(repeating: nil, count: Clever3Layout.pinkCells)
     public var foxes: Int = 0
-    public var theme = Clever3ColorTheme()
+    // Note: older saves carry a per-game `theme` key; the decoder ignores it
+    // (dice colours are an app-wide setting now — see `DiceTheme`).
 
     public init() {}
 }

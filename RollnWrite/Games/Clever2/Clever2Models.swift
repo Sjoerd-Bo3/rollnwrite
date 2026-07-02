@@ -5,8 +5,8 @@
 //  Value types + exact official layout data for "Twice as Clever"
 //  (Doppelt so clever) by Wolfgang Warsch / Schmidt Spiele (art. 88234).
 //
-//  Areas: Silver, Yellow, Blue, Green, Pink. Reuses the shared `ThemeColor`
-//  palette (from the Clever module) for the dice-colour mapping feature.
+//  Areas: Silver, Yellow, Blue, Green, Pink. Display colours come from the
+//  app-wide dice palette (`DiceTheme`) via nearest-colour matching.
 //
 
 import SwiftUI
@@ -18,44 +18,15 @@ public enum Clever2Area: String, Codable, CaseIterable, Identifiable {
     public var id: String { rawValue }
     public var title: String { rawValue.capitalized }
 
-    public var defaultColor: ThemeColor {
+    /// The area's STANDARD colour as printed on the official card — the input
+    /// to the app-wide `DiceTheme` nearest-colour matching, never shown as-is.
+    public var standardColor: Color {
         switch self {
-        case .silver: return .gray
-        case .yellow: return .yellow
-        case .blue:   return .blue
-        case .green:  return .green
-        case .pink:   return .pink
-        }
-    }
-}
-
-/// Player colour assignment per area (defaults to official colours).
-public struct Clever2ColorTheme: Codable, Equatable {
-    public var silver: ThemeColor = .gray
-    public var yellow: ThemeColor = .yellow
-    public var blue: ThemeColor = .blue
-    public var green: ThemeColor = .green
-    public var pink: ThemeColor = .pink
-
-    public init() {}
-
-    public func value(for area: Clever2Area) -> ThemeColor {
-        switch area {
-        case .silver: return silver
-        case .yellow: return yellow
-        case .blue:   return blue
-        case .green:  return green
-        case .pink:   return pink
-        }
-    }
-
-    public mutating func set(_ c: ThemeColor, for area: Clever2Area) {
-        switch area {
-        case .silver: silver = c
-        case .yellow: yellow = c
-        case .blue:   blue = c
-        case .green:  green = c
-        case .pink:   pink = c
+        case .silver: return Color(red: 0.45, green: 0.47, blue: 0.50)
+        case .yellow: return Color(red: 0.96, green: 0.80, blue: 0.10)
+        case .blue:   return Color(red: 0.16, green: 0.45, blue: 0.82)
+        case .green:  return Color(red: 0.18, green: 0.62, blue: 0.30)
+        case .pink:   return Color(red: 0.86, green: 0.28, blue: 0.56)
         }
     }
 }
@@ -133,8 +104,9 @@ public struct Clever2State: Codable, Equatable {
     public var rerollUsed: Set<Int> = []
     public var returnUsed: Set<Int> = []
     public var extraDieUsed: Set<Int> = []
-    public var theme = Clever2ColorTheme()
     public var history: [Clever2Action] = []
+    // Note: older saves carry a per-game `theme` key; the decoder ignores it
+    // (dice colours are an app-wide setting now — see `DiceTheme`).
 
     public init() {}
 }

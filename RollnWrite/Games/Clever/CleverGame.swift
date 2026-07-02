@@ -32,18 +32,14 @@ public final class CleverGame: ObservableObject, Scoreboard {
         load()
     }
 
-    // MARK: - Colour theme (map physical dice → areas)
+    // MARK: - Colour theme (app-wide physical dice → areas)
 
-    public func color(_ area: CleverArea) -> ThemeColor { state.theme.value(for: area) }
-
-    public func setColor(_ color: ThemeColor, for area: CleverArea) {
-        state.theme.set(color, for: area)
-        save()
-    }
-
-    public func resetColors() {
-        state.theme = CleverColorTheme()
-        save()
+    /// Display colour for an area, resolved from the app-wide dice palette
+    /// (`DiceTheme`) by nearest-colour matching against the standard colours.
+    /// Presentation only — scoring never touches it.
+    public func color(_ area: CleverArea) -> DiceColor {
+        let areas = CleverArea.allCases
+        return DiceTheme.shared.mapped(standard: areas.map(\.standardColor))[areas.firstIndex(of: area)!]
     }
 
     // MARK: - Yellow (cross numbers in any order)
@@ -430,10 +426,7 @@ public final class CleverGame: ObservableObject, Scoreboard {
     }
 
     public func reset() {
-        let theme = state.theme // keep the player's colour mapping across games
-        var fresh = CleverState()
-        fresh.theme = theme
-        state = fresh
+        state = CleverState()
         earnedBonuses.removeAll()
         save()
     }

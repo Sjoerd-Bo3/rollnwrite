@@ -14,87 +14,23 @@ import SwiftUI
 // MARK: - Areas & colours
 
 /// The five scoring areas. These are fixed *roles* (their scoring logic never
-/// changes); only the colour shown for each can be remapped by the player so the
-/// app can match the colours on their physical dice.
+/// changes); the colour shown for each is resolved from the app-wide dice
+/// palette (`DiceTheme`) by nearest-colour matching against `standardColor`.
 public enum CleverArea: String, Codable, CaseIterable, Identifiable {
     case yellow, blue, green, orange, purple
 
     public var id: String { rawValue }
     public var title: String { rawValue.capitalized }
 
-    public var defaultColor: ThemeColor {
+    /// The area's STANDARD colour as printed on the official card — the input
+    /// to the app-wide `DiceTheme` nearest-colour matching, never shown as-is.
+    public var standardColor: Color {
         switch self {
-        case .yellow: return .yellow
-        case .blue:   return .blue
-        case .green:  return .green
-        case .orange: return .orange
-        case .purple: return .purple
-        }
-    }
-}
-
-/// A fixed palette of colours the player can assign to dice/areas.
-public enum ThemeColor: String, Codable, CaseIterable, Identifiable {
-    case red, orange, amber, yellow, lime, green, teal, cyan, blue, indigo, purple, pink, brown, gray
-
-    public var id: String { rawValue }
-    public var displayName: String { rawValue.capitalized }
-
-    public var color: Color {
-        switch self {
-        case .red:    return Color(red: 0.86, green: 0.18, blue: 0.18)
-        case .orange: return Color(red: 0.95, green: 0.52, blue: 0.10)
-        case .amber:  return Color(red: 0.92, green: 0.70, blue: 0.10)
         case .yellow: return Color(red: 0.96, green: 0.80, blue: 0.10)
-        case .lime:   return Color(red: 0.55, green: 0.74, blue: 0.13)
-        case .green:  return Color(red: 0.18, green: 0.62, blue: 0.30)
-        case .teal:   return Color(red: 0.10, green: 0.60, blue: 0.55)
-        case .cyan:   return Color(red: 0.15, green: 0.65, blue: 0.80)
         case .blue:   return Color(red: 0.16, green: 0.45, blue: 0.82)
-        case .indigo: return Color(red: 0.29, green: 0.31, blue: 0.71)
+        case .green:  return Color(red: 0.18, green: 0.62, blue: 0.30)
+        case .orange: return Color(red: 0.95, green: 0.52, blue: 0.10)
         case .purple: return Color(red: 0.55, green: 0.28, blue: 0.72)
-        case .pink:   return Color(red: 0.86, green: 0.28, blue: 0.56)
-        case .brown:  return Color(red: 0.55, green: 0.40, blue: 0.26)
-        case .gray:   return Color(red: 0.45, green: 0.47, blue: 0.50)
-        }
-    }
-
-    /// Legible text colour drawn on top of this colour.
-    public var textColor: Color {
-        switch self {
-        case .yellow, .amber, .lime: return .black
-        default: return .white
-        }
-    }
-}
-
-/// The player's colour assignment for each area (defaults to official colours).
-public struct CleverColorTheme: Codable, Equatable {
-    public var yellow: ThemeColor = .yellow
-    public var blue: ThemeColor = .blue
-    public var green: ThemeColor = .green
-    public var orange: ThemeColor = .orange
-    public var purple: ThemeColor = .purple
-
-    public init() {}
-
-    public func value(for area: CleverArea) -> ThemeColor {
-        switch area {
-        case .yellow: return yellow
-        case .blue:   return blue
-        case .green:  return green
-        case .orange: return orange
-        case .purple: return purple
-        }
-    }
-
-    public mutating func set(_ color: ThemeColor, for area: CleverArea) {
-        switch area {
-        case .yellow: yellow = color
-        case .blue:   blue = color
-        case .green:  green = color
-        case .orange: orange = color
-        case .purple: purple = color
         }
     }
 }
@@ -195,8 +131,9 @@ public struct CleverState: Codable, Equatable {
     public var purple: [Int?] = Array(repeating: nil, count: CleverLayout.rowLength)
     public var rerollUsed: Set<Int> = []
     public var extraDieUsed: Set<Int> = []
-    public var theme = CleverColorTheme()
     public var history: [CleverAction] = []
+    // Note: older saves carry a per-game `theme` key; the decoder ignores it
+    // (dice colours are an app-wide setting now — see `DiceTheme`).
 
     public init() {}
 }

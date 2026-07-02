@@ -68,10 +68,10 @@
         "de" : { "stringUnit" : { "state" : "translated", "value" : "Dadurch wird der aktuelle Spielzettel gelöscht." } }
       }
     },
-    "This clears the scorecard. Your dice-colour mapping is kept." : {
+    "This clears the scorecard." : {
       "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Hiermee wordt de scorekaart gewist. Je dobbelsteenkleuren blijven behouden." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dadurch wird der Spielzettel gelöscht. Deine Würfelfarben bleiben erhalten." } }
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Hiermee wordt de scorekaart gewist." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dadurch wird der Spielzettel gelöscht." } }
       }
     },
     "Source: %@" : {
@@ -194,22 +194,22 @@
         "de" : { "stringUnit" : { "state" : "translated", "value" : "Würfelfarben" } }
       }
     },
-    "Match each area to your physical dice colour" : {
+    "Die %lld" : {
       "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Koppel elk gebied aan de kleur van je echte dobbelsteen" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ordne jeden Bereich der Farbe deines echten Würfels zu" } }
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Dobbelsteen %lld" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Würfel %lld" } }
       }
     },
-    "Scoring is unchanged — only the colours shown are remapped." : {
+    "Set the colours of your physical dice once; every game shows each of its areas in the nearest of your dice colours. Scoring is unchanged." : {
       "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "De puntentelling blijft gelijk — alleen de getoonde kleuren veranderen." } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Wertung bleibt unverändert — nur die angezeigten Farben werden geändert." } }
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Stel de kleuren van je echte dobbelstenen één keer in; elk spel toont zijn gebieden in de dichtstbijzijnde van jouw dobbelsteenkleuren. De puntentelling blijft gelijk." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Lege die Farben deiner echten Würfel einmal fest; jedes Spiel zeigt seine Bereiche in der nächstliegenden deiner Würfelfarben. Die Wertung bleibt unverändert." } }
       }
     },
-    "Reset to official colours" : {
+    "Reset to standard colours" : {
       "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Terug naar officiële kleuren" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Auf offizielle Farben zurücksetzen" } }
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Terug naar standaardkleuren" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Auf Standardfarben zurücksetzen" } }
       }
     },
     "Rounds" : {

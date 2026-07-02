@@ -26,11 +26,14 @@ public final class Clever4Game: ObservableObject, Scoreboard {
         load()
     }
 
-    // MARK: - Colour theme
+    // MARK: - Colour theme (app-wide physical dice → areas)
 
-    public func color(_ area: Clever4Area) -> ThemeColor { state.theme.value(for: area) }
-    public func setColor(_ c: ThemeColor, for area: Clever4Area) { state.theme.set(c, for: area); save() }
-    public func resetColors() { state.theme = Clever4ColorTheme(); save() }
+    /// Display colour for an area, resolved from the app-wide dice palette
+    /// (`DiceTheme`) by nearest-colour matching. Presentation only.
+    public func color(_ area: Clever4Area) -> DiceColor {
+        let areas = Clever4Area.allCases
+        return DiceTheme.shared.mapped(standard: areas.map(\.standardColor))[areas.firstIndex(of: area)!]
+    }
 
     // MARK: - Yellow (free-entry values, 3 rows)
 
@@ -307,10 +310,7 @@ public final class Clever4Game: ObservableObject, Scoreboard {
     public func undo() {}
 
     public func reset() {
-        let theme = state.theme
-        var fresh = Clever4State()
-        fresh.theme = theme
-        state = fresh
+        state = Clever4State()
         earnedBonuses.removeAll()
         save()
     }

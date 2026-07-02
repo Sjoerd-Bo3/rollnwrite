@@ -168,9 +168,11 @@ colours (cap 15 → 120). See `Games/Qwixx`.
   fox count rather than asking the player to track it. Other bonuses (re-roll,
   +1, extra marks, coloured numbers) are applied manually — consistent with the
   pure-scorecard model (no in-app dice).
-- **Dice-colour mapping**: players can remap the colour shown for each area to
-  match their physical dice (`CleverColorTheme`). It changes only presentation,
-  never scoring, and persists across games.
+- **Dice-colour mapping**: the player's physical dice colours are an APP-WIDE
+  setting (`Core/DiceTheme.swift`, edited in Settings — six colour slots,
+  classic Clever dice by default). Every Clever game derives each area's
+  display colour as the nearest palette colour (unique assignment; achromatic
+  standards match by brightness). Presentation only, never scoring.
 
 **Twice as Clever (Clever 2)** — `Games/Clever2`. Areas: silver (per-row
 scale, summed), yellow (circle-then-cross, scored by crosses), blue
