@@ -38,9 +38,11 @@ Keep this file updated at the end of significant sessions.
   owner-approved exception to the official-only rule)
 - #35 Android version (big; unscoped)
 - #41 Qwixx Double & Bonus official Version B variants (A/B switch like Mixx)
-- Idea parked in chat: a "simulator smoke test" workflow (macOS runner boots
-  a Simulator, screenshots each game, uploads artifacts) — the no-Mac way to
-  see screens without a TestFlight round-trip.
+- "6. Simulator Smoke Test" workflow SHIPPED (manual, Actions tab): boots a
+  Simulator, screenshots the catalogue + every game (Debug-only
+  `-smokeTestGame <id>` launch arg in RootView), uploads artifacts. First
+  run pending — check that the rotated Qwixx shots read upright (the
+  workflow rotates them 90°; flip to 270° if they come out upside down).
 
 ## How to work here
 

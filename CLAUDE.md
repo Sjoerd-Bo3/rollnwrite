@@ -151,7 +151,10 @@ sheet, and optional 2-player mirror — exactly like `QwixxBoardView` /
 - Manual workflows (Actions tab): "1. Validate Secrets", "3. iOS Build"
   (compile-only pre-merge check for risky branches), "4. Bump Version",
   "4. Renew Certs", "5. App Store Release" (builds the selected branch with
-  the `QWIXX_ONLY` flag and uploads the store candidate).
+  the `QWIXX_ONLY` flag and uploads the store candidate), "6. Simulator
+  Smoke Test" (boots a Simulator, screenshots the catalogue + every game via
+  the Debug-only `-smokeTestGame <id>` launch argument, uploads artifacts —
+  screens without a TestFlight round-trip).
 - **Releases:** `main` = full app → TestFlight; `release/1.0` = stability
   branch for the App Store, built Qwixx-only via the `QWIXX_ONLY` compilation
   condition (a build flag, never divergent code). Full checklist:
