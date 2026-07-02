@@ -17,6 +17,28 @@
 
 import SwiftUI
 
+// MARK: - Shared metrics
+
+/// ONE stroke scale for all sheet chrome (design points, pre-scale):
+/// `small` for hairline accents (bonus-badge rims, card outlines), `medium`
+/// for emphasis rings (undo rings, track circles, total-strip box borders).
+/// Never invent a third weight — pick one of these.
+enum SheetStroke {
+    static let small: CGFloat = 1.5
+    static let medium: CGFloat = 2.5
+}
+
+/// ONE corner-radius scale: cells stay proportional (0.2 × cell size); these
+/// fixed values cover the rest of the chrome.
+enum SheetRadius {
+    /// Grey pills and small chrome strips (tracks, rounds tiles, scale strips).
+    static let pill: CGFloat = 10
+    /// Coloured area bands/panels and list/editor cards.
+    static let panel: CGFloat = 14
+    /// The big sheet card behind the whole board.
+    static let card: CGFloat = 20
+}
+
 // MARK: - Scale-to-fit container (with vertical stretch)
 
 /// Renders `content` at its NATURAL (design-space) size, then applies ONE
@@ -41,10 +63,17 @@ struct ScaledSheet<Content: View>: View {
     /// Natural size of the design at the current stretch factor.
     @State private var natural: CGSize = .zero
     private let maxStretch: CGFloat
+    /// Where leftover WIDTH goes when the fit is height-bound: `.top` centres
+    /// the piece in its slot (default); `.topLeading` / `.topTrailing` pin it
+    /// to one edge so a neighbouring column keeps a constant gutter (the v3
+    /// rounds rail hugs the yellow column this way).
+    private let anchor: UnitPoint
     private let content: (CGFloat) -> Content
 
-    init(maxStretch: CGFloat = 1, @ViewBuilder content: @escaping (CGFloat) -> Content) {
+    init(maxStretch: CGFloat = 1, anchor: UnitPoint = .top,
+         @ViewBuilder content: @escaping (CGFloat) -> Content) {
         self.maxStretch = maxStretch
+        self.anchor = anchor
         self.content = content
     }
 
@@ -58,7 +87,7 @@ struct ScaledSheet<Content: View>: View {
             let stretch = stretchFactor(for: geo.size)
             let scale: CGFloat = natural == .zero ? 1 :
                 min(geo.size.width / natural.width, geo.size.height / natural.height)
-            ZStack(alignment: .top) {
+            ZStack(alignment: alignment) {
                 if maxStretch > 1 {
                     // Invisible probe: measures the natural (stretch 1) size
                     // that the stretch factor is derived from.
@@ -71,12 +100,17 @@ struct ScaledSheet<Content: View>: View {
                 content(stretch)
                     .fixedSize()
                     .onGeometryChange(for: CGSize.self) { $0.size } action: { natural = $0 }
-                    .scaleEffect(scale, anchor: .top)
+                    .scaleEffect(scale, anchor: anchor)
             }
-            .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
+            .frame(width: geo.size.width, height: geo.size.height, alignment: alignment)
             // Hide the un-scaled frames before the first measurements land.
             .opacity(natural == .zero || (maxStretch > 1 && base == .zero) ? 0 : 1)
         }
+    }
+
+    /// Frame alignment matching the scale anchor (vertical stays `.top`).
+    private var alignment: Alignment {
+        anchor.x >= 1 ? .topTrailing : (anchor.x <= 0 ? .topLeading : .top)
     }
 
     private func stretchFactor(for avail: CGSize) -> CGFloat {
@@ -161,7 +195,7 @@ struct SheetCell: View {
             .frame(width: size, height: h)
             .overlay(
                 RoundedRectangle(cornerRadius: size * 0.2, style: .continuous)
-                    .strokeBorder(ink, lineWidth: undoable ? size * 0.06 : 0)
+                    .strokeBorder(ink, lineWidth: undoable ? SheetStroke.medium : 0)
             )
             .animation(.spring(response: 0.26, dampingFraction: 0.6), value: marked)
         }
@@ -217,12 +251,12 @@ struct SheetWriteCell: View {
             .overlay {
                 if isNext, value == nil {
                     RoundedRectangle(cornerRadius: size * 0.2, style: .continuous)
-                        .strokeBorder(style: StrokeStyle(lineWidth: size * 0.05,
+                        .strokeBorder(style: StrokeStyle(lineWidth: SheetStroke.medium,
                                                          dash: [size * 0.12, size * 0.09]))
                         .foregroundStyle(tint)
                 }
                 RoundedRectangle(cornerRadius: size * 0.2, style: .continuous)
-                    .strokeBorder(ink, lineWidth: undoable ? size * 0.06 : 0)
+                    .strokeBorder(ink, lineWidth: undoable ? SheetStroke.medium : 0)
             }
             .animation(.snappy, value: value)
         }
@@ -319,7 +353,7 @@ struct SheetRoundsBar<Badge: View>: View {
                 .padding(.vertical, cell * 0.12 * stretch)
                 .frame(maxWidth: .infinity)
                 .background(
-                    RoundedRectangle(cornerRadius: cell * 0.18, style: .continuous)
+                    RoundedRectangle(cornerRadius: SheetRadius.pill, style: .continuous)
                         .fill(r >= darkFrom ? Color.black : Color(white: 0.3))
                 )
             }
@@ -359,16 +393,21 @@ struct SheetCircleTrack<Icon: View>: View {
     }
 
     var body: some View {
-        HStack(spacing: diameter * 0.4) {
+        // Equal flexible gaps (icon→1st circle and between circles) DISTRIBUTE
+        // the circles evenly across the pill's full width — no dead trailing
+        // space. In fixed-size contexts (probes, width-scaled cards) the
+        // spacers collapse to their minimum, keeping a compact natural width.
+        HStack(spacing: 0) {
             icon
             ForEach(0..<slots, id: \.self) { s in
+                Spacer(minLength: diameter * 0.4)
                 let isUsed = used.contains(s)
                 let isEarned = s < earned
                 Button { tap(s) } label: {
                     ZStack {
                         if isUsed {
                             Circle().fill(ink)
-                            Circle().strokeBorder(Color.white, lineWidth: diameter * 0.12)
+                            Circle().strokeBorder(Color.white, lineWidth: SheetStroke.medium)
                             Image(systemName: "xmark")
                                 .font(.system(size: diameter * 0.5, weight: .black))
                                 .foregroundStyle(.white)
@@ -376,12 +415,12 @@ struct SheetCircleTrack<Icon: View>: View {
                             // AVAILABLE: clearly inviting — a near-white fill
                             // with a solid ink ring, ready to be spent.
                             Circle().fill(Color.white.opacity(0.9))
-                            Circle().strokeBorder(ink, lineWidth: diameter * 0.12)
+                            Circle().strokeBorder(ink, lineWidth: SheetStroke.medium)
                         } else {
                             // NOT EARNED: faint ghost of the printed circle.
                             Circle().fill(Color.white.opacity(0.15))
                             Circle().strokeBorder(Color.white.opacity(0.45),
-                                                  lineWidth: diameter * 0.12)
+                                                  lineWidth: SheetStroke.medium)
                         }
                     }
                     .frame(width: diameter, height: diameter)
@@ -392,12 +431,11 @@ struct SheetCircleTrack<Icon: View>: View {
                 .disabled(!isUsed && !isEarned)
                 .accessibilityValue(isUsed ? "marked" : (isEarned ? "available" : "not earned yet"))
             }
-            Spacer(minLength: 0)
         }
         .padding(.horizontal, diameter * 0.45)
         .padding(.vertical, diameter * 0.3 * stretch)
         .background(
-            RoundedRectangle(cornerRadius: diameter * 0.55, style: .continuous)
+            RoundedRectangle(cornerRadius: SheetRadius.pill, style: .continuous)
                 .fill(Color(white: 0.62))
         )
     }
@@ -438,11 +476,13 @@ struct SheetTotalStrip: View {
 
     private func box(_ e: Entry) -> some View {
         ZStack {
-            RoundedRectangle(cornerRadius: height * 0.22, style: .continuous)
+            // Cell radius family (0.2 × box height); one border weight for
+            // EVERY entry box — colour areas and the fox box alike.
+            RoundedRectangle(cornerRadius: height * 0.2, style: .continuous)
                 .fill(Color.white)
                 .overlay(
-                    RoundedRectangle(cornerRadius: height * 0.22, style: .continuous)
-                        .strokeBorder(e.tint, lineWidth: height * 0.07)
+                    RoundedRectangle(cornerRadius: height * 0.2, style: .continuous)
+                        .strokeBorder(e.tint, lineWidth: SheetStroke.medium)
                 )
             VStack(spacing: 0) {
                 Text(e.value)
@@ -466,11 +506,13 @@ struct SheetTotalStrip: View {
 
     private var totalBox: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: height * 0.22, style: .continuous)
+            // Same radius FAMILY as the entry boxes (0.2 × this box's own,
+            // slightly taller height) and the same border weight.
+            RoundedRectangle(cornerRadius: height * 1.08 * 0.2, style: .continuous)
                 .fill(Color.white)
                 .overlay(
-                    RoundedRectangle(cornerRadius: height * 0.22, style: .continuous)
-                        .strokeBorder(ink, lineWidth: height * 0.09)
+                    RoundedRectangle(cornerRadius: height * 1.08 * 0.2, style: .continuous)
+                        .strokeBorder(ink, lineWidth: SheetStroke.medium)
                 )
             Text("\(total)")
                 .font(.system(size: height * 0.42, weight: .heavy, design: .rounded).monospacedDigit())
