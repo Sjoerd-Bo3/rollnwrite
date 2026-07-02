@@ -205,9 +205,12 @@ struct SheetWriteCell: View {
                         .lineLimit(1)
                         .contentTransition(.numericText())
                 } else if let hint {
+                    // Near-full tint: combined with the cell's blocked-state
+                    // dimming (×0.55) the ghost hint reads clearly (~0.45
+                    // effective) while a written value is full-strength ink.
                     Text(hint)
-                        .font(.system(size: fontBase * 0.42, weight: .heavy, design: .rounded))
-                        .foregroundStyle(tint.opacity(0.45))
+                        .font(.system(size: fontBase * 0.46, weight: .heavy, design: .rounded))
+                        .foregroundStyle(tint.opacity(0.85))
                 }
             }
             .frame(width: size, height: h)

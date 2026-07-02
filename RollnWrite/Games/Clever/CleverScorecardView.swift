@@ -144,7 +144,15 @@ struct CleverSheetBoardView: View {
     // the available aspect (portrait) and then scales the whole sheet to fit.
     private let sheetW: CGFloat = 580
     private let midCell: CGFloat = 36
-    private let rowCell: CGFloat = 40
+    /// Width available to a row band's CELLS: the sheet width minus the
+    /// sheet's horizontal padding (2×14), the band's own padding (2×8), the
+    /// fixed-width chevron (14) and its spacing (6). Cell sizes are derived
+    /// from it so the 11th cell ends flush with the band — no trailing gap.
+    private var bandContentW: CGFloat { sheetW - 28 - 16 - 14 - 6 }
+    /// Green/orange rows: 11 cells + 10 gaps of 0.1×cell = 12 cell widths.
+    private var rowCell: CGFloat { bandContentW / 12 }
+    /// Purple row: 11 cells + 10 "<" separators of 0.24×cell = 13.4 widths.
+    private var purpleRowCell: CGFloat { bandContentW / 13.4 }
 
     var body: some View {
         ScaledSheet(maxStretch: 1.6) { stretch in sheet(stretch) }
@@ -180,7 +188,7 @@ struct CleverSheetBoardView: View {
                 CleverOrangeRow(game: game, cell: rowCell, stretch: stretch) { entry = $0 }
             }
             rowBand(.purple, stretch) {
-                CleverPurpleRow(game: game, cell: rowCell, stretch: stretch) { entry = $0 }
+                CleverPurpleRow(game: game, cell: purpleRowCell, stretch: stretch) { entry = $0 }
             }
             cleverTotalStrip(game: game, height: 44 * min(stretch, 1.25))
         }
@@ -239,6 +247,7 @@ struct CleverSheetBoardView: View {
             Image(systemName: "arrowtriangle.right.fill")
                 .font(.system(size: 13, weight: .black))
                 .foregroundStyle(.white)
+                .frame(width: 14) // fixed so `bandContentW` is exact
             content()
             Spacer(minLength: 0)
         }
@@ -315,14 +324,14 @@ struct CleverYellowGrid: View {
                         Image(systemName: "arrowtriangle.right.fill")
                             .font(.system(size: cell * 0.22, weight: .black))
                             .foregroundStyle(.black.opacity(0.55))
-                        BonusBadge(icon: CleverLayout.yellowRowBonus[r], game: game, size: cell * 0.55)
+                        BonusBadge(icon: CleverLayout.yellowRowBonus[r], game: game, size: cell * 0.78)
                     }
                     .frame(height: cellH)
                 }
                 // The main-diagonal +1 bonus, aligned with the points row.
-                BonusBadge(icon: .plusOne, game: game, size: cell * 0.5)
+                BonusBadge(icon: .plusOne, game: game, size: cell * 0.7)
                     .frame(maxWidth: .infinity)
-                    .frame(height: cell * 0.72)
+                    .frame(height: cell * 0.9)
             }
         }
     }
@@ -367,7 +376,7 @@ struct CleverYellowGrid: View {
             ForEach(0..<4, id: \.self) { col in
                 let done = Set(CleverLayout.yellowColumns[col]).isSubset(of: game.state.yellowCrossed)
                 SheetPointsBadge(value: CleverLayout.yellowColumnValues[col],
-                                 tint: tint.color, size: cell * 0.55, highlighted: done)
+                                 tint: tint.color, size: cell * 0.78, highlighted: done)
                     .frame(width: cell)
             }
         }
@@ -416,7 +425,7 @@ struct CleverBluePanel: View {
                             Image(systemName: "arrowtriangle.right.fill")
                                 .font(.system(size: cell * 0.22, weight: .black))
                                 .foregroundStyle(.black.opacity(0.55))
-                            BonusBadge(icon: CleverLayout.blueRowBonus[r], game: game, size: cell * 0.55)
+                            BonusBadge(icon: CleverLayout.blueRowBonus[r], game: game, size: cell * 0.78)
                         }
                         .frame(height: cellH)
                     }
@@ -428,11 +437,13 @@ struct CleverBluePanel: View {
 
     private func scaleRow(_ tint: DiceColor) -> some View {
         let count = game.state.blueCrossed.count
-        return HStack(spacing: 1) {
+        // Seals slightly OVERLAP (negative spacing), like the printed strip —
+        // that is what lets them grow ~1.25× and still fit 11-across.
+        return HStack(spacing: -2) {
             ForEach(1...11, id: \.self) { i in
                 VStack(spacing: 0) {
                     SheetPointsBadge(value: CleverLayout.bluePointScale[i],
-                                     tint: tint.color, size: cell * 0.42, highlighted: i == count)
+                                     tint: tint.color, size: cell * 0.52, highlighted: i == count)
                     if showCounts {
                         Text("\(i)")
                             .font(.system(size: cell * 0.2, weight: .bold, design: .rounded))
@@ -443,7 +454,7 @@ struct CleverBluePanel: View {
             }
         }
         .padding(.vertical, cell * 0.06)
-        .padding(.horizontal, cell * 0.08)
+        .padding(.horizontal, cell * 0.05)
         .background(
             RoundedRectangle(cornerRadius: cell * 0.18, style: .continuous)
                 .fill(.black.opacity(0.32))
@@ -497,7 +508,7 @@ struct CleverBluePanel: View {
     private var columnBonusRow: some View {
         HStack(spacing: gap) {
             ForEach(0..<4, id: \.self) { c in
-                BonusBadge(icon: CleverLayout.blueColBonus[c], game: game, size: cell * 0.55)
+                BonusBadge(icon: CleverLayout.blueColBonus[c], game: game, size: cell * 0.78)
                     .frame(width: cell)
             }
         }
@@ -537,22 +548,25 @@ struct CleverGreenRow: View {
                 let undoable = game.lastGreenIndex == i
                 VStack(spacing: cell * 0.06 * stretch) {
                     SheetPointsBadge(value: CleverLayout.greenScale[i], tint: tint.color,
-                                     size: cell * 0.45,
+                                     size: cell * 0.62,
                                      highlighted: i == game.state.greenCount - 1)
                     SheetCell(
+                        // Near-full tint: the cell's own blocked-state dimming
+                        // (×0.55) lands the ghost "≥n" at readable placeholder
+                        // strength instead of double-fading it to invisible.
                         label: "≥\(CleverLayout.greenThresholds[i])",
-                        tint: tint.color.opacity(0.55),
+                        tint: tint.color.opacity(0.85),
                         ink: cleverInk,
                         marked: i < game.state.greenCount,
                         legal: i == game.state.greenCount,
                         undoable: undoable,
                         size: cell,
                         height: cell * stretch,
-                        fontScale: 0.42
+                        fontScale: 0.48
                     ) {
                         if undoable { game.undo() } else { game.markGreen() }
                     }
-                    cleverBonusSlot(CleverLayout.greenBonus[i], game: game, size: cell * 0.42)
+                    cleverBonusSlot(CleverLayout.greenBonus[i], game: game, size: cell * 0.6)
                 }
             }
         }
@@ -609,7 +623,7 @@ struct CleverOrangeRow: View {
                             })
                         }
                     }
-                    cleverBonusSlot(CleverLayout.orangeBonus[i], game: game, size: cell * 0.42)
+                    cleverBonusSlot(CleverLayout.orangeBonus[i], game: game, size: cell * 0.6)
                 }
             }
         }
@@ -645,10 +659,12 @@ struct CleverPurpleRow: View {
         HStack(alignment: .top, spacing: 0) {
             ForEach(range, id: \.self) { i in
                 if i > range.lowerBound {
+                    // Real horizontal room (0.24×cell) so the glyph is never
+                    // clipped, and full-contrast white to match the bonuses.
                     Text("<")
-                        .font(.system(size: cell * 0.26, weight: .black, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.9))
-                        .frame(width: cell * 0.12, height: cell * stretch)
+                        .font(.system(size: cell * 0.34, weight: .black, design: .rounded))
+                        .foregroundStyle(.white)
+                        .frame(width: cell * 0.24, height: cell * stretch)
                 }
                 let undoable = game.isLastPurple(i)
                 VStack(spacing: cell * 0.06 * stretch) {
@@ -670,7 +686,7 @@ struct CleverPurpleRow: View {
                             })
                         }
                     }
-                    cleverBonusSlot(CleverLayout.purpleBonus[i], game: game, size: cell * 0.42)
+                    cleverBonusSlot(CleverLayout.purpleBonus[i], game: game, size: cell * 0.6)
                 }
             }
         }
