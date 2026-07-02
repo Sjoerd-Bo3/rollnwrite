@@ -267,7 +267,9 @@ struct SheetPointsBadge: View {
 /// The "1 2 3 4 5 6" rounds bar: a white number tile per round with a badge
 /// slot underneath (bonus icon or player-count marker). Rounds from
 /// `darkFrom` render on black, as printed (they only happen with fewer
-/// players). Informative only — no game state.
+/// players). Pass `crossed` + `tap` to make the tiles crossable (bookkeeping
+/// only — crossing a round is never a game move); omit them for a
+/// display-only bar.
 struct SheetRoundsBar<Badge: View>: View {
     let rounds: Int
     let darkFrom: Int
@@ -276,6 +278,10 @@ struct SheetRoundsBar<Badge: View>: View {
     /// Vertical stretch factor — multiplies tile heights and vertical
     /// paddings only (widths and glyph geometry stay the design's).
     var stretch: CGFloat = 1
+    /// Rounds crossed off by the player (ink ✗ over the number tile).
+    var crossed: Set<Int> = []
+    /// Tap handler for a round tile; `nil` keeps the bar display-only.
+    var tap: ((Int) -> Void)? = nil
     @ViewBuilder let badge: (Int) -> Badge
 
     private var fontBase: CGFloat { cell * min(1 + 0.35 * (max(stretch, 1) - 1), 1.25) }
@@ -284,14 +290,28 @@ struct SheetRoundsBar<Badge: View>: View {
         HStack(spacing: cell * 0.12) {
             ForEach(0..<rounds, id: \.self) { r in
                 VStack(spacing: cell * 0.1 * stretch) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: cell * 0.2, style: .continuous)
-                            .fill(Color.white)
-                        Text("\(r + 1)")
-                            .font(.system(size: fontBase * 0.52, weight: .heavy, design: .rounded))
-                            .foregroundStyle(ink)
+                    Button { tap?(r) } label: {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: cell * 0.2, style: .continuous)
+                                .fill(Color.white)
+                            Text("\(r + 1)")
+                                .font(.system(size: fontBase * 0.52, weight: .heavy, design: .rounded))
+                                .foregroundStyle(ink)
+                            if crossed.contains(r) {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: fontBase * 0.55, weight: .black))
+                                    .foregroundStyle(ink.opacity(0.88))
+                                    .transition(.scale(scale: 0.4).combined(with: .opacity))
+                            }
+                        }
+                        .frame(width: cell, height: cell * 0.85 * stretch)
+                        .animation(.spring(response: 0.26, dampingFraction: 0.6),
+                                   value: crossed.contains(r))
                     }
-                    .frame(width: cell, height: cell * 0.85 * stretch)
+                    .buttonStyle(.plain)
+                    .disabled(tap == nil)
+                    .accessibilityLabel(Text("Round \(r + 1)"))
+                    .accessibilityValue(crossed.contains(r) ? "marked" : "available")
                     badge(r)
                         .frame(height: cell * 0.5)
                 }
@@ -308,10 +328,15 @@ struct SheetRoundsBar<Badge: View>: View {
 }
 
 /// A grey action track (reroll / +1): a leading icon badge and tappable
-/// circles that cross off used actions.
+/// circles that cross off used actions. Pass `earned` to light up how many
+/// slots the player has actually earned — each circle then shows one of
+/// three states: USED (ink fill + white ✗), AVAILABLE (earned but unspent:
+/// near-white fill + solid ink ring), NOT EARNED (faint, disabled). The
+/// default (`.max`) keeps every slot available (the pre-counting behaviour).
 struct SheetCircleTrack<Icon: View>: View {
     let slots: Int
     let used: Set<Int>
+    var earned: Int = .max
     let diameter: CGFloat
     var ink: Color = .black
     /// Vertical stretch — multiplies the track's vertical padding only
@@ -320,11 +345,12 @@ struct SheetCircleTrack<Icon: View>: View {
     private let icon: Icon
     private let tap: (Int) -> Void
 
-    init(slots: Int, used: Set<Int>, diameter: CGFloat, ink: Color = .black,
-         stretch: CGFloat = 1,
+    init(slots: Int, used: Set<Int>, earned: Int = .max, diameter: CGFloat,
+         ink: Color = .black, stretch: CGFloat = 1,
          @ViewBuilder icon: () -> Icon, tap: @escaping (Int) -> Void) {
         self.slots = slots
         self.used = used
+        self.earned = earned
         self.diameter = diameter
         self.ink = ink
         self.stretch = stretch
@@ -337,20 +363,34 @@ struct SheetCircleTrack<Icon: View>: View {
             icon
             ForEach(0..<slots, id: \.self) { s in
                 let isUsed = used.contains(s)
+                let isEarned = s < earned
                 Button { tap(s) } label: {
                     ZStack {
-                        Circle().fill(isUsed ? ink : Color.white.opacity(0.35))
-                        Circle().strokeBorder(Color.white, lineWidth: diameter * 0.12)
                         if isUsed {
+                            Circle().fill(ink)
+                            Circle().strokeBorder(Color.white, lineWidth: diameter * 0.12)
                             Image(systemName: "xmark")
                                 .font(.system(size: diameter * 0.5, weight: .black))
                                 .foregroundStyle(.white)
+                        } else if isEarned {
+                            // AVAILABLE: clearly inviting — a near-white fill
+                            // with a solid ink ring, ready to be spent.
+                            Circle().fill(Color.white.opacity(0.9))
+                            Circle().strokeBorder(ink, lineWidth: diameter * 0.12)
+                        } else {
+                            // NOT EARNED: faint ghost of the printed circle.
+                            Circle().fill(Color.white.opacity(0.15))
+                            Circle().strokeBorder(Color.white.opacity(0.45),
+                                                  lineWidth: diameter * 0.12)
                         }
                     }
                     .frame(width: diameter, height: diameter)
+                    .animation(.snappy, value: isUsed)
+                    .animation(.snappy, value: isEarned)
                 }
                 .buttonStyle(.plain)
-                .accessibilityValue(isUsed ? "marked" : "available")
+                .disabled(!isUsed && !isEarned)
+                .accessibilityValue(isUsed ? "marked" : (isEarned ? "available" : "not earned yet"))
             }
             Spacer(minLength: 0)
         }

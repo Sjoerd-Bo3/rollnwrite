@@ -149,20 +149,34 @@ struct CleverV3LandscapeBoard: View {
     // MARK: Rounds rail — the 1–6 rounds as a vertical left-edge column
 
     /// Vertical counterpart of `SheetRoundsBar`: one dark tile per round with
-    /// an upright number and the printed bonus badge underneath. Informative
-    /// only — no game state — so it earns only a narrow rail.
+    /// an upright number and the printed bonus badge underneath. Tiles are
+    /// crossable (bookkeeping only — never a game move); crossing rounds 1–3
+    /// feeds the reroll/+1 earned counts.
     private func roundsRail(_ stretch: CGFloat) -> some View {
         VStack(spacing: 6 * stretch) {
             ForEach(0..<6, id: \.self) { r in
                 VStack(spacing: 4 * stretch) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 7, style: .continuous)
-                            .fill(Color.white)
-                        Text("\(r + 1)")
-                            .font(.system(size: 17, weight: .heavy, design: .rounded))
-                            .foregroundStyle(cleverInk)
+                    Button { game.toggleRound(r) } label: {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                .fill(Color.white)
+                            Text("\(r + 1)")
+                                .font(.system(size: 17, weight: .heavy, design: .rounded))
+                                .foregroundStyle(cleverInk)
+                            if game.state.roundsCrossed.contains(r) {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 18, weight: .black))
+                                    .foregroundStyle(cleverInk.opacity(0.88))
+                                    .transition(.scale(scale: 0.4).combined(with: .opacity))
+                            }
+                        }
+                        .frame(width: railW - 12, height: 30 * stretch)
+                        .animation(.spring(response: 0.26, dampingFraction: 0.6),
+                                   value: game.state.roundsCrossed.contains(r))
                     }
-                    .frame(width: railW - 12, height: 30 * stretch)
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(Text("Round \(r + 1)"))
+                    .accessibilityValue(game.state.roundsCrossed.contains(r) ? "marked" : "available")
                     cleverRoundBadge(r, game: game, size: 18)
                         .frame(height: 18)
                 }
@@ -218,11 +232,13 @@ struct CleverV3LandscapeBoard: View {
         HStack(spacing: 10) {
             SheetCircleTrack(slots: CleverLayout.rerollTrackSlots,
                              used: game.state.rerollUsed,
+                             earned: game.rerollsEarned,
                              diameter: 19, ink: cleverInk, stretch: stretch,
                              icon: { BonusBadge(icon: .reroll, game: game, size: 24) },
                              tap: { game.toggleReroll($0) })
             SheetCircleTrack(slots: CleverLayout.extraDieTrackSlots,
                              used: game.state.extraDieUsed,
+                             earned: game.extraDiceEarned,
                              diameter: 19, ink: cleverInk, stretch: stretch,
                              icon: { BonusBadge(icon: .plusOne, game: game, size: 24) },
                              tap: { game.toggleExtraDie($0) })

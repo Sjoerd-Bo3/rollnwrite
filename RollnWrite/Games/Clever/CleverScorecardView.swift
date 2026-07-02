@@ -205,16 +205,20 @@ struct CleverSheetBoardView: View {
 
     private func headerBand(_ stretch: CGFloat) -> some View {
         VStack(spacing: 6 * stretch) {
-            SheetRoundsBar(rounds: 6, darkFrom: 4, cell: 30, ink: cleverInk, stretch: stretch) { r in
+            SheetRoundsBar(rounds: 6, darkFrom: 4, cell: 30, ink: cleverInk, stretch: stretch,
+                           crossed: game.state.roundsCrossed,
+                           tap: { game.toggleRound($0) }) { r in
                 cleverRoundBadge(r, game: game, size: 16)
             }
             SheetCircleTrack(slots: CleverLayout.rerollTrackSlots,
                              used: game.state.rerollUsed,
+                             earned: game.rerollsEarned,
                              diameter: 17, ink: cleverInk, stretch: stretch,
                              icon: { BonusBadge(icon: .reroll, game: game, size: 21) },
                              tap: { game.toggleReroll($0) })
             SheetCircleTrack(slots: CleverLayout.extraDieTrackSlots,
                              used: game.state.extraDieUsed,
+                             earned: game.extraDiceEarned,
                              diameter: 17, ink: cleverInk, stretch: stretch,
                              icon: { BonusBadge(icon: .plusOne, game: game, size: 21) },
                              tap: { game.toggleExtraDie($0) })
@@ -791,16 +795,20 @@ struct CleverListBoardView: View {
 
     private var tracksContent: some View {
         VStack(spacing: 10) {
-            SheetRoundsBar(rounds: 6, darkFrom: 4, cell: 42, ink: cleverInk) { r in
+            SheetRoundsBar(rounds: 6, darkFrom: 4, cell: 42, ink: cleverInk,
+                           crossed: game.state.roundsCrossed,
+                           tap: { game.toggleRound($0) }) { r in
                 cleverRoundBadge(r, game: game, size: 21)
             }
             SheetCircleTrack(slots: CleverLayout.rerollTrackSlots,
                              used: game.state.rerollUsed,
+                             earned: game.rerollsEarned,
                              diameter: 26, ink: cleverInk,
                              icon: { BonusBadge(icon: .reroll, game: game, size: 30) },
                              tap: { game.toggleReroll($0) })
             SheetCircleTrack(slots: CleverLayout.extraDieTrackSlots,
                              used: game.state.extraDieUsed,
+                             earned: game.extraDiceEarned,
                              diameter: 26, ink: cleverInk,
                              icon: { BonusBadge(icon: .plusOne, game: game, size: 30) },
                              tap: { game.toggleExtraDie($0) })
@@ -884,16 +892,20 @@ struct CleverEditorSheet: View {
         // The printed sheet's three scratch boxes are pen-and-paper artifacts
         // and are deliberately omitted (owner request) — rounds + tracks only.
         VStack(spacing: 10) {
-            SheetRoundsBar(rounds: 6, darkFrom: 4, cell: 42, ink: cleverInk) { r in
+            SheetRoundsBar(rounds: 6, darkFrom: 4, cell: 42, ink: cleverInk,
+                           crossed: game.state.roundsCrossed,
+                           tap: { game.toggleRound($0) }) { r in
                 cleverRoundBadge(r, game: game, size: 21)
             }
             SheetCircleTrack(slots: CleverLayout.rerollTrackSlots,
                              used: game.state.rerollUsed,
+                             earned: game.rerollsEarned,
                              diameter: 26, ink: cleverInk,
                              icon: { BonusBadge(icon: .reroll, game: game, size: 30) },
                              tap: { game.toggleReroll($0) })
             SheetCircleTrack(slots: CleverLayout.extraDieTrackSlots,
                              used: game.state.extraDieUsed,
+                             earned: game.extraDiceEarned,
                              diameter: 26, ink: cleverInk,
                              icon: { BonusBadge(icon: .plusOne, game: game, size: 30) },
                              tap: { game.toggleExtraDie($0) })

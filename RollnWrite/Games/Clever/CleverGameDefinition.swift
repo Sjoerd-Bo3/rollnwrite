@@ -59,6 +59,7 @@ func cleverRulesDocument() -> RulesDocument {
             ]),
             RulesSection(heading: "Bonuses & foxes", body: [
                 "Printed bonuses (re-roll, +1, extra cross, a coloured number) are earned as you mark spaces; apply them by tapping the granted space yourself. Bonuses can chain.",
+                "Tap a round number to cross it off as you play. The re-roll and +1 tracks count what you have earned — from crossed rounds 1–3 and from area bonuses — and only earned circles can be spent.",
                 "Each fox scores the value of your lowest-scoring area. The app detects foxes automatically and counts them for you.",
             ]),
             RulesSection(heading: "Game end & scoring", body: [

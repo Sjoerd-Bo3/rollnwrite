@@ -2497,6 +2497,54 @@
           }
         }
       }
+    },
+    "Tap a round number to cross it off as you play. The re-roll and +1 tracks count what you have earned — from crossed rounds 1–3 and from area bonuses — and only earned circles can be spent.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tik op een rondenummer om het af te strepen tijdens het spelen. De opnieuw-gooien- en +1-balken tellen wat je hebt verdiend — via afgestreepte rondes 1–3 en via vakbonussen — en alleen verdiende cirkels kun je gebruiken."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tippe auf eine Rundenzahl, um sie im Spielverlauf abzustreichen. Die Neu-würfeln- und +1-Leisten zählen, was du verdient hast — durch abgestrichene Runden 1–3 und durch Bereichsboni — und nur verdiente Kreise lassen sich einsetzen."
+          }
+        }
+      }
+    },
+    "Round %lld": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ronde %lld"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Runde %lld"
+          }
+        }
+      }
+    },
+    "not earned yet": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nog niet verdiend"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "noch nicht verdient"
+          }
+        }
+      }
     }
   }
 }
