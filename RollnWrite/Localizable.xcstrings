@@ -2897,6 +2897,102 @@
           }
         }
       }
+    },
+    "Add fox": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos toevoegen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuchs hinzufügen"
+          }
+        }
+      }
+    },
+    "Remove fox": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos verwijderen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuchs entfernen"
+          }
+        }
+      }
+    },
+    "Green die value": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waarde groene dobbelsteen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wert des grünen Würfels"
+          }
+        }
+      }
+    },
+    "Green top value": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groen — bovenste waarde"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grün — oberer Wert"
+          }
+        }
+      }
+    },
+    "Green bottom value": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groen — onderste waarde"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grün — unterer Wert"
+          }
+        }
+      }
+    },
+    "circled": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "omcirkeld"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "eingekreist"
+          }
+        }
+      }
     }
   }
 }
