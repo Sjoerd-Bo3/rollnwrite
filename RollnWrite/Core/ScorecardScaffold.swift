@@ -15,6 +15,24 @@
 
 import SwiftUI
 
+/// Where a board should park leftover height when it gets more space than its
+/// content needs. Single player keeps the default `.center` (CLAUDE.md:
+/// "leftover height centres the board"); the two-player PORTRAIT stack sets
+/// `.bottom` on both halves so — after the opponent's 180° rotation — each
+/// board hugs its player's table edge and the slack pools in the middle,
+/// like the neutral zone of a real table. Boards opt in by reading
+/// `\.boardAnchor` into their fill frame; views that ignore it are unaffected.
+private struct BoardAnchorKey: EnvironmentKey {
+    static let defaultValue: Alignment = .center
+}
+
+public extension EnvironmentValues {
+    var boardAnchor: Alignment {
+        get { self[BoardAnchorKey.self] }
+        set { self[BoardAnchorKey.self] = newValue }
+    }
+}
+
 public struct ScorecardScaffold<Board: View, Accessory: View>: View {
     private let title: String
     private let rules: RulesDocument
@@ -100,8 +118,14 @@ public struct ScorecardScaffold<Board: View, Accessory: View>: View {
                     }
                 } else {
                     VStack(spacing: 6) {
+                        // `.bottom` on BOTH: the opponent's content sits at the
+                        // bottom of its half and the 180° rotation flips it to
+                        // the screen's top edge — so each board ends up at its
+                        // player's edge with the slack pooled in the middle.
                         opponent
+                            .environment(\.boardAnchor, .bottom)
                         board
+                            .environment(\.boardAnchor, .bottom)
                     }
                 }
             }
