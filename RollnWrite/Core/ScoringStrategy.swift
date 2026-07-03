@@ -60,6 +60,17 @@ public protocol Scoreboard: ObservableObject {
     var canUndo: Bool { get }
     /// Reverse the most recent action.
     func undo()
+    /// Whether there is an undone action available to redo.
+    var canRedo: Bool { get }
+    /// Re-apply the most recently undone action.
+    func redo()
     /// Clear the card back to a fresh game.
     func reset()
+}
+
+/// Default no-op redo for conformers that don't (yet) implement it, so adding
+/// `canRedo`/`redo()` to the protocol never breaks an existing `Scoreboard`.
+extension Scoreboard {
+    public var canRedo: Bool { false }
+    public func redo() {}
 }

@@ -34,6 +34,24 @@ public final class MixxGame: ObservableObject, Scoreboard {
     @Published private var stateA = MixxState()
     @Published private var stateB = MixxState()
 
+    /// Actions undone via `undo()`, most-recently-undone last, so `redo()` can
+    /// re-apply them in LIFO order — one stack per board, mirroring `stateA`/
+    /// `stateB`, since undo/redo/reset apply to the *currently selected* board.
+    /// Deliberately NOT persisted (`MixxState` / `Codable` is untouched) and
+    /// NOT part of either state — redo is an in-memory, per-session
+    /// convenience, like most editors. Any new forward move (via
+    /// `recordAction`) clears the current board's stack.
+    private var redoStackA: [MixxAction] = []
+    private var redoStackB: [MixxAction] = []
+
+    /// Redo stack of the board currently in play — mirrors `state`.
+    private var redoStack: [MixxAction] {
+        get { board == .variantA ? redoStackA : redoStackB }
+        set {
+            if board == .variantA { redoStackA = newValue } else { redoStackB = newValue }
+        }
+    }
+
     private let scoring: ScoringStrategy
     private let persistencePrefix: String
 
@@ -104,7 +122,7 @@ public final class MixxGame: ObservableObject, Scoreboard {
         }
         var s = state
         s.rows[rowIndex] = r
-        s.history.append(.mark(row: rowIndex, index: index, didLock: didLock))
+        recordAction(&s, .mark(row: rowIndex, index: index, didLock: didLock))
         state = s
         save()
     }
@@ -119,7 +137,7 @@ public final class MixxGame: ObservableObject, Scoreboard {
         guard canAddPenalty() else { return }
         var s = state
         s.penalties += 1
-        s.history.append(.penalty)
+        recordAction(&s, .penalty)
         state = s
         save()
     }
@@ -137,7 +155,7 @@ public final class MixxGame: ObservableObject, Scoreboard {
         guard canConcedeRow(rowIndex) else { return }
         var s = state
         s.rows[rowIndex].locked = true
-        s.history.append(.concede(row: rowIndex))
+        recordAction(&s, .concede(row: rowIndex))
         state = s
         save()
     }
@@ -154,7 +172,7 @@ public final class MixxGame: ObservableObject, Scoreboard {
         guard canFinishManually else { return }
         var s = state
         s.manuallyFinished = true
-        s.history.append(.finish)
+        recordAction(&s, .finish)
         state = s
         save()
     }
@@ -217,13 +235,52 @@ public final class MixxGame: ObservableObject, Scoreboard {
             s.manuallyFinished = false
         }
         state = s
+        redoStack.append(last)
         save()
+    }
+
+    public var canRedo: Bool { !redoStack.isEmpty }
+
+    /// `true` while `redo()` is re-applying an action through its original
+    /// mutator, so `recordAction` (called by that mutator) knows NOT to treat
+    /// it as a fresh move and clear the rest of the current board's redo stack.
+    private var isRedoing = false
+
+    /// Re-apply the most recently undone action (on the current board) through
+    /// the SAME mutator a fresh move takes, so scores/locks/derived state stay
+    /// exact — never re-implement the effect here.
+    public func redo() {
+        guard let next = redoStack.popLast() else { return }
+        isRedoing = true
+        switch next {
+        case let .mark(rowIndex, index, _):
+            mark(rowIndex, index)
+        case .penalty:
+            addPenalty()
+        case let .concede(rowIndex):
+            concedeRow(rowIndex)
+        case .finish:
+            finishGame()
+        }
+        isRedoing = false
     }
 
     /// Clears only the currently selected board.
     public func reset() {
         state = MixxState()
+        redoStack = []
         save()
+    }
+
+    // MARK: - Mutation helpers
+
+    /// Appends a new action to `s`'s history. Any FORWARD move — i.e. every
+    /// call site except `redo()` re-applying an undone one — invalidates the
+    /// current board's redo stack (standard editor semantics: making a new
+    /// move after undoing forecloses the redone future).
+    private func recordAction(_ s: inout MixxState, _ action: MixxAction) {
+        s.history.append(action)
+        if !isRedoing { redoStack = [] }
     }
 
     // MARK: - Persistence
