@@ -3105,6 +3105,54 @@
           }
         }
       }
+    },
+    "Looking for dice…": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dobbelstenen zoeken…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Würfel werden gesucht…"
+          }
+        }
+      }
+    },
+    "%lld dice found — tap to adjust": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld dobbelstenen gevonden — tik om aan te passen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Würfel gefunden — zum Anpassen tippen"
+          }
+        }
+      }
+    },
+    "Tap each die in the photo to sample its colour": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tik op elke dobbelsteen in de foto om de kleur af te lezen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tippe auf jeden Würfel im Foto, um seine Farbe abzulesen"
+          }
+        }
+      }
     }
   }
 }
