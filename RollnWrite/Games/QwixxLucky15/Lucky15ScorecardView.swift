@@ -191,6 +191,11 @@ struct Lucky15BoardView: View {
             BoardControlButton("arrow.uturn.backward", size: b) { game.undo() }
                 .disabled(!game.canUndo)
                 .opacity(game.canUndo ? 1 : 0.4)
+                .accessibilityLabel("Undo")
+            BoardControlButton("arrow.uturn.forward", size: b) { game.redo() }
+                .disabled(!game.canRedo)
+                .opacity(game.canRedo ? 1 : 0.4)
+                .accessibilityLabel("Redo")
             BoardControlButton("trash", size: b) { confirmReset = true }
             BoardControlButton("flag.checkered", size: b) { confirmFinish = true }
                 .disabled(game.isGameOver)

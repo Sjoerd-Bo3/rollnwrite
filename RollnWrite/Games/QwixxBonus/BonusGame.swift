@@ -26,6 +26,13 @@ public final class BonusGame: ObservableObject, Scoreboard {
 
     @Published public private(set) var state = BonusState()
 
+    /// Actions undone via `undo()`, most-recently-undone last, so `redo()` can
+    /// re-apply them in LIFO order. Deliberately NOT persisted (`BonusState` /
+    /// `Codable` is untouched) and NOT part of `state` — redo is an in-memory,
+    /// per-session convenience, like most editors. Any new forward move (via
+    /// `recordAction`) clears it, matching standard undo/redo semantics.
+    private var redoStack: [BonusAction] = []
+
     private let scoring: ScoringStrategy
     private let persistenceKey: String
 
@@ -106,8 +113,7 @@ public final class BonusGame: ObservableObject, Scoreboard {
             forfeited = forfeitBarFields(for: color)
         }
 
-        state.history.append(.color(color, index: index, didLock: didLock,
-                                     bar: barAdvance, forfeited: forfeited))
+        recordAction(.color(color, index: index, didLock: didLock, bar: barAdvance, forfeited: forfeited))
         save()
     }
 
@@ -120,7 +126,7 @@ public final class BonusGame: ObservableObject, Scoreboard {
     public func addPenalty() {
         guard canAddPenalty() else { return }
         state.penalties += 1
-        state.history.append(.penalty)
+        recordAction(.penalty)
         save()
     }
 
@@ -141,7 +147,7 @@ public final class BonusGame: ObservableObject, Scoreboard {
         // A conceded colour is completed too, so its remaining bonus-bar fields
         // are forfeited immediately — same as a self-lock.
         let forfeited = forfeitBarFields(for: color)
-        state.history.append(.concede(color, forfeited: forfeited))
+        recordAction(.concede(color, forfeited: forfeited))
         save()
     }
 
@@ -169,7 +175,7 @@ public final class BonusGame: ObservableObject, Scoreboard {
     public func finishGame() {
         guard canFinishManually else { return }
         state.manuallyFinished = true
-        state.history.append(.finish)
+        recordAction(.finish)
         save()
     }
 
@@ -243,15 +249,53 @@ public final class BonusGame: ObservableObject, Scoreboard {
         case .finish:
             state.manuallyFinished = false
         }
+        redoStack.append(last)
         save()
+    }
+
+    public var canRedo: Bool { !redoStack.isEmpty }
+
+    /// `true` while `redo()` is re-applying an action through its original
+    /// mutator, so `recordAction` (called by that mutator) knows NOT to treat
+    /// it as a fresh move and clear the rest of the redo stack.
+    private var isRedoing = false
+
+    /// Re-apply the most recently undone action through the SAME mutator a
+    /// fresh move takes, so scores/locks/derived state (including the bonus
+    /// bar's earned/forfeited fields) stay exact — never re-implement the
+    /// effect here.
+    public func redo() {
+        guard let next = redoStack.popLast() else { return }
+        isRedoing = true
+        switch next {
+        case let .color(color, index, _, _, _):
+            markColor(color, index)
+        case .penalty:
+            addPenalty()
+        case let .concede(color, _):
+            concedeRow(color)
+        case .finish:
+            finishGame()
+        }
+        isRedoing = false
     }
 
     public func reset() {
         state = BonusState()
+        redoStack = []
         save()
     }
 
     // MARK: - Mutation helpers
+
+    /// Appends a new action to the history. Any FORWARD move — i.e. every call
+    /// site except `redo()` re-applying an undone one — invalidates the redo
+    /// stack (standard editor semantics: making a new move after undoing
+    /// forecloses the redone future).
+    private func recordAction(_ action: BonusAction) {
+        state.history.append(action)
+        if !isRedoing { redoStack = [] }
+    }
 
     private func setRow(_ r: ColorRow) {
         switch r.color {
