@@ -1385,6 +1385,9 @@ struct C3BrownRow: View {
                 Text("\(i + 1)")
                     .font(.system(size: cell * 0.2, weight: .heavy, design: .rounded))
                     .foregroundStyle(.white.opacity(0.9))
+                    // Two digits ("10"…"12") must never wrap into a stack.
+                    .lineLimit(1)
+                    .fixedSize()
                 SheetPointsBadge(value: Clever3Layout.brownScale[i + 1], tint: tint.color,
                                  size: cell * 0.46,
                                  highlighted: game.state.brown.count == i + 1)

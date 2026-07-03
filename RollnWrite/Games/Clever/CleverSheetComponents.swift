@@ -343,7 +343,11 @@ struct SheetRoundsBar<Badge: View>: View {
                                    value: crossed.contains(r))
                     }
                     .buttonStyle(.plain)
-                    .disabled(tap == nil)
+                    // Display-only bars (tap == nil) must still render at full
+                    // strength — `.disabled` would dim the printed tiles (the
+                    // washed-out rounds bars the device survey flagged on
+                    // Clever 2/4) — so block interaction without the styling.
+                    .allowsHitTesting(tap != nil)
                     .accessibilityLabel(Text("Round \(r + 1)"))
                     .accessibilityValue(crossed.contains(r) ? "marked" : "available")
                     badge(r)

@@ -490,8 +490,11 @@ struct C4GreyPanel: View {
         VStack(spacing: gap * stretch) {
             HStack(spacing: gap) {
                 ForEach(cols, id: \.self) { c in
+                    // Ink numerals, not the area tint: the grey area's colour
+                    // is near-white, which made these badges white-on-white
+                    // (unreadable in the device survey).
                     SheetPointsBadge(value: Clever4Layout.greyColumnValues[c],
-                                     tint: tint.color, size: cell * 0.55,
+                                     tint: cleverInk, size: cell * 0.55,
                                      highlighted: columnFilled(c))
                         .frame(width: cell)
                 }
