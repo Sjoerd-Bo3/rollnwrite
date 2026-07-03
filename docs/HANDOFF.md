@@ -34,9 +34,13 @@ Keep this file updated at the end of significant sessions.
    `release/1.0`, verify the Qwixx-only candidate in TestFlight, then
    attach + submit in App Store Connect (docs/APP_STORE.md §7).
 2. **Clever v3 rollout review**: check all four Clever boards on
-   TestFlight (portrait sheet, landscape reflow, list toggle, editors);
-   photograph the Doppelt so clever pad's yellow area so the edge
-   bonuses can be added.
+   TestFlight (portrait sheet, landscape reflow, list toggle, editors).
+   Clever 1 + 2 have had a pad-fidelity pass against the owner's photos
+   of the physical sheets (round-4 badge, arrow lattices, yellow edge
+   bonuses, ?-glyph audit, track end-bonuses, readable value dialogs);
+   Clever 3 + 4 still only match the transcribed layout data — pad
+   photos of those two would enable the same pass. Idea backlog from
+   the owner is filed as issues #54–#60.
 
 ## Open issues backlog
 

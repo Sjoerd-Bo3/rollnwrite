@@ -47,6 +47,14 @@ public enum BonusIcon: Equatable {
     case mark(CleverArea)      // "X" → cross a box in this area
     case number(CleverArea, Int) // coloured number → write this number in that area
     case fox
+    /// Round 4's printed badge: a generic (non-area) "✗ | 6" choice — cross
+    /// any box OR write a 6, player's choice. Printed as two small circles
+    /// side by side (both black, unlike `.mark`/`.number` which tint to an
+    /// area), split by a thin divider. Layout/print data only — like every
+    /// other `BonusIcon` case, it is a manual-apply bonus (see `CleverGame`
+    /// and `CleverLayout.roundBonuses`, which still map round 4 to `nil` for
+    /// the reroll/+1 derivations — this case never appears in that array).
+    case crossOrSix
 }
 
 // MARK: - Exact official layout
@@ -114,8 +122,15 @@ public enum CleverLayout {
 
     public static let rowLength = 11
 
-    /// Start-of-round bonuses (rounds 1–4; rounds 5–6 have none).
+    /// Start-of-round bonuses that feed the reroll/+1 earned counts (rounds
+    /// 1–3 only; round 4's printed badge is `roundFourBonus` below — it is
+    /// NEITHER a reroll NOR a +1, so it must stay `nil` here, or
+    /// `CleverGame.roundGrantCount` would start counting it as one).
     public static let roundBonuses: [BonusIcon?] = [.reroll, .plusOne, .reroll, nil, nil, nil]
+    /// Round 4's printed "✗ | 6" badge — a manual-apply choice bonus, kept
+    /// OUT of `roundBonuses` on purpose (see above). Display-only, wired up by
+    /// `cleverRoundBadge`.
+    public static let roundFourBonus: BonusIcon = .crossOrSix
     public static let rerollTrackSlots = 7
     public static let extraDieTrackSlots = 7
 }
