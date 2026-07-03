@@ -20,6 +20,13 @@ public final class QwixxGame: ObservableObject, Scoreboard {
 
     @Published public private(set) var state = QwixxState()
 
+    /// Actions undone via `undo()`, most-recently-undone last, so `redo()` can
+    /// re-apply them in LIFO order. Deliberately NOT persisted (`QwixxState` /
+    /// `Codable` is untouched) and NOT part of `state` — redo is an in-memory,
+    /// per-session convenience, like most editors. Any new forward move (via
+    /// `recordAction`) clears it, matching standard undo/redo semantics.
+    private var redoStack: [GameAction] = []
+
     private let scoring: ScoringStrategy
     private let persistenceKey: String
 
@@ -88,7 +95,7 @@ public final class QwixxGame: ObservableObject, Scoreboard {
             didLock = true
         }
         setRow(r)
-        state.history.append(.color(color, index: index, didLock: didLock))
+        recordAction(.color(color, index: index, didLock: didLock))
         save()
     }
 
@@ -115,7 +122,7 @@ public final class QwixxGame: ObservableObject, Scoreboard {
         var b = bonus(id)
         b.marks.insert(index)
         setBonus(b)
-        state.history.append(.bonus(id, index: index))
+        recordAction(.bonus(id, index: index))
         save()
     }
 
@@ -128,7 +135,7 @@ public final class QwixxGame: ObservableObject, Scoreboard {
     public func addPenalty() {
         guard canAddPenalty() else { return }
         state.penalties += 1
-        state.history.append(.penalty)
+        recordAction(.penalty)
         save()
     }
 
@@ -146,7 +153,7 @@ public final class QwixxGame: ObservableObject, Scoreboard {
         var r = row(for: color)
         r.locked = true
         setRow(r)
-        state.history.append(.concede(color))
+        recordAction(.concede(color))
         save()
     }
 
@@ -161,7 +168,7 @@ public final class QwixxGame: ObservableObject, Scoreboard {
     public func finishGame() {
         guard canFinishManually else { return }
         state.manuallyFinished = true
-        state.history.append(.finish)
+        recordAction(.finish)
         save()
     }
 
@@ -216,6 +223,7 @@ public final class QwixxGame: ObservableObject, Scoreboard {
 
     /// Reverse the most recent action. Strictly LIFO so a bonus mark is always
     /// undone before the colour mark that authorised it — state stays legal.
+    /// The undone action moves onto the (in-memory only) redo stack.
     public func undo() {
         guard let last = state.history.popLast() else { return }
         switch last {
@@ -237,15 +245,54 @@ public final class QwixxGame: ObservableObject, Scoreboard {
         case .finish:
             state.manuallyFinished = false
         }
+        redoStack.append(last)
         save()
+    }
+
+    public var canRedo: Bool { !redoStack.isEmpty }
+
+    /// `true` while `redo()` is re-applying an action through its original
+    /// mutator, so `recordAction` (called by that mutator) knows NOT to treat
+    /// it as a fresh move and clear the rest of the redo stack.
+    private var isRedoing = false
+
+    /// Re-apply the most recently undone action through the SAME mutator a
+    /// fresh move takes, so scores/locks/derived state stay exact — never
+    /// re-implement the effect here.
+    public func redo() {
+        guard let next = redoStack.popLast() else { return }
+        isRedoing = true
+        switch next {
+        case let .color(color, index, _):
+            markColor(color, index)
+        case let .bonus(id, index):
+            markBonus(id, index)
+        case .penalty:
+            addPenalty()
+        case let .concede(color):
+            concedeRow(color)
+        case .finish:
+            finishGame()
+        }
+        isRedoing = false
     }
 
     public func reset() {
         state = QwixxState()
+        redoStack = []
         save()
     }
 
     // MARK: - Mutation helpers
+
+    /// Appends a new action to the history. Any FORWARD move — i.e. every call
+    /// site except `redo()` re-applying an undone one — invalidates the redo
+    /// stack (standard editor semantics: making a new move after undoing
+    /// forecloses the redone future).
+    private func recordAction(_ action: GameAction) {
+        state.history.append(action)
+        if !isRedoing { redoStack = [] }
+    }
 
     private func setRow(_ r: ColorRow) {
         switch r.color {

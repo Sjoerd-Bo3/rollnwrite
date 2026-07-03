@@ -25,6 +25,14 @@ public final class ConnectedGame: ObservableObject, Scoreboard {
 
     @Published public private(set) var state = ConnectedState()
 
+    /// Actions undone via `undo()`, most-recently-undone last, so `redo()` can
+    /// re-apply them in LIFO order. Deliberately NOT persisted
+    /// (`ConnectedState` / `Codable` is untouched) and NOT part of `state` —
+    /// redo is an in-memory, per-session convenience, like most editors. Any
+    /// new forward move (via `recordAction`) clears it, matching standard
+    /// undo/redo semantics.
+    private var redoStack: [ConnectedAction] = []
+
     private let scoring: ScoringStrategy
     private let persistenceKey: String
 
@@ -112,7 +120,7 @@ public final class ConnectedGame: ObservableObject, Scoreboard {
             }
         }
 
-        state.history.append(.color(color, index: index, didLock: didLock, auto: auto))
+        recordAction(.color(color, index: index, didLock: didLock, auto: auto))
         save()
     }
 
@@ -125,7 +133,7 @@ public final class ConnectedGame: ObservableObject, Scoreboard {
     public func addPenalty() {
         guard canAddPenalty() else { return }
         state.penalties += 1
-        state.history.append(.penalty)
+        recordAction(.penalty)
         save()
     }
 
@@ -143,7 +151,7 @@ public final class ConnectedGame: ObservableObject, Scoreboard {
         var r = row(for: color)
         r.locked = true
         setRow(r)
-        state.history.append(.concede(color))
+        recordAction(.concede(color))
         save()
     }
 
@@ -158,7 +166,7 @@ public final class ConnectedGame: ObservableObject, Scoreboard {
     public func finishGame() {
         guard canFinishManually else { return }
         state.manuallyFinished = true
-        state.history.append(.finish)
+        recordAction(.finish)
         save()
     }
 
@@ -229,15 +237,54 @@ public final class ConnectedGame: ObservableObject, Scoreboard {
         case .finish:
             state.manuallyFinished = false
         }
+        redoStack.append(last)
         save()
+    }
+
+    public var canRedo: Bool { !redoStack.isEmpty }
+
+    /// `true` while `redo()` is re-applying an action through its original
+    /// mutator, so `recordAction` (called by that mutator) knows NOT to treat
+    /// it as a fresh move and clear the rest of the redo stack.
+    private var isRedoing = false
+
+    /// Re-apply the most recently undone action through the SAME mutator a
+    /// fresh move takes, so scores/locks/derived state stay exact — never
+    /// re-implement the effect here. `markColor` re-derives the chain partner
+    /// itself (deterministic from `ConnectedLayout` + current marks, both of
+    /// which `undo()` restored), so it reproduces the same `auto` co-mark.
+    public func redo() {
+        guard let next = redoStack.popLast() else { return }
+        isRedoing = true
+        switch next {
+        case let .color(color, index, _, _):
+            markColor(color, index)
+        case .penalty:
+            addPenalty()
+        case let .concede(color):
+            concedeRow(color)
+        case .finish:
+            finishGame()
+        }
+        isRedoing = false
     }
 
     public func reset() {
         state = ConnectedState()
+        redoStack = []
         save()
     }
 
     // MARK: - Mutation helpers
+
+    /// Appends a new action to the history. Any FORWARD move — i.e. every call
+    /// site except `redo()` re-applying an undone one — invalidates the redo
+    /// stack (standard editor semantics: making a new move after undoing
+    /// forecloses the redone future).
+    private func recordAction(_ action: ConnectedAction) {
+        state.history.append(action)
+        if !isRedoing { redoStack = [] }
+    }
 
     private func setRow(_ r: ColorRow) {
         switch r.color {

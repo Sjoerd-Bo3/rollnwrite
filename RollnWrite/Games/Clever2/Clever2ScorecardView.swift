@@ -1050,18 +1050,28 @@ struct Clever2YellowGrid: View {
 
     private func yellowCell(index: Int, value: Int, tint: DiceColor) -> some View {
         let mark = game.yellowState(index)
-        let undoable = mark != .empty && game.isLastYellow(index)
+        let legal = game.canAdvanceYellow(index)
+        // Circled-and-crossable always wins: the upgrade tap must never be
+        // shadowed by tap-to-undo just because circling was the last move.
+        let upgradesToCross = mark == .circled && legal
+        let undoable = !upgradesToCross && mark != .empty && game.isLastYellow(index)
         return Clever2YellowCell(
             label: "\(value)",
             tint: tint.color,
             ink: cleverInk,
             mark: mark,
-            legal: game.canAdvanceYellow(index),
+            legal: legal,
             undoable: undoable,
             size: cell,
             height: cell * stretch
         ) {
-            if undoable { game.undo() } else { game.advanceYellow(index) }
+            if upgradesToCross {
+                game.advanceYellow(index)
+            } else if undoable {
+                game.undo()
+            } else if legal {
+                game.advanceYellow(index)
+            }
         }
     }
 }

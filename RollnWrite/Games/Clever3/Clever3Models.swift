@@ -97,31 +97,34 @@ public enum Clever3Layout {
 
     /// Blue ±1 track (the purple band). Position index 0 = innermost (value 3),
     /// 5 = outermost (value 22), per side. Centre 7 grants a reroll.
-    /// Left side bonuses (idx→icon): 5:+1, 4:?green, 2:?yellow, 1:extraDie.
-    /// Right side bonuses (idx→icon): 1:reroll, 2:?orange, 4:?blue, 5:fox.
+    /// Left side bonuses (idx→icon), verified against the official score sheet
+    /// (Schmidt Spiele art. 49384, "BONI" composite render): 5:+1, 4:?pink,
+    /// 2:?yellow, 1:extraDie (Zahlen-Joker).
+    /// Right side bonuses (idx→icon): 1:reroll, 2:?brown, 4:?turquoise, 5:fox.
     public static let blueLeftBonus: [Int: C3Bonus] = [
         5: .plusOne,
-        4: .pick(.yellow),
+        4: .pick(.pink),
         2: .pick(.yellow),
         1: .extraDie,
     ]
     public static let blueRightBonus: [Int: C3Bonus] = [
         1: .reroll,
         2: .pick(.brown),
-        4: .pick(.blue),
+        4: .pick(.turquoise),
         // idx 5 = fox (manual stepper) → omitted
     ]
     public static let blueCenterBonus: C3Bonus = .reroll
 
     /// Brown row of 12. Icons sit between adjacent cells; we attach each to the
     /// later cell, so the bonus fires when that cell is crossed (you reach it).
-    /// 1:extraDie, 2:?green, 4:reroll, 5:?blue, 7:+1, 8:?purple, 10:?yellow,
-    /// 11:fox.
+    /// Verified against the official score sheet (art. 49384, "BONI" composite
+    /// render): 1:extraDie, 2:?pink, 4:reroll, 5:?turquoise, 7:+1, 8:?blue,
+    /// 10:?yellow, 11:fox.
     public static let brownBonus: [Int: C3Bonus] = [
         1: .extraDie,
-        2: .pick(.yellow),
+        2: .pick(.pink),
         4: .reroll,
-        5: .pick(.blue),
+        5: .pick(.turquoise),
         7: .plusOne,
         8: .pick(.blue),
         10: .pick(.yellow),
@@ -129,8 +132,9 @@ public enum Clever3Layout {
     ]
 
     /// Pink row of 11. Icons sit between adjacent cells; attach to the later cell.
-    /// 1:reroll, 2:?blue, 3:+1, 4:extraDie, 5:?yellow, 6:?orange, 7:reroll,
-    /// 8:fox, 9:?purple, 10:?blue.
+    /// Verified against the official score sheet (art. 49384, "BONI" composite
+    /// render): 1:reroll, 2:?blue, 3:+1, 4:extraDie, 5:?yellow, 6:?brown,
+    /// 7:reroll, 8:fox, 9:?blue, 10:?turquoise.
     public static let pinkBonus: [Int: C3Bonus] = [
         1: .reroll,
         2: .pick(.blue),
@@ -141,7 +145,7 @@ public enum Clever3Layout {
         7: .reroll,
         // 8 = fox (manual stepper) → omitted
         9: .pick(.blue),
-        10: .pick(.blue),
+        10: .pick(.turquoise),
     ]
 }
 
