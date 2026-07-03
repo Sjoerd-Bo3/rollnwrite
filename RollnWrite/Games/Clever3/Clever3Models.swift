@@ -91,23 +91,31 @@ public enum Clever3Layout {
     // all surface as advisory strings. Foxes stay the manual stepper and are NOT
     // listed here (they would double-count against the stepper).
 
-    /// Yellow grid: KNOWN TRIGGER-GRANULARITY GAP (flagged, not fixed here —
-    /// `Clever3Game.swift` is read-only). The official sheet prints ONE badge
-    /// under EACH of the 6 numbered cells on rows I/II's divider (confirmed
-    /// against the sheet: row I = reroll, joker, ?green, +1, ?blue, fox; row
-    /// II = joker, ?blue, ?purple, ?orange, wild-?, +1) — i.e. each bonus
-    /// should fire the moment THAT specific numbered cell is crossed
-    /// (per-cell), the same idiom already used correctly for the blue track/
-    /// brown/pink cells below. The engine instead only fires `.yellowRow(r)`
-    /// once the ENTIRE row (all 6 cells) is crossed, collapsing 6 badges into
-    /// 1 "representative" (its rightmost icon) per row. This under-reports
-    /// bonuses whenever a row is completed by crossing its cells out of
-    /// numeric order, or is never fully completed at all. See the follow-up
-    /// issue for a per-cell fix (would need a `[row][col]` bonus map here and
-    /// a per-cell trigger in `Clever3Game.completedTriggers()`).
-    public static let yellowRowBonus: [Int: C3Bonus] = [
-        0: .fox,            // row 0 divider, rightmost = fox  (but fox via stepper)
-        1: .plusOne,        // row 1 divider, rightmost = +1
+    /// Yellow grid: the official sheet prints ONE badge under EACH of the 6
+    /// numbered cells on rows I/II's divider (pixel-verified against
+    /// `C3SheetArt.yellowDividerBonuses`: row I = reroll, joker, ?green, +1,
+    /// ?blue, fox; row II = joker, ?blue, ?purple, ?orange, wild-?, +1), so
+    /// each bonus fires the moment THAT specific numbered cell is crossed
+    /// (per-cell) — the same idiom already used for the blue track/brown/pink
+    /// cells below. Keyed `[row: [col: C3Bonus]]`; row 0 col 5 and row 1 col 5
+    /// are fox badges, omitted here (foxes stay the manual stepper).
+    public static let yellowCellBonus: [Int: [Int: C3Bonus]] = [
+        0: [
+            0: .reroll,
+            1: .extraDie,       // joker — closest available C3Bonus case
+            2: .pick(.pink),    // ? green
+            3: .plusOne,
+            4: .pick(.turquoise), // ? blue
+            // col 5 = fox (manual stepper) → omitted
+        ],
+        1: [
+            0: .extraDie,       // joker — closest available C3Bonus case
+            1: .pick(.turquoise), // ? blue
+            2: .pick(.blue),    // ? purple
+            3: .pick(.brown),   // ? orange
+            4: .wild,           // wild-?
+            5: .plusOne,
+        ],
     ]
 
     /// Turquoise (the 6×6 numbered grid) — row-end bonuses (right of rows 0–4)

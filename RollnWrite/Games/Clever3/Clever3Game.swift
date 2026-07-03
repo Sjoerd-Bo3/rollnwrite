@@ -130,7 +130,7 @@ public final class Clever3Game: ObservableObject, Scoreboard {
     /// Identity of a bonus-granting completion. Compared "before" vs "after" each
     /// mark; never persisted, so undo (clearing a cell) re-arms it for next time.
     private enum Trigger: Hashable {
-        case yellowRow(Int)
+        case yellowCell(row: Int, col: Int)
         case turquoiseRow(Int)
         case turquoiseCol(Int)
         case blueLeft(Int)
@@ -141,9 +141,11 @@ public final class Clever3Game: ObservableObject, Scoreboard {
 
     private func completedTriggers() -> Set<Trigger> {
         var done = Set<Trigger>()
-        // Yellow rows: all 6 cells of a row crossed.
-        for r in 0..<Clever3Layout.yellowRows where yellowMarks(inRow: r) == Clever3Layout.yellowCols {
-            done.insert(.yellowRow(r))
+        // Yellow cells: each numbered cell fires its own bonus once crossed.
+        for i in state.yellow {
+            let row = i / Clever3Layout.yellowCols
+            let col = i % Clever3Layout.yellowCols
+            done.insert(.yellowCell(row: row, col: col))
         }
         // Turquoise rows & columns fully crossed.
         for r in 0..<Clever3Layout.turquoiseRows where turquoiseMarks(inRow: r) == Clever3Layout.turquoiseCols {
@@ -167,7 +169,7 @@ public final class Clever3Game: ObservableObject, Scoreboard {
 
     private func bonus(for t: Trigger) -> C3Bonus? {
         switch t {
-        case let .yellowRow(r):    return Clever3Layout.yellowRowBonus[r]
+        case let .yellowCell(row, col): return Clever3Layout.yellowCellBonus[row]?[col]
         case let .turquoiseRow(r): return Clever3Layout.turquoiseRowBonus[r]
         case let .turquoiseCol(c): return Clever3Layout.turquoiseColBonus[c]
         case let .blueLeft(i):     return Clever3Layout.blueLeftBonus[i]
@@ -189,13 +191,13 @@ public final class Clever3Game: ObservableObject, Scoreboard {
 
     private func order(_ t: Trigger) -> Int {
         switch t {
-        case let .yellowRow(r):    return 0 + r
-        case let .turquoiseRow(r): return 10 + r
-        case let .turquoiseCol(c): return 20 + c
-        case let .blueLeft(i):     return 30 + i
-        case let .blueRight(i):    return 40 + i
-        case let .brownCell(i):    return 50 + i
-        case let .pinkCell(i):     return 70 + i
+        case let .yellowCell(row, col): return row * Clever3Layout.yellowCols + col
+        case let .turquoiseRow(r): return 100 + r
+        case let .turquoiseCol(c): return 110 + c
+        case let .blueLeft(i):     return 120 + i
+        case let .blueRight(i):    return 130 + i
+        case let .brownCell(i):    return 140 + i
+        case let .pinkCell(i):     return 150 + i
         }
     }
 
