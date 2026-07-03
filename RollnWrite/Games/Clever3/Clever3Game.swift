@@ -210,11 +210,11 @@ public final class Clever3Game: ObservableObject, Scoreboard {
 
     public func score(for area: Clever3Area) -> Int {
         switch area {
-        case .yellow:    return yellowScore
-        case .turquoise: return turquoiseScore
-        case .blue:      return blueScore
-        case .brown:     return brownScore
-        case .pink:      return pinkScore
+        case .yellow: return yellowScore
+        case .blue:   return turquoiseScore
+        case .purple: return blueScore
+        case .orange: return brownScore
+        case .green:  return pinkScore
         }
     }
 

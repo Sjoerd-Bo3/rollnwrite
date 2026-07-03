@@ -10,13 +10,13 @@
 //  • SHEET (default) — an orientation switch:
 //    – PORTRAIT: a faithful one-screen miniature of the official Clever hoch
 //      Drei score sheet (Schmidt Spiele art. 49384): header (1–6 rounds bar +
-//      the three printed action tracks), yellow | turquoise side by side, the
-//      full-width blue ±1 band, the brown row, the pink row, the manual fox
-//      stepper and the totals strip. Tapping an area's chrome (outside its
-//      cells) opens a paged editor (`SheetEditorPager`).
+//      the three printed action tracks), yellow | blue side by side, the
+//      full-width purple ±1 band, the orange row, the green row, the manual
+//      fox stepper and the totals strip. Tapping an area's chrome (outside
+//      its cells) opens a paged editor (`SheetEditorPager`).
 //    – LANDSCAPE: a direct-tap reflow — a vertical rounds rail, the yellow +
-//      turquoise grids stacked in a left column (with the fox stepper), and
-//      the action tracks + blue/brown/pink bands filling the right column at
+//      blue grids stacked in a left column (with the fox stepper), and
+//      the action tracks + purple/orange/green bands filling the right column at
 //      large cell sizes. No editor modal and no totals strip here (owner
 //      precedent — scoring only matters at game end).
 //  • LIST — every area stacked in ONE vertical scrolling list of full-size
@@ -47,7 +47,7 @@ enum Clever3BoardLayout: String {
 /// The tappable regions of the sheet — one editor page each. Sheet order:
 /// the five areas, then the rounds / action-track header.
 enum C3SheetSection: String, CaseIterable, Identifiable, Hashable {
-    case yellow, turquoise, blue, brown, pink, tracks
+    case yellow, blue, purple, orange, green, tracks
 
     var id: String { rawValue }
 
@@ -92,36 +92,36 @@ enum C3SheetArt {
     /// pick — confirmed by its transparent/ring rendering vs the solid
     /// yellow-filled pick badges elsewhere on the sheet.
     static let yellowDividerBonuses: [[C3BonusIcon]] = [
-        [.reroll, .joker, .pick(.pink), .extraDie, .pick(.turquoise), .fox],
-        [.joker, .pick(.turquoise), .pick(.blue), .pick(.brown), .wild, .extraDie],
+        [.reroll, .joker, .pick(.green), .extraDie, .pick(.blue), .fox],
+        [.joker, .pick(.blue), .pick(.purple), .pick(.orange), .wild, .extraDie],
     ]
     /// Turquoise: how many leading cells of each row are tinted ("normal");
     /// the rest print white (only reachable via extra matching dice).
     static let turquoiseTintedPerRow = [6, 5, 3, 2, 1]
     /// Turquoise: row-end badges (after a printed ▶) and column-foot badges.
     /// Row 3's end badge (crop: official sheet, blue/turquoise grid, 4th row
-    /// arrow) is the unfilled "choose any colour" ring, not a turquoise pick.
-    static let turquoiseRowEnd: [C3BonusIcon?] = [.fox, .extraDie, .pick(.brown), .wild, nil]
+    /// arrow) is the unfilled "choose any colour" ring, not a blue pick.
+    static let turquoiseRowEnd: [C3BonusIcon?] = [.fox, .extraDie, .pick(.orange), .wild, nil]
     static let turquoiseColFoot: [C3BonusIcon] = [
-        .pick(.brown), .pick(.pink), .pick(.yellow), .joker, .pick(.blue), .reroll,
+        .pick(.orange), .pick(.green), .pick(.yellow), .joker, .pick(.purple), .reroll,
     ]
     /// Blue: badges under track positions (index 0 innermost … 5 outermost).
     static let blueLeftBadges: [Int: C3BonusIcon] = [
-        5: .extraDie, 4: .pick(.pink), 2: .pick(.yellow), 1: .joker,
+        5: .extraDie, 4: .pick(.green), 2: .pick(.yellow), 1: .joker,
     ]
     static let blueRightBadges: [Int: C3BonusIcon] = [
-        1: .reroll, 2: .pick(.brown), 4: .pick(.turquoise), 5: .fox,
+        1: .reroll, 2: .pick(.orange), 4: .pick(.blue), 5: .fox,
     ]
     /// Brown/pink: badge printed in the gap BEFORE cell `key` (it fires when
     /// both neighbours are reached — matching the engine's attach-to-later-
     /// cell advisory model).
     static let brownGapBadges: [Int: C3BonusIcon] = [
-        1: .joker, 2: .pick(.pink), 4: .reroll, 5: .pick(.turquoise),
-        7: .extraDie, 8: .pick(.blue), 10: .pick(.yellow), 11: .fox,
+        1: .joker, 2: .pick(.green), 4: .reroll, 5: .pick(.blue),
+        7: .extraDie, 8: .pick(.purple), 10: .pick(.yellow), 11: .fox,
     ]
     static let pinkGapBadges: [Int: C3BonusIcon] = [
-        1: .reroll, 2: .pick(.turquoise), 3: .extraDie, 4: .joker, 5: .pick(.yellow),
-        6: .pick(.brown), 7: .reroll, 8: .fox, 9: .pick(.blue), 10: .pick(.turquoise),
+        1: .reroll, 2: .pick(.blue), 3: .extraDie, 4: .joker, 5: .pick(.yellow),
+        6: .pick(.orange), 7: .reroll, 8: .fox, 9: .pick(.purple), 10: .pick(.blue),
     ]
 }
 
@@ -297,17 +297,17 @@ struct C3SheetBoardView: View {
                 panel(.yellow, stretch) {
                     C3YellowGrid(game: game, cell: gridCell, stretch: stretch)
                 }
-                panel(.turquoise, stretch) {
+                panel(.blue, stretch) {
                     C3TurquoiseGrid(game: game, cell: gridCell, stretch: stretch)
                 }
             }
-            rowBand(.blue, stretch) {
+            rowBand(.purple, stretch) {
                 C3BlueTrack(game: game, cell: blueCell, stretch: stretch) { entry = $0 }
             }
-            rowBand(.brown, stretch) {
+            rowBand(.orange, stretch) {
                 C3BrownRow(game: game, cell: brownCell, stretch: stretch)
             }
-            rowBand(.pink, stretch) {
+            rowBand(.green, stretch) {
                 C3PinkRow(game: game, cell: pinkCell, stretch: stretch) { entry = $0 }
             }
             C3FoxRow(game: game, stretch: stretch)
@@ -529,7 +529,7 @@ struct C3LandscapeBoard: View {
             panel(.yellow, stretch) {
                 C3YellowGrid(game: game, cell: gridCell, stretch: stretch)
             }
-            panel(.turquoise, stretch) {
+            panel(.blue, stretch) {
                 C3TurquoiseGrid(game: game, cell: gridCell, stretch: stretch)
             }
             // The manual fox stepper stays reachable in landscape — a compact
@@ -544,13 +544,13 @@ struct C3LandscapeBoard: View {
     private func rightColumn(_ stretch: CGFloat) -> some View {
         VStack(spacing: 10 * stretch) {
             tracksRow(stretch)
-            rowBand(.blue, stretch) {
+            rowBand(.purple, stretch) {
                 C3BlueTrack(game: game, cell: blueCell, stretch: stretch) { entry = $0 }
             }
-            rowBand(.brown, stretch) {
+            rowBand(.orange, stretch) {
                 C3BrownRow(game: game, cell: brownCell, stretch: stretch)
             }
-            rowBand(.pink, stretch) {
+            rowBand(.green, stretch) {
                 C3PinkRow(game: game, cell: pinkCell, stretch: stretch) { entry = $0 }
             }
             // No totals strip in landscape (owner call): scoring only matters
@@ -642,16 +642,16 @@ struct C3ListBoardView: View {
                     card(.yellow, width: cardW) {
                         C3YellowGrid(game: game, cell: 52)
                     }
-                    card(.turquoise, width: cardW) {
+                    card(.blue, width: cardW) {
                         C3TurquoiseGrid(game: game, cell: 46)
                     }
-                    card(.blue, width: cardW) {
+                    card(.purple, width: cardW) {
                         C3BlueTrack(game: game, cell: 46, split: true) { entry = $0 }
                     }
-                    card(.brown, width: cardW) {
+                    card(.orange, width: cardW) {
                         C3BrownRow(game: game, cell: 46, split: true)
                     }
-                    card(.pink, width: cardW) {
+                    card(.green, width: cardW) {
                         C3PinkRow(game: game, cell: 48, split: true) { entry = $0 }
                     }
                     WidthScaledCard(width: cardW) {
@@ -756,13 +756,13 @@ struct C3EditorSheet: View {
                             .fill(section == .tracks ? cleverSheetGrey : tint(for: section))
                     )
             }
-            if section == .blue {
+            if section == .purple {
                 Text("Outermost left + outermost right + 4 per 2/3/4/10/11/12.")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
-            if section == .pink {
+            if section == .green {
                 Text("Enter the value you wrote (die × the shown multiplier, or the halved bonus value).")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -778,13 +778,13 @@ struct C3EditorSheet: View {
         switch section {
         case .yellow:
             C3YellowGrid(game: game, cell: 52)
-        case .turquoise:
-            C3TurquoiseGrid(game: game, cell: 46)
         case .blue:
+            C3TurquoiseGrid(game: game, cell: 46)
+        case .purple:
             C3BlueTrack(game: game, cell: 46, split: true) { entry = $0 }
-        case .brown:
+        case .orange:
             C3BrownRow(game: game, cell: 46, split: true)
-        case .pink:
+        case .green:
             C3PinkRow(game: game, cell: 48, split: true) { entry = $0 }
         case .tracks:
             C3TracksPanel(game: game, tracks: $tracks,
@@ -887,8 +887,8 @@ enum C3TrackKind {
     var endBadge: C3BonusIcon {
         switch self {
         case .reroll: return .fox
-        case .joker: return .pick(.pink)
-        case .extra: return .pick(.brown)
+        case .joker: return .pick(.green)
+        case .extra: return .pick(.orange)
         }
     }
 }
@@ -1111,7 +1111,7 @@ struct C3TurquoiseGrid: View {
     private var trailW: CGFloat { cell * 0.9 }
 
     var body: some View {
-        let tint = game.color(.turquoise)
+        let tint = game.color(.blue)
         VStack(spacing: gap * stretch) {
             scaleStrip(tint)
             divider
@@ -1233,7 +1233,7 @@ struct C3BlueTrack: View {
     private var n: Int { Clever3Layout.blueSideCells }
 
     var body: some View {
-        let tint = game.color(.blue)
+        let tint = game.color(.purple)
         VStack(alignment: .leading, spacing: cell * 0.16 * stretch) {
             if split {
                 leftLine(tint)
@@ -1371,7 +1371,7 @@ struct C3BrownRow: View {
     var stretch: CGFloat = 1
 
     var body: some View {
-        let tint = game.color(.brown)
+        let tint = game.color(.orange)
         Group {
             if split {
                 VStack(alignment: .leading, spacing: cell * 0.3) {
@@ -1456,7 +1456,7 @@ struct C3PinkRow: View {
     let requestEntry: (ValueEntry) -> Void
 
     var body: some View {
-        let tint = game.color(.pink)
+        let tint = game.color(.green)
         Group {
             if split {
                 VStack(alignment: .leading, spacing: cell * 0.3) {

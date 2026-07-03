@@ -2146,18 +2146,18 @@
         }
       }
     },
-    "Five areas: yellow, turquoise, brown (cross out) and blue, pink (write numbers). White is wild. The app auto-scores all five.": {
+    "Five areas: yellow, blue, orange (cross out) and purple, green (write numbers). White is wild. The app auto-scores all five.": {
       "localizations": {
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vijf gebieden: geel, turkoois, bruin (wegstrepen) en blauw, roze (getallen schrijven). Wit is joker. De app scoort alle vijf automatisch."
+            "value": "Vijf gebieden: geel, blauw, oranje (wegstrepen) en paars, groen (getallen schrijven). Wit is joker. De app scoort alle vijf automatisch."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fünf Bereiche: Gelb, Türkis, Braun (ankreuzen) sowie Blau, Rosa (Zahlen schreiben). Weiß ist Joker. Die App wertet alle fünf automatisch."
+            "value": "Fünf Bereiche: Gelb, Blau, Orange (ankreuzen) sowie Lila, Grün (Zahlen schreiben). Weiß ist Joker. Die App wertet alle fünf automatisch."
           }
         }
       }
@@ -2258,18 +2258,18 @@
         }
       }
     },
-    "Each fox scores your lowest area. Total = yellow + turquoise + blue + brown + pink + (foxes × lowest area).": {
+    "Each fox scores your lowest area. Total = yellow + blue + purple + orange + green + (foxes × lowest area).": {
       "localizations": {
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elke vos scoort je laagste gebied. Totaal = geel + turkoois + blauw + bruin + roze + (vossen × laagste gebied)."
+            "value": "Elke vos scoort je laagste gebied. Totaal = geel + blauw + paars + oranje + groen + (vossen × laagste gebied)."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Jeder Fuchs zählt deinen niedrigsten Bereich. Gesamt = Gelb + Türkis + Blau + Braun + Rosa + (Füchse × niedrigster Bereich)."
+            "value": "Jeder Fuchs zählt deinen niedrigsten Bereich. Gesamt = Gelb + Blau + Lila + Orange + Grün + (Füchse × niedrigster Bereich)."
           }
         }
       }

@@ -10,49 +10,32 @@
 import SwiftUI
 
 public enum Clever3Area: String, Codable, CaseIterable, Identifiable {
-    // NB: these case NAMES are legacy opaque identifiers (kept because the
-    // rawValue is persisted in saved games and ~90 call sites reference them).
-    // They do NOT match the areas' real colours — the official sheet's five
-    // areas are yellow / BLUE / PURPLE / ORANGE / GREEN. The true colour is the
-    // single source of truth in `standardColor` and `title` below; treat the
-    // case name as just an ID. (A proper rename is tracked as a follow-up.)
-    case yellow, turquoise, blue, brown, pink
+    // The five printed areas of the official Clever Cubed sheet. Case names,
+    // titles and standardColor all match the sheet's real colours.
+    case yellow, blue, purple, orange, green
 
     public var id: String { rawValue }
 
-    /// User-facing colour name — the area's TRUE printed colour (see the note
-    /// on the case names). Also used as a localisation key.
+    /// User-facing colour name. Also used as a localisation key.
     public var title: String {
         switch self {
-        case .yellow:    return "Yellow"
-        case .turquoise: return "Blue"    // the sheet's blue 5×6 grid
-        case .blue:      return "Purple"  // the sheet's purple ±1 track
-        case .brown:     return "Orange"  // the sheet's orange 12-cell row
-        case .pink:      return "Green"   // the sheet's green 11-cell row
+        case .yellow: return "Yellow"
+        case .blue:   return "Blue"
+        case .purple: return "Purple"
+        case .orange: return "Orange"
+        case .green:  return "Green"
         }
     }
 
     /// The area's STANDARD colour as printed on the official card — the input
     /// to the app-wide `DiceTheme` nearest-colour matching, never shown as-is.
-    ///
-    /// Re-verified against the official "Pretty Clever III" sheet (pixel-
-    /// sampled from a clean render): the five printed areas are actually
-    /// YELLOW / BLUE / PURPLE / ORANGE / GREEN — not the turquoise/blue/
-    /// brown/pink hues previously declared here. This case's NAME is kept
-    /// (renaming touches ~90 call sites and the read-only engine; tracked as
-    /// a follow-up), but the RGB values below are now the true print colours
-    /// so `DiceTheme`'s nearest-colour mapping starts from the right input:
-    /// `.turquoise` (really the sheet's "blue" 5×6 grid) → rgb(0,118,188);
-    /// `.blue` (really the sheet's "purple" ±1 track) → rgb(95,36,121);
-    /// `.brown` (really the sheet's "orange" 12-cell row) → rgb(238,123,0);
-    /// `.pink` (really the sheet's "green" 11-cell row) → rgb(0,161,56).
     public var standardColor: Color {
         switch self {
-        case .yellow:    return Color(red: 254/255, green: 212/255, blue: 0)
-        case .turquoise: return Color(red: 0, green: 118/255, blue: 188/255)
-        case .blue:      return Color(red: 95/255, green: 36/255, blue: 121/255)
-        case .brown:     return Color(red: 238/255, green: 123/255, blue: 0)
-        case .pink:      return Color(red: 0, green: 161/255, blue: 56/255)
+        case .yellow: return Color(red: 254/255, green: 212/255, blue: 0)
+        case .blue:   return Color(red: 0, green: 118/255, blue: 188/255)
+        case .purple: return Color(red: 95/255, green: 36/255, blue: 121/255)
+        case .orange: return Color(red: 238/255, green: 123/255, blue: 0)
+        case .green:  return Color(red: 0, green: 161/255, blue: 56/255)
         }
     }
 }
@@ -124,15 +107,15 @@ public enum Clever3Layout {
     /// ?orange, ?green, ?yellow, extraDie, ?purple, reroll.
     public static let turquoiseRowBonus: [Int: C3Bonus] = [
         1: .plusOne,        // row 1 end = +1
-        2: .pick(.brown),   // row 2 end = ? orange → choose a brown value
+        2: .pick(.orange),  // row 2 end = ? orange → choose an orange value
         3: .wild,           // row 3 end = ? (unfilled ring) → choose any value, any colour
     ]
     public static let turquoiseColBonus: [Int: C3Bonus] = [
-        0: .pick(.brown),   // ? orange
-        1: .pick(.pink),    // ? green
+        0: .pick(.orange),  // ? orange
+        1: .pick(.green),   // ? green
         2: .pick(.yellow),  // ? yellow
         3: .extraDie,       // dice (joker — closest available C3Bonus case)
-        4: .pick(.blue),    // ? purple
+        4: .pick(.purple),  // ? purple
         5: .reroll,         // reroll
     ]
 
@@ -142,14 +125,14 @@ public enum Clever3Layout {
     /// Right side bonuses (idx→icon): 1:reroll, 2:?orange, 4:?blue, 5:fox.
     public static let blueLeftBonus: [Int: C3Bonus] = [
         5: .plusOne,
-        4: .pick(.pink),
+        4: .pick(.green),
         2: .pick(.yellow),
         1: .extraDie,       // joker — closest available C3Bonus case
     ]
     public static let blueRightBonus: [Int: C3Bonus] = [
         1: .reroll,
-        2: .pick(.brown),
-        4: .pick(.turquoise),
+        2: .pick(.orange),
+        4: .pick(.blue),
         // idx 5 = fox (manual stepper) → omitted
     ]
     public static let blueCenterBonus: C3Bonus = .reroll
@@ -160,11 +143,11 @@ public enum Clever3Layout {
     /// 11:fox.
     public static let brownBonus: [Int: C3Bonus] = [
         1: .extraDie,       // joker — closest available C3Bonus case
-        2: .pick(.pink),
+        2: .pick(.green),
         4: .reroll,
-        5: .pick(.turquoise),
+        5: .pick(.blue),
         7: .plusOne,
-        8: .pick(.blue),
+        8: .pick(.purple),
         10: .pick(.yellow),
         // 11 = fox (manual stepper) → omitted
     ]
@@ -174,15 +157,15 @@ public enum Clever3Layout {
     /// 6:?orange, 7:reroll, 8:fox, 9:?purple, 10:?blue(turquoise official).
     public static let pinkBonus: [Int: C3Bonus] = [
         1: .reroll,
-        2: .pick(.turquoise),
+        2: .pick(.blue),
         3: .plusOne,
         4: .extraDie,       // joker — closest available C3Bonus case
         5: .pick(.yellow),
-        6: .pick(.brown),
+        6: .pick(.orange),
         7: .reroll,
         // 8 = fox (manual stepper) → omitted
-        9: .pick(.blue),
-        10: .pick(.turquoise),
+        9: .pick(.purple),
+        10: .pick(.blue),
     ]
 }
 
