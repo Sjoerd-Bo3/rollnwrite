@@ -87,15 +87,21 @@ enum C3SheetArt {
     /// row I cols 5–6, row II cols 3–4, row III cols 1–2.
     static let yellowGreyCells: Set<Int> = [4, 5, 8, 9, 12, 13]
     /// Yellow: bonus badges printed on the two row dividers (one per column).
+    /// Row II's 5th badge (crop: official sheet left card, yellow grid, row
+    /// II divider) is the unfilled "choose any colour" ring, not a yellow
+    /// pick — confirmed by its transparent/ring rendering vs the solid
+    /// yellow-filled pick badges elsewhere on the sheet.
     static let yellowDividerBonuses: [[C3BonusIcon]] = [
         [.reroll, .joker, .pick(.pink), .extraDie, .pick(.turquoise), .fox],
-        [.joker, .pick(.turquoise), .pick(.blue), .pick(.brown), .pick(.yellow), .extraDie],
+        [.joker, .pick(.turquoise), .pick(.blue), .pick(.brown), .wild, .extraDie],
     ]
     /// Turquoise: how many leading cells of each row are tinted ("normal");
     /// the rest print white (only reachable via extra matching dice).
     static let turquoiseTintedPerRow = [6, 5, 3, 2, 1]
     /// Turquoise: row-end badges (after a printed ▶) and column-foot badges.
-    static let turquoiseRowEnd: [C3BonusIcon?] = [.fox, .extraDie, .pick(.brown), .pick(.turquoise), nil]
+    /// Row 3's end badge (crop: official sheet, blue/turquoise grid, 4th row
+    /// arrow) is the unfilled "choose any colour" ring, not a turquoise pick.
+    static let turquoiseRowEnd: [C3BonusIcon?] = [.fox, .extraDie, .pick(.brown), .wild, nil]
     static let turquoiseColFoot: [C3BonusIcon] = [
         .pick(.brown), .pick(.pink), .pick(.yellow), .joker, .pick(.blue), .reroll,
     ]
@@ -114,7 +120,7 @@ enum C3SheetArt {
         7: .extraDie, 8: .pick(.blue), 10: .pick(.yellow), 11: .fox,
     ]
     static let pinkGapBadges: [Int: C3BonusIcon] = [
-        1: .reroll, 2: .pick(.blue), 3: .extraDie, 4: .joker, 5: .pick(.yellow),
+        1: .reroll, 2: .pick(.turquoise), 3: .extraDie, 4: .joker, 5: .pick(.yellow),
         6: .pick(.brown), 7: .reroll, 8: .fox, 9: .pick(.blue), 10: .pick(.turquoise),
     ]
 }
@@ -1640,6 +1646,13 @@ enum C3BonusIcon: Equatable {
     case joker
     case fox
     case pick(Clever3Area?)
+    /// The "choose ANY colour" free mark: printed as an unfilled ring (the
+    /// area's own background shows through) with a white "?" — visually
+    /// distinct from `pick(nil)`'s solid-ink action badge (round 4's own
+    /// bonus). Confirmed against the official sheet: yellow row II's 5th
+    /// divider badge and turquoise row 4's row-end badge are both this ring
+    /// style, not a coloured pick.
+    case wild
 }
 
 /// Clever 3 twin of `BonusBadge` (that one takes a `CleverGame`) — identical
@@ -1653,8 +1666,18 @@ struct C3BonusBadge: View {
 
     var body: some View {
         ZStack {
-            Circle().fill(background)
-            Circle().strokeBorder(.white.opacity(0.85), lineWidth: SheetStroke.small)
+            if icon == .wild {
+                // Unfilled ring: the surrounding area colour shows through,
+                // exactly as printed (no badge fill of its own). The sheet
+                // uses a dark glyph on its light (yellow) instance and a
+                // light glyph on its darker (blue) instance for contrast;
+                // `cleverInk` reads on both of this board's actual instances
+                // (yellow panel, turquoise/green-mapped panel).
+                Circle().strokeBorder(cleverInk, lineWidth: SheetStroke.medium)
+            } else {
+                Circle().fill(background)
+                Circle().strokeBorder(.white.opacity(0.85), lineWidth: SheetStroke.small)
+            }
             content
         }
         .frame(width: size, height: size)
@@ -1685,6 +1708,10 @@ struct C3BonusBadge: View {
             Text("?")
                 .font(.system(size: size * 0.55, weight: .black))
                 .foregroundStyle(area.map { game.color($0).textColor } ?? .white)
+        case .wild:
+            Text("?")
+                .font(.system(size: size * 0.55, weight: .black))
+                .foregroundStyle(cleverInk)
         }
     }
 }
