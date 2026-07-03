@@ -46,6 +46,7 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var scores: [(name: String, best: Int)] = []
     @State private var feedbackKind: FeedbackKind?
+    @State private var showDiceScan = false
 
     private var appearance: Binding<AppearanceMode> {
         Binding(
@@ -86,6 +87,11 @@ struct SettingsView: View {
                 Section {
                     ForEach(0..<DiceTheme.slotCount, id: \.self) { i in
                         ColorPicker("Die \(i + 1)", selection: dieColor(i), supportsOpacity: false)
+                    }
+                    Button {
+                        showDiceScan = true
+                    } label: {
+                        Label("Scan dice", systemImage: "camera.viewfinder")
                     }
                     Button("Reset to standard colours") { diceTheme.resetToDefault() }
                 } header: {
@@ -136,6 +142,9 @@ struct SettingsView: View {
             .onAppear { scores = HighScores.all() }
             .sheet(item: $feedbackKind) { kind in
                 FeedbackComposerView(kind: kind)
+            }
+            .sheet(isPresented: $showDiceScan) {
+                DiceScanView()
             }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {

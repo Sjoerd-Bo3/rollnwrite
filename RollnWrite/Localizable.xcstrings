@@ -2993,6 +2993,118 @@
           }
         }
       }
+    },
+    "Apply": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toepassen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übernehmen"
+          }
+        }
+      }
+    },
+    "Scan dice": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dobbelstenen scannen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Würfel scannen"
+          }
+        }
+      }
+    },
+    "Scan your dice": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan je dobbelstenen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanne deine Würfel"
+          }
+        }
+      }
+    },
+    "Take a photo": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maak een foto"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto aufnehmen"
+          }
+        }
+      }
+    },
+    "Choose from library": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies uit bibliotheek"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus Mediathek wählen"
+          }
+        }
+      }
+    },
+    "Sample dice colours": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dobbelsteenkleuren aflezen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Würfelfarben ablesen"
+          }
+        }
+      }
+    },
+    "Take or choose a photo of your dice, then tap each one to read its colour.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maak of kies een foto van je dobbelstenen en tik daarna op elke dobbelsteen om de kleur af te lezen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nimm ein Foto deiner Würfel auf oder wähle eines aus und tippe dann auf jeden Würfel, um seine Farbe abzulesen."
+          }
+        }
+      }
     }
   }
 }
