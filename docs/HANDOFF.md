@@ -9,11 +9,17 @@ Keep this file updated at the end of significant sessions.
 - Qwixx: 9 flavours, rules-audited twice against official NSV/WGG sources;
   feature-complete (concede, manual finish, game-over + high scores, exact
   fill-the-screen layouts, 12-item design polish pass).
-- Clever 1: redesigned as a printed-sheet miniature with THREE layouts under
-  test — sheet + paged editor modal, list mode (header toggle), and the
-  "(v3)" catalogue entry with a landscape two-column reflow. Crossable
-  rounds bar; re-roll/+1 tracks auto-count earned bonuses (derived state).
-  13-item design polish pass applied.
+- Clever family: the v3 concept is the CANONICAL design (owner verdict
+  2026-07-02) and is rolled out to ALL FOUR Clever games (#32): portrait
+  sheet miniature + paged editor, landscape direct-tap reflow, free
+  rotation, plus the scrolling LIST layout as a header-toggle option
+  (owner request; per-game `cleverN.layout` keys). The separate "(v3)"
+  catalogue entry is gone. Clever 1: crossable rounds bar; re-roll/+1
+  tracks auto-count earned bonuses (derived state). Clever 2/3/4 sheets
+  were rebuilt from the official Schmidt renders; owner screenshot review
+  still pending (esp. Clever 2 yellow edge bonuses — needs a photo of the
+  physical pad; and Clever 2's rounds bar is display-only, engine has no
+  round state).
 - App-wide dice colours (Settings), optional dice roller on every board
   (#30), in-app feedback → GitHub issues (#33), light/dark mode, keep-awake,
   orientation fixes.
@@ -24,11 +30,13 @@ Keep this file updated at the end of significant sessions.
 
 ## Open decisions (owner)
 
-1. **Clever layout verdict**: sheet vs list vs v3 (on-device comparison).
-   This gates the Clever 2/3/4 redesign rollout (#32).
-2. **App Store 1.0 submission**: run "5. App Store Release" on
+1. **App Store 1.0 submission**: run "5. App Store Release" on
    `release/1.0`, verify the Qwixx-only candidate in TestFlight, then
    attach + submit in App Store Connect (docs/APP_STORE.md §7).
+2. **Clever v3 rollout review**: check all four Clever boards on
+   TestFlight (portrait sheet, landscape reflow, list toggle, editors);
+   photograph the Doppelt so clever pad's yellow area so the edge
+   bonuses can be added.
 
 ## Open issues backlog
 

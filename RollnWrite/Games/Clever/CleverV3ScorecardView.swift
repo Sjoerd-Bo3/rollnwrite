@@ -2,8 +2,11 @@
 //  CleverV3ScorecardView.swift
 //  RollnWrite – Clever
 //
-//  EXPERIMENTAL third Clever 1 layout ("v3"): a landscape-optimised REFLOW of
-//  the printed score sheet, built entirely from the existing sheet pieces.
+//  The CANONICAL Clever board ("v3" — the owner's verdict from the on-device
+//  three-layout comparison): a landscape-optimised REFLOW of the printed
+//  score sheet, built entirely from the existing sheet pieces, with portrait
+//  falling back to the sheet miniature. Hosted by `CleverScorecardView`;
+//  Clever 2/3/4 mirror this concept in their own modules.
 //
 //  Landscape — a rounds rail plus two columns filling the screen, everything
 //  directly tappable (no editor modal):
@@ -23,60 +26,9 @@
 //  (`CleverSheetBoardView`) unchanged; v3 is a landscape reflow, not a new
 //  portrait design.
 //
-//  Same engine and the SAME persistence key as the regular catalogue entry:
-//  the two entries are two lenses on ONE running game.
 //
 
 import SwiftUI
-
-// MARK: - Scorecard (scaffold wrapper)
-
-public struct CleverV3ScorecardView: View {
-    /// Default persistence key — deliberately shared with the regular
-    /// "That's Pretty Clever" entry, so both boards show the same game.
-    @StateObject private var game = CleverGame()
-    let rules: RulesDocument
-
-    @State private var confirmNewGame = false
-
-    public init(rules: RulesDocument) {
-        self.rules = rules
-    }
-
-    public var body: some View {
-        ScorecardScaffold(
-            title: "That's Pretty Clever (v3)",
-            rules: rules,
-            // Both orientations scale to fit — let the screen rotate freely.
-            locksLandscape: false,
-            board: { CleverV3BoardView(game: game) },
-            headerAccessory: {
-                HStack(spacing: 16) {
-                    Button { game.undo() } label: { Image(systemName: "arrow.uturn.backward") }
-                        .disabled(!game.canUndo)
-                        .opacity(game.canUndo ? 1 : 0.5)
-                        .accessibilityLabel("Undo")
-                    Button(role: .destructive) { confirmNewGame = true } label: {
-                        Image(systemName: "trash")
-                    }
-                    .accessibilityLabel("New game")
-                }
-            }
-        )
-        .background(cleverPaper.ignoresSafeArea())
-        // Force LIGHT resolution of dynamic colours on the cream paper — same
-        // reasoning as `CleverScorecardView` (the app root's outer
-        // `.preferredColorScheme` would otherwise win in dark mode).
-        .environment(\.colorScheme, .light)
-        .tint(Color(red: 0.55, green: 0.28, blue: 0.72))
-        .confirmationDialog("Start a new game?", isPresented: $confirmNewGame, titleVisibility: .visible) {
-            Button("New game", role: .destructive) { game.reset() }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("This clears the scorecard.")
-        }
-    }
-}
 
 // MARK: - Orientation switch
 

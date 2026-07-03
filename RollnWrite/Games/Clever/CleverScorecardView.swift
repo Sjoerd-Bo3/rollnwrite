@@ -6,15 +6,17 @@
 //  printed sheet. Presentation + touch only; all rules and scoring live in
 //  `CleverGame`.
 //
-//  Layout model (the PILOT for the whole Clever family):
-//  • The board is a faithful one-screen MINIATURE of the sheet — header
-//    (scratch boxes, rounds bar, reroll/+1 tracks), yellow + blue side by
-//    side, full-width green/orange/purple bands, and the bottom total strip.
-//    `ScaledSheet` scales the whole sheet uniformly to fit — no scrolling,
-//    both orientations (the scaffold's landscape lock is opted out of).
-//  • The miniature is directly interactive; tapping anywhere else in an area
-//    opens a paged EDITOR sheet (`SheetEditorPager`) with a big, comfortable
-//    page per area — swipe to move between areas without closing.
+//  Layout model (the CANONICAL v3 concept for the whole Clever family —
+//  the owner's verdict after the three-layout on-device comparison):
+//  • PORTRAIT: a faithful one-screen MINIATURE of the sheet — header
+//    (rounds bar, reroll/+1 tracks), yellow + blue side by side, full-width
+//    green/orange/purple bands, and the bottom total strip. `ScaledSheet`
+//    scales the whole sheet uniformly to fit — no scrolling. The miniature
+//    is directly interactive; tapping anywhere else in an area opens a paged
+//    EDITOR sheet (`SheetEditorPager`) with a big, comfortable page per
+//    area — swipe to move between areas without closing.
+//  • LANDSCAPE: the direct-tap two-column reflow (`CleverV3LandscapeBoard`
+//    in CleverV3ScorecardView.swift) — no editor needed at that cell size.
 //  • Tapping the most-recent mark un-checks it (LIFO undo), as everywhere.
 //
 
@@ -43,11 +45,13 @@ enum CleverSheetSection: String, CaseIterable, Identifiable, Hashable {
     var title: String { area?.title ?? "Rounds & bonuses" }
 }
 
-// MARK: - Board layout (A/B experiment)
+// MARK: - Board layout (v3 default + list option)
 
-/// The two board layouts under test: the faithful sheet miniature (+ modal
-/// editor) versus one vertical scrolling list of full-size areas (inline
-/// editing — an owner-approved exception to the no-scroll rule).
+/// The two board layouts: `.sheet` is the canonical v3 board (portrait sheet
+/// miniature, landscape direct-tap reflow) and `.list` is one vertical
+/// scrolling list of full-size areas (inline editing — an owner-approved
+/// exception to the no-scroll rule; kept as an option by owner request).
+/// The raw values predate v3, so stored preferences carry over unchanged.
 enum CleverBoardLayout: String {
     case sheet, list
     static let storageKey = "clever.layout"
@@ -72,12 +76,12 @@ public struct CleverScorecardView: View {
         ScorecardScaffold(
             title: "That's Pretty Clever",
             rules: rules,
-            // The sheet is portrait-shaped and scales to fit — let it rotate.
+            // Both orientations scale to fit — let the screen rotate freely.
             locksLandscape: false,
             board: {
                 Group {
                     switch layout {
-                    case .sheet: CleverSheetBoardView(game: game)
+                    case .sheet: CleverV3BoardView(game: game)
                     case .list: CleverListBoardView(game: game)
                     }
                 }
@@ -270,8 +274,7 @@ struct CleverSheetBoardView: View {
     }
 }
 
-/// The bottom summary strip (per-area scores + foxes + total) — shared by the
-/// sheet overview and the list layout.
+/// The bottom summary strip (per-area scores + foxes + total).
 @MainActor
 func cleverTotalStrip(game: CleverGame, height: CGFloat) -> some View {
     var entries: [SheetTotalStrip.Entry] = CleverArea.allCases.map {
@@ -749,17 +752,15 @@ func cleverBonusSlot(_ icon: BonusIcon?, game: CleverGame, size: CGFloat) -> som
     }
 }
 
-// MARK: - Editor sheet (big, comfortable, paged)
+// MARK: - Layout option: one scrolling list of full-size areas
 
-// MARK: - Layout B: one scrolling list of full-size areas
-
-/// The "list" side of the A/B layout experiment: every area stacked in ONE
-/// vertical scrolling list at full interactive size — inline editing, no
-/// modal. (A ScrollView here is an owner-approved exception to the no-scroll
-/// rule, specifically so the two layouts can be compared on-device.) Uses the
-/// SAME area views as the editor pages; each card scales down to the screen
-/// width via `WidthScaledCard` (a `ScaledSheet` cannot measure available
-/// space inside a scroll view).
+/// The "list" layout option: every area stacked in ONE vertical scrolling
+/// list at full interactive size — inline editing, no modal. (A ScrollView
+/// here is an owner-approved exception to the no-scroll rule; the owner keeps
+/// this layout as a first-class option alongside the v3 board.) Uses the SAME
+/// area views as the editor pages; each card scales down to the screen width
+/// via `WidthScaledCard` (a `ScaledSheet` cannot measure available space
+/// inside a scroll view).
 struct CleverListBoardView: View {
     @ObservedObject var game: CleverGame
     /// Observed so an open board recolours when Settings changes the palette.
@@ -862,6 +863,8 @@ struct CleverListBoardView: View {
     }
 }
 
+// MARK: - Editor sheet (big, comfortable, paged)
+
 struct CleverEditorSheet: View {
     @ObservedObject var game: CleverGame
     @ObservedObject var diceTheme = DiceTheme.shared
@@ -959,7 +962,7 @@ struct CleverEditorSheet: View {
         // A definite design width (just past the bars' natural size) so the
         // round tiles and the track circles DISTRIBUTE evenly across their
         // pills instead of hugging the leading edge; the enclosing
-        // ScaledSheet/WidthScaledCard scales the block to fit as usual.
+        // ScaledSheet scales the block to fit as usual.
         .frame(width: 360)
     }
 
