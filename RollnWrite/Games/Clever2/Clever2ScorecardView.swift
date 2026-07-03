@@ -368,13 +368,13 @@ struct Clever2LandscapeBoard: View {
             // rounds bar is display-only chrome here — Clever 2 tracks no
             // round state — so landscape spends the height on the areas).
             HStack(spacing: 10) {
-                track(.reroll, slots: Clever2Layout.rerollTrackSlots,
+                track(.reroll, slots: Clever2Layout.rerollTrackSlots, endBonus: .fox,
                       used: game.state.rerollUsed, stretch: stretch) { game.toggleReroll($0) }
-                track(.returnDie, slots: Clever2Layout.returnTrackSlots,
+                track(.returnDie, slots: Clever2Layout.returnTrackSlots, endBonus: .mark(.pink),
                       used: game.state.returnUsed, stretch: stretch) { game.toggleReturn($0) }
             }
             HStack(spacing: 10) {
-                track(.plusOne, slots: Clever2Layout.extraDieTrackSlots,
+                track(.plusOne, slots: Clever2Layout.extraDieTrackSlots, endBonus: .mark(.silver),
                       used: game.state.extraDieUsed, stretch: stretch) { game.toggleExtraDie($0) }
                 // The manual fox stepper stays reachable in landscape.
                 Clever2FoxStepper(game: game, height: 26, stretch: stretch)
@@ -395,12 +395,20 @@ struct Clever2LandscapeBoard: View {
         .frame(width: rightW)
     }
 
-    private func track(_ icon: Clever2Bonus, slots: Int, used: Set<Int>, stretch: CGFloat,
-                       tap: @escaping (Int) -> Void) -> some View {
-        SheetCircleTrack(slots: slots, used: used,
-                         diameter: 19, ink: cleverInk, stretch: stretch,
-                         icon: { Clever2BonusBadge(bonus: icon, game: game, size: 24) },
-                         tap: tap)
+    /// Mirrors `Clever2TracksBlock.track(_:slots:endBonus:used:tap:)`: `slots`
+    /// crossable circles (6, printed) plus the non-interactive printed
+    /// end-bonus circle (see that method's doc comment for the pad-photo
+    /// evidence — reroll → fox, return → mark(pink), +1 → mark(silver)).
+    private func track(_ icon: Clever2Bonus, slots: Int, endBonus: Clever2Bonus, used: Set<Int>,
+                       stretch: CGFloat, tap: @escaping (Int) -> Void) -> some View {
+        HStack(spacing: 19 * 0.35 * stretch) {
+            SheetCircleTrack(slots: slots, used: used,
+                             diameter: 19, ink: cleverInk, stretch: stretch,
+                             icon: { Clever2BonusBadge(bonus: icon, game: game, size: 24) },
+                             tap: tap)
+            Clever2BonusBadge(bonus: endBonus, game: game, size: 19)
+                .accessibilityHidden(true)
+        }
     }
 
     // MARK: Area containers (direct interaction — no editor to open)
@@ -682,21 +690,29 @@ struct Clever2TracksBlock: View {
                            ink: cleverInk, stretch: stretch) { r in
                 clever2RoundBadge(r, game: game, size: badgeSize)
             }
-            SheetCircleTrack(slots: Clever2Layout.rerollTrackSlots,
-                             used: game.state.rerollUsed,
+            track(.reroll, slots: Clever2Layout.rerollTrackSlots, endBonus: .fox,
+                  used: game.state.rerollUsed) { game.toggleReroll($0) }
+            track(.returnDie, slots: Clever2Layout.returnTrackSlots, endBonus: .mark(.pink),
+                  used: game.state.returnUsed) { game.toggleReturn($0) }
+            track(.plusOne, slots: Clever2Layout.extraDieTrackSlots, endBonus: .mark(.silver),
+                  used: game.state.extraDieUsed) { game.toggleExtraDie($0) }
+        }
+    }
+
+    /// One action track: `slots` plain crossable circles (the pad prints SIX
+    /// per track — see `Clever2Layout.rerollTrackSlots` et al) plus a final,
+    /// non-interactive PRINTED end-bonus circle (pad photo "tracks_all3":
+    /// reroll → 🦊 fox, return → "?" on pink, +1 → "?" on silver). The end
+    /// badge is chrome, not a slot — it never appears in `used`/`tap`.
+    private func track(_ icon: Clever2Bonus, slots: Int, endBonus: Clever2Bonus,
+                        used: Set<Int>, tap: @escaping (Int) -> Void) -> some View {
+        HStack(spacing: diameter * 0.35 * stretch) {
+            SheetCircleTrack(slots: slots, used: used,
                              diameter: diameter, ink: cleverInk, stretch: stretch,
-                             icon: { Clever2BonusBadge(bonus: .reroll, game: game, size: iconSize) },
-                             tap: { game.toggleReroll($0) })
-            SheetCircleTrack(slots: Clever2Layout.returnTrackSlots,
-                             used: game.state.returnUsed,
-                             diameter: diameter, ink: cleverInk, stretch: stretch,
-                             icon: { Clever2BonusBadge(bonus: .returnDie, game: game, size: iconSize) },
-                             tap: { game.toggleReturn($0) })
-            SheetCircleTrack(slots: Clever2Layout.extraDieTrackSlots,
-                             used: game.state.extraDieUsed,
-                             diameter: diameter, ink: cleverInk, stretch: stretch,
-                             icon: { Clever2BonusBadge(bonus: .plusOne, game: game, size: iconSize) },
-                             tap: { game.toggleExtraDie($0) })
+                             icon: { Clever2BonusBadge(bonus: icon, game: game, size: iconSize) },
+                             tap: tap)
+            Clever2BonusBadge(bonus: endBonus, game: game, size: diameter)
+                .accessibilityHidden(true)
         }
     }
 }
@@ -804,6 +820,7 @@ struct Clever2SilverGrid: View {
     var body: some View {
         VStack(spacing: gap * stretch) {
             columnBonusRow
+            columnArrowRow
             ForEach(0..<Clever2Layout.silverRowAreas.count, id: \.self) { r in
                 row(r)
             }
@@ -824,6 +841,23 @@ struct Clever2SilverGrid: View {
         }
         .padding(.vertical, cell * 0.05)
         .background(Capsule().fill(.white.opacity(0.35)))
+    }
+
+    /// The pad's printed dark arrow chaining each column up into its bonus
+    /// badge (pad photo "silver_full": one arrow per column, between the
+    /// badge row and the "1…6" grid). Subtle, non-interactive, dark per the
+    /// board-wide arrow-chain idiom (fix 8): ~0.55 opacity, sized off `cell`.
+    private var columnArrowRow: some View {
+        HStack(spacing: gap) {
+            ForEach(0..<Clever2Layout.silverCols, id: \.self) { _ in
+                Image(systemName: "arrowtriangle.up.fill")
+                    .font(.system(size: cell * 0.22, weight: .black))
+                    .foregroundStyle(cleverInk.opacity(0.55))
+                    .frame(width: cell)
+            }
+            if showRowScores { Color.clear.frame(width: scoreW, height: 1) }
+        }
+        .allowsHitTesting(false)
     }
 
     private func row(_ r: Int) -> some View {
@@ -882,8 +916,16 @@ struct Clever2YellowGrid: View {
     @ObservedObject var game: Clever2Game
     @ObservedObject var diceTheme = DiceTheme.shared
     let cell: CGFloat
-    /// Show the cross-count under each scale badge (editor/list pages).
-    var showCounts = false
+    /// Show the cross-count under each scale badge. Defaults to true: the pad
+    /// prints "1 2 3 … 10" under the point scale permanently (owner photo
+    /// evidence: red-penned "1 2 3 4 5 6 7 8 9 10" above the seals in the
+    /// annotated screenshot, matching the pad's own printed row) — this is
+    /// NOT an editor/list-only affordance. The scale row was already flagged
+    /// tight (see `SheetPointsBadge` sizing below): the count label adds one
+    /// more line at `cell * 0.16` font size + 0 spacing under a `cell * 0.36`
+    /// seal, i.e. ≈44% extra height on that one pill — acceptable because the
+    /// pill already isolates itself with vertical padding on both sides.
+    var showCounts = true
     /// Vertical stretch — multiplies cell heights and vertical gaps only.
     var stretch: CGFloat = 1
 
@@ -903,20 +945,81 @@ struct Clever2YellowGrid: View {
         let tint = game.color(.yellow)
         VStack(spacing: cell * 0.16 * stretch) {
             scaleRow(tint)
-            // Centre-aligned columns give the printed staggered/diamond look
-            // (the 2-cell columns sit between the 3-cell columns' rows).
-            HStack(alignment: .center, spacing: gap) {
-                ForEach(0..<Clever2Layout.yellowColumns.count, id: \.self) { col in
-                    VStack(spacing: gap * stretch) {
-                        ForEach(0..<Clever2Layout.yellowColumns[col].count, id: \.self) { r in
-                            yellowCell(index: columnStarts[col] + r,
-                                       value: Clever2Layout.yellowColumns[col][r],
-                                       tint: tint)
+            HStack(alignment: .center, spacing: gap * 0.6) {
+                // Centre-aligned columns give the printed staggered/diamond
+                // look (the 2-cell columns sit between the 3-cell columns').
+                HStack(alignment: .center, spacing: gap) {
+                    ForEach(0..<Clever2Layout.yellowColumns.count, id: \.self) { col in
+                        VStack(spacing: gap * stretch) {
+                            ForEach(0..<Clever2Layout.yellowColumns[col].count, id: \.self) { r in
+                                yellowCell(index: columnStarts[col] + r,
+                                           value: Clever2Layout.yellowColumns[col][r],
+                                           tint: tint)
+                            }
                         }
                     }
                 }
+                rowBonusColumn
+            }
+            columnBonusRow
+        }
+    }
+
+    /// The FIVE printed row bonuses on the right edge (pad photo
+    /// "yellow_precise" / "yellow_rightedge"): a small dark arrow per row,
+    /// then its badge. Compact (0.42×cell) so the extra column doesn't blow
+    /// out the panel width the silver panel's fixed 310pt neighbour expects.
+    ///
+    /// Geometry: the grid's tallest columns (3 cells, e.g. `yellowColumns[1]`
+    /// = [3,4,5]) set the row-slot pitch — slot centre `n` sits at
+    /// `(cell + gap*stretch) * n + cell/2` for n = 0,1,2 (rows A,C,E). The
+    /// short (2-cell) columns are VStack-centred against that taller sibling,
+    /// so their two cells land on the GAP MIDPOINTS half-way between A/C and
+    /// C/E — rows B and D. Reusing that same arithmetic (n = 0.5, 1.5) places
+    /// each badge exactly opposite the pad's own row it annotates. A ZStack
+    /// with `.topLeading` alignment + `.offset(y:)` avoids the fragile
+    /// zero-height spacer tricks a VStack would need for the half-slots.
+    private var rowBonusColumn: some View {
+        let pitch = cell * stretch + gap * stretch
+        return ZStack(alignment: .topLeading) {
+            // Reserves the full column height (3 slots) so the surrounding
+            // HStack sizes this view the same as the grid's tallest column.
+            Color.clear.frame(width: cell * 0.42 + cell * 0.2, height: pitch * 2 + cell * stretch)
+            ForEach(0..<Clever2Layout.yellowRowBonus.count, id: \.self) { r in
+                let n = CGFloat(r) / 2 // 0, 0.5, 1, 1.5, 2 → A, B, C, D, E
+                rowBonusBadge(r)
+                    .offset(y: pitch * n)
             }
         }
+        .allowsHitTesting(false)
+    }
+
+    private func rowBonusBadge(_ r: Int) -> some View {
+        HStack(spacing: cell * 0.06) {
+            Image(systemName: "arrowtriangle.right.fill")
+                .font(.system(size: cell * 0.2, weight: .black))
+                .foregroundStyle(cleverInk.opacity(0.55))
+            Clever2BonusBadge(bonus: Clever2Layout.yellowRowBonus[r], game: game, size: cell * 0.42)
+        }
+        .frame(height: cell * stretch)
+    }
+
+    /// The FOUR printed column bonuses on the bottom edge (pad photo
+    /// "yellow_precise"): a down-arrow per column, then its badge — mirrors
+    /// `Clever2SilverGrid.columnArrowRow`'s up-arrow idiom.
+    private var columnBonusRow: some View {
+        HStack(spacing: gap) {
+            ForEach(0..<Clever2Layout.yellowColumns.count, id: \.self) { col in
+                VStack(spacing: cell * 0.04) {
+                    Image(systemName: "arrowtriangle.down.fill")
+                        .font(.system(size: cell * 0.2, weight: .black))
+                        .foregroundStyle(cleverInk.opacity(0.55))
+                    Clever2BonusBadge(bonus: Clever2Layout.yellowColumnBonus[col], game: game, size: cell * 0.42)
+                }
+                .frame(width: cell)
+            }
+        }
+        .allowsHitTesting(false)
     }
 
     /// The printed points scale above the grid (1…10 crosses →
@@ -1048,6 +1151,20 @@ struct Clever2BlueRow: View {
         }
     }
 
+    /// The printed "descending-or-equal" separator (pad photo "blue_glyph_
+    /// zoom": a double chevron "≫" in the row's own blue tint, sitting at the
+    /// trailing edge of every box — not a per-box hint value, since it isn't
+    /// replaced once the box is filled; it stays printed under the ink digit).
+    /// Non-interactive, subtle (0.55 opacity per the arrow-chain idiom used
+    /// elsewhere on this board), sized off the cell metric.
+    private var blueDescendingGlyph: some View {
+        Image(systemName: "chevron.right.2")
+            .font(.system(size: cell * 0.22, weight: .heavy))
+            .foregroundStyle(game.color(.blue).color.opacity(0.55))
+            .padding(.trailing, cell * 0.06)
+            .allowsHitTesting(false)
+    }
+
     private func segment(_ range: Range<Int>, tint: DiceColor) -> some View {
         HStack(alignment: .top, spacing: cell * 0.1) {
             ForEach(range, id: \.self) { i in
@@ -1076,6 +1193,7 @@ struct Clever2BlueRow: View {
                             })
                         }
                     }
+                    .overlay(alignment: .trailing) { blueDescendingGlyph }
                     clever2BonusSlot(Clever2Layout.blueBonus[i], game: game, size: cell * 0.6)
                 }
             }
@@ -1317,7 +1435,11 @@ struct Clever2BonusBadge: View {
         case .fox:
             Text("🦊").font(.system(size: size * 0.62))
         case let .mark(area):
-            Text("✗")
+            // The pad prints "?" for this bonus (write/cross any box of the
+            // player's choice in `area`) — never an ✗ (issue #60: the app was
+            // rendering a free cross where the sheet prints a question mark;
+            // audited against the pad photo across every badge on the board).
+            Text("?")
                 .font(.system(size: size * 0.55, weight: .black))
                 .foregroundStyle(game.color(area).textColor)
         case let .number(area, n):
