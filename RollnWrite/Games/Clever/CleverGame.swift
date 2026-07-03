@@ -285,6 +285,13 @@ public final class CleverGame: ObservableObject, Scoreboard {
                 // No number-bonuses target these areas; advisory fallback.
                 note("Write \(n) in \(area.title.lowercased())")
             }
+        case .crossOrSix:
+            // Round 4's printed badge only ever reaches `cleverRoundBadge` for
+            // DISPLAY (see `CleverLayout.roundFourBonus`) — it is never a
+            // member of `roundBonuses` or any area bonus dictionary, so
+            // `bonus(for:)` can never route it here. Case kept only for
+            // switch exhaustiveness over `BonusIcon`.
+            break
         }
     }
 

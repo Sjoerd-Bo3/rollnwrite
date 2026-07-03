@@ -303,16 +303,19 @@ func cleverTotalStrip(game: CleverGame, height: CGFloat) -> some View {
 // MARK: - Round badges (bonus icons + player-count markers)
 
 /// The badge under a round number: the printed start-of-round bonus for
-/// rounds 1–3 (`CleverLayout.roundBonuses`), player-count end markers for
-/// rounds 5–6 (3 players → 5 rounds; 1–2 players → 6 rounds). Every branch —
-/// including round 4's EMPTY slot — occupies the identical `size`×`size` box,
-/// so round tiles keep equal heights everywhere rounds render (header bar,
-/// list/editor bars, v3 rail).
+/// rounds 1–3 (`CleverLayout.roundBonuses`), round 4's printed "✗ | 6" badge
+/// (`CleverLayout.roundFourBonus` — kept separate from `roundBonuses` so it
+/// never feeds the reroll/+1 earned counts), and player-count end markers for
+/// rounds 5–6 (3 players → 5 rounds; 1–2 players → 6 rounds). Every branch
+/// occupies the identical `size`×`size` box, so round tiles keep equal
+/// heights everywhere rounds render (header bar, list/editor bars, v3 rail).
 @MainActor
 func cleverRoundBadge(_ round: Int, game: CleverGame, size: CGFloat) -> some View {
     Group {
         if let bonus = CleverLayout.roundBonuses[round] {
             BonusBadge(icon: bonus, game: game, size: size)
+        } else if round == 3 {
+            BonusBadge(icon: CleverLayout.roundFourBonus, game: game, size: size)
         } else if round == 4 {
             Image(systemName: "person.3.fill")
                 .font(.system(size: size * 0.55, weight: .bold))
@@ -413,19 +416,95 @@ struct CleverYellowGrid: View {
                 .foregroundStyle(.black.opacity(0.4))
                 .allowsHitTesting(false)
         }
+        .overlay { CleverGridConnectors(cols: 4, rows: 4, hGap: gap, vGap: vgap) }
     }
 
     private func pointsRow(_ tint: DiceColor) -> some View {
-        HStack(spacing: gap) {
-            ForEach(0..<4, id: \.self) { col in
-                let done = Set(CleverLayout.yellowColumns[col]).isSubset(of: game.state.yellowCrossed)
-                SheetPointsBadge(value: CleverLayout.yellowColumnValues[col],
-                                 tint: tint.color, size: cell * 0.78, highlighted: done)
-                    .frame(width: cell)
+        VStack(spacing: 0) {
+            // Down-arrows chaining each column into its points seal below,
+            // as printed. Same glyph/size as the row-end arrows for one
+            // consistent connector language.
+            HStack(spacing: gap) {
+                ForEach(0..<4, id: \.self) { _ in
+                    Image(systemName: "arrowtriangle.down.fill")
+                        .font(.system(size: cell * 0.22, weight: .black))
+                        .foregroundStyle(.black.opacity(0.55))
+                        .frame(width: cell)
+                }
+            }
+            .frame(height: cell * 0.24)
+            .allowsHitTesting(false)
+            HStack(spacing: gap) {
+                ForEach(0..<4, id: \.self) { col in
+                    let done = Set(CleverLayout.yellowColumns[col]).isSubset(of: game.state.yellowCrossed)
+                    SheetPointsBadge(value: CleverLayout.yellowColumnValues[col],
+                                     tint: tint.color, size: cell * 0.78, highlighted: done)
+                        .frame(width: cell)
+                }
+            }
+            .padding(.vertical, cell * 0.06)
+            .background(Capsule().fill(.white.opacity(0.4)))
+        }
+    }
+}
+
+/// The printed grid's dark connector dashes: a small rounded tab centred in
+/// EVERY gap between horizontally- or vertically-adjacent cells (the "chain"
+/// linking every cell, as on the pad). Purely decorative print detail —
+/// non-interactive, drawn as an overlay sized to the EXACT grid footprint via
+/// `GeometryReader` (rather than replicating the sibling `HStack`/`VStack`
+/// spacer maths by hand, which would drift out of sync if that layout ever
+/// changes). Cell/gap centres follow directly from the reader's measured
+/// size: for `n` cells with `n-1` gaps of width `gap` in a span `total`,
+/// `cell = (total - (n-1)·gap) / n`; the i-th gap's centre sits at
+/// `i·(cell+gap) + cell + gap/2`. Subtle: dark ink at ~0.55 opacity, matching
+/// the row/column arrow glyphs.
+struct CleverGridConnectors: View {
+    let cols: Int
+    let rows: Int
+    let hGap: CGFloat
+    let vGap: CGFloat
+    /// Horizontal gaps to skip (e.g. the blue grid's row-0 dice-hint cell has
+    /// no printed connector into "2"): `(row, gapIndex)` where `gapIndex` is
+    /// the gap before column `gapIndex + 1`. Empty for grids with no non-cell
+    /// tiles (yellow).
+    var skipHGaps: Set<GridGap> = []
+
+    struct GridGap: Hashable { let row: Int; let gapIndex: Int }
+
+    var body: some View {
+        GeometryReader { geo in
+            let cellW = (geo.size.width - CGFloat(cols - 1) * hGap) / CGFloat(cols)
+            let cellHgt = (geo.size.height - CGFloat(rows - 1) * vGap) / CGFloat(rows)
+            let tabW = min(hGap, vGap) * 1.6
+            let tabH = min(hGap, vGap) * 1.6
+
+            // Horizontal tabs: centred in each internal column gap, once per row.
+            ForEach(0..<rows, id: \.self) { r in
+                ForEach(0..<(cols - 1), id: \.self) { c in
+                    if !skipHGaps.contains(GridGap(row: r, gapIndex: c)) {
+                        let cx = CGFloat(c + 1) * (cellW + hGap) - hGap / 2
+                        let cy = CGFloat(r) * (cellHgt + vGap) + cellHgt / 2
+                        RoundedRectangle(cornerRadius: tabH * 0.3, style: .continuous)
+                            .fill(.black.opacity(0.55))
+                            .frame(width: hGap, height: tabH)
+                            .position(x: cx, y: cy)
+                    }
+                }
+            }
+            // Vertical tabs: centred in each internal row gap, once per column.
+            ForEach(0..<(rows - 1), id: \.self) { r in
+                ForEach(0..<cols, id: \.self) { c in
+                    let cx = CGFloat(c) * (cellW + hGap) + cellW / 2
+                    let cy = CGFloat(r + 1) * (cellHgt + vGap) - vGap / 2
+                    RoundedRectangle(cornerRadius: tabW * 0.3, style: .continuous)
+                        .fill(.black.opacity(0.55))
+                        .frame(width: tabW, height: vGap)
+                        .position(x: cx, y: cy)
+                }
             }
         }
-        .padding(.vertical, cell * 0.06)
-        .background(Capsule().fill(.white.opacity(0.4)))
+        .allowsHitTesting(false)
     }
 }
 
@@ -541,6 +620,13 @@ struct CleverBluePanel: View {
                 }
             }
         }
+        .overlay {
+            // Same connector language as yellow, except the row-0 dice-hint
+            // tile is not a real cell — the pad prints no dash leading into
+            // "2", so that one gap (row 0, gap index 0) is skipped.
+            CleverGridConnectors(cols: 4, rows: 3, hGap: gap, vGap: vgap,
+                                 skipHGaps: [.init(row: 0, gapIndex: 0)])
+        }
     }
 
     /// The printed "blue die + white die" rule reminder in the grid's corner.
@@ -561,14 +647,28 @@ struct CleverBluePanel: View {
     }
 
     private var columnBonusRow: some View {
-        HStack(spacing: gap) {
-            ForEach(0..<4, id: \.self) { c in
-                BonusBadge(icon: CleverLayout.blueColBonus[c], game: game, size: cell * 0.78)
-                    .frame(width: cell)
+        VStack(spacing: 0) {
+            // Down-arrows chaining each column into its bonus badge below,
+            // as printed — same glyph/size as the yellow grid's.
+            HStack(spacing: gap) {
+                ForEach(0..<4, id: \.self) { _ in
+                    Image(systemName: "arrowtriangle.down.fill")
+                        .font(.system(size: cell * 0.22, weight: .black))
+                        .foregroundStyle(.black.opacity(0.55))
+                        .frame(width: cell)
+                }
             }
+            .frame(height: cell * 0.24)
+            .allowsHitTesting(false)
+            HStack(spacing: gap) {
+                ForEach(0..<4, id: \.self) { c in
+                    BonusBadge(icon: CleverLayout.blueColBonus[c], game: game, size: cell * 0.78)
+                        .frame(width: cell)
+                }
+            }
+            .padding(.vertical, cell * 0.06)
+            .background(Capsule().fill(.white.opacity(0.35)))
         }
-        .padding(.vertical, cell * 0.06)
-        .background(Capsule().fill(.white.opacity(0.35)))
     }
 }
 
@@ -1059,6 +1159,17 @@ struct ValueEntry: Identifiable {
 
 extension View {
     /// Presents the die-value picker for a pending `ValueEntry` request.
+    ///
+    /// TestFlight bug: confirmationDialog buttons render in the presentation
+    /// context's TINT, so the 1–6 option digits picked up whatever colour the
+    /// screen behind them was tinted to (an area colour, sometimes near-white
+    /// on a light sheet) and became unreadable. `confirmationDialog` reads
+    /// the tint from the view it is attached to at presentation time, so a
+    /// `.tint(...)` placed here — AFTER (i.e. chained onto the result of)
+    /// `confirmationDialog`, overriding whatever `.tint` the screen applied
+    /// upstream — reaches the dialog's own buttons with a fixed, high-contrast
+    /// colour independent of the screen/dice tint. Never applied to the
+    /// screen itself, so the rest of the UI keeps its normal tint.
     func cleverValueEntry(_ entry: Binding<ValueEntry?>) -> some View {
         confirmationDialog(
             Text(LocalizedStringKey(entry.wrappedValue?.title ?? "")),
@@ -1076,6 +1187,7 @@ extension View {
             }
             Button("Cancel", role: .cancel) { entry.wrappedValue = nil }
         }
+        .tint(cleverInk)
     }
 }
 
@@ -1089,17 +1201,43 @@ struct BonusBadge: View {
     let size: CGFloat
 
     var body: some View {
-        ZStack {
-            Circle().fill(background)
-            Circle().strokeBorder(.white.opacity(0.85), lineWidth: SheetStroke.small)
-            content
+        if case .crossOrSix = icon {
+            // Printed as TWO small circles side by side (✗ | 6), split by a
+            // thin divider — unlike every other icon, which is one circle.
+            // Each sub-circle is sized to fit two-across in the same
+            // `size`×`size` slot every other round badge occupies.
+            HStack(spacing: size * 0.06) {
+                miniCircle { Text("✗").font(.system(size: size * 0.34, weight: .black))
+                    .foregroundStyle(.white) }
+                Rectangle().fill(.white.opacity(0.6)).frame(width: 1, height: size * 0.5)
+                miniCircle { Text("6").font(.system(size: size * 0.34, weight: .black))
+                    .foregroundStyle(.white) }
+            }
+            .frame(width: size, height: size)
+        } else {
+            ZStack {
+                Circle().fill(background)
+                Circle().strokeBorder(.white.opacity(0.85), lineWidth: SheetStroke.small)
+                content
+            }
+            .frame(width: size, height: size)
         }
-        .frame(width: size, height: size)
+    }
+
+    /// One half of the `.crossOrSix` badge: a small ink circle with its own
+    /// thin rim, matching the single-icon badges' styling at half width.
+    private func miniCircle<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        ZStack {
+            Circle().fill(cleverInk)
+            Circle().strokeBorder(.white.opacity(0.85), lineWidth: SheetStroke.small)
+            content()
+        }
+        .frame(width: size * 0.47, height: size * 0.47)
     }
 
     private var background: Color {
         switch icon {
-        case .reroll, .plusOne, .fox: return cleverInk
+        case .reroll, .plusOne, .fox, .crossOrSix: return cleverInk
         case let .mark(area): return game.color(area).color
         case let .number(area, _): return game.color(area).color
         }
@@ -1125,6 +1263,8 @@ struct BonusBadge: View {
             Text("\(n)")
                 .font(.system(size: size * 0.55, weight: .black))
                 .foregroundStyle(game.color(area).textColor)
+        case .crossOrSix:
+            EmptyView() // handled by `body`'s dedicated two-circle layout
         }
     }
 }
