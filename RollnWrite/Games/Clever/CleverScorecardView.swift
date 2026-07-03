@@ -61,6 +61,9 @@ enum CleverBoardLayout: String {
 
 public struct CleverScorecardView: View {
     @StateObject private var game = CleverGame()
+    /// Independent second engine for the across-the-table mirror (same
+    /// pattern as the Qwixx variant owners' `.p2.state` engines).
+    @StateObject private var opponent = CleverGame(persistenceKey: "rollnwrite.clever1.p2.state")
     let rules: RulesDocument
 
     @State private var confirmNewGame = false
@@ -83,6 +86,17 @@ public struct CleverScorecardView: View {
                     switch layout {
                     case .sheet: CleverV3BoardView(game: game)
                     case .list: CleverListBoardView(game: game)
+                    }
+                }
+            },
+            // Two-player: in landscape each half is a portrait-aspect slot, so
+            // the orientation switch renders two SHEET miniatures side by side
+            // (the opponent's flipped); portrait stacks two landscape reflows.
+            opponent: {
+                Group {
+                    switch layout {
+                    case .sheet: CleverV3BoardView(game: opponent)
+                    case .list: CleverListBoardView(game: opponent)
                     }
                 }
             },
