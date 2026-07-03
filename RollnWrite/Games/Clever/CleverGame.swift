@@ -25,6 +25,18 @@ public final class CleverGame: ObservableObject, Scoreboard {
     /// appear here — they are written straight onto the card and pushed to undo.
     @Published public private(set) var earnedBonuses: [String] = []
 
+    /// Actions undone via `undo()`, most-recently-undone last, so `redo()` can
+    /// re-apply them in LIFO order. Deliberately NOT persisted (`CleverState` /
+    /// `Codable` is untouched) and NOT part of `state` — redo is an in-memory,
+    /// per-session convenience. Any new forward move (via `recordAction`)
+    /// clears it, matching standard undo/redo semantics.
+    private var redoStack: [CleverAction] = []
+
+    /// `true` while `redo()` is replaying an undone action's raw mutation, so
+    /// `recordAction` knows NOT to treat it as a fresh move and clear the rest
+    /// of the redo stack.
+    private var isRedoing = false
+
     private let persistenceKey: String
 
     public init(persistenceKey: String = "rollnwrite.clever1.state") {
@@ -54,7 +66,7 @@ public final class CleverGame: ObservableObject, Scoreboard {
         guard canMarkYellow(index) else { return }
         let before = completedTriggers()
         state.yellowCrossed.insert(index)
-        state.history.append(.yellow(index))
+        recordAction(.yellow(index))
         applyNewlyEarned(before: before)
         save()
     }
@@ -69,7 +81,7 @@ public final class CleverGame: ObservableObject, Scoreboard {
         guard canMarkBlue(value) else { return }
         let before = completedTriggers()
         state.blueCrossed.insert(value)
-        state.history.append(.blue(value))
+        recordAction(.blue(value))
         applyNewlyEarned(before: before)
         save()
     }
@@ -82,7 +94,7 @@ public final class CleverGame: ObservableObject, Scoreboard {
         guard canMarkGreen() else { return }
         let before = completedTriggers()
         state.greenCount += 1
-        state.history.append(.green)
+        recordAction(.green)
         applyNewlyEarned(before: before)
         save()
     }
@@ -98,7 +110,7 @@ public final class CleverGame: ObservableObject, Scoreboard {
         guard let i = orangeNextIndex, (1...6).contains(value) else { return }
         let before = completedTriggers()
         state.orange[i] = value
-        state.history.append(.orange(i, value: value))
+        recordAction(.orange(i, value: value))
         applyNewlyEarned(before: before)
         save()
     }
@@ -118,7 +130,7 @@ public final class CleverGame: ObservableObject, Scoreboard {
         guard let i = purpleNextIndex, allowedPurpleValues().contains(value) else { return }
         let before = completedTriggers()
         state.purple[i] = value
-        state.history.append(.purple(i, value: value))
+        recordAction(.purple(i, value: value))
         applyNewlyEarned(before: before)
         save()
     }
@@ -248,7 +260,7 @@ public final class CleverGame: ObservableObject, Scoreboard {
                 if canMarkGreen() {
                     let before = completedTriggers()
                     state.greenCount += 1
-                    state.history.append(.green)
+                    recordAction(.green)
                     applyNewlyEarned(before: before, depth: depth + 1)
                 } else {
                     note("Green is full — mark skipped")
@@ -267,7 +279,7 @@ public final class CleverGame: ObservableObject, Scoreboard {
                 if let i = orangeNextIndex {
                     let before = completedTriggers()
                     state.orange[i] = n
-                    state.history.append(.orange(i, value: n))
+                    recordAction(.orange(i, value: n))
                     applyNewlyEarned(before: before, depth: depth + 1)
                 } else {
                     note("Orange \(n) earned — row is full")
@@ -276,7 +288,7 @@ public final class CleverGame: ObservableObject, Scoreboard {
                 if let i = purpleNextIndex, allowedPurpleValues().contains(n) {
                     let before = completedTriggers()
                     state.purple[i] = n
-                    state.history.append(.purple(i, value: n))
+                    recordAction(.purple(i, value: n))
                     applyNewlyEarned(before: before, depth: depth + 1)
                 } else {
                     note("Purple \(n) earned — doesn't fit the sequence")
@@ -358,7 +370,7 @@ public final class CleverGame: ObservableObject, Scoreboard {
         } else {
             guard slot < rerollsEarned else { return }
             state.rerollUsed.insert(slot)
-            state.history.append(.reroll(slot))
+            recordAction(.reroll(slot))
         }
         save()
     }
@@ -371,7 +383,7 @@ public final class CleverGame: ObservableObject, Scoreboard {
         } else {
             guard slot < extraDiceEarned else { return }
             state.extraDieUsed.insert(slot)
-            state.history.append(.extraDie(slot))
+            recordAction(.extraDie(slot))
         }
         save()
     }
@@ -487,13 +499,54 @@ public final class CleverGame: ObservableObject, Scoreboard {
         case let .reroll(s): state.rerollUsed.remove(s)
         case let .extraDie(s): state.extraDieUsed.remove(s)
         }
+        redoStack.append(last)
+        save()
+    }
+
+    public var canRedo: Bool { !redoStack.isEmpty }
+
+    /// Re-apply the most recently undone action by replaying its RAW state
+    /// mutation only — the exact inverse of `undo()`'s reversal for that case.
+    /// This deliberately does NOT call the public mutators (`markYellow`,
+    /// `fillOrange`, etc.): those funnel through `applyNewlyEarned`, which
+    /// auto-marks further cells whenever a row/column/cell completes (e.g. a
+    /// finished yellow row auto-crosses a bonus box). Each auto-mark is its own
+    /// leaf `history` entry that `undo()` unwinds one leaf at a time, so
+    /// replaying through the mutator here would re-trigger `applyNewlyEarned`
+    /// and double-chain bonuses that are already sitting on the card. Pushing
+    /// the raw mutation back—and re-appending the exact same leaf action to
+    /// `state.history`—restores precisely the state `undo()` took away.
+    public func redo() {
+        guard let next = redoStack.popLast() else { return }
+        isRedoing = true
+        switch next {
+        case let .yellow(i): state.yellowCrossed.insert(i)
+        case let .blue(v): state.blueCrossed.insert(v)
+        case .green: state.greenCount += 1
+        case let .orange(i, value): state.orange[i] = value
+        case let .purple(i, value): state.purple[i] = value
+        case let .reroll(s): state.rerollUsed.insert(s)
+        case let .extraDie(s): state.extraDieUsed.insert(s)
+        }
+        recordAction(next)
+        isRedoing = false
         save()
     }
 
     public func reset() {
         state = CleverState()
         earnedBonuses.removeAll()
+        redoStack = []
         save()
+    }
+
+    /// Appends a new action to the history. Any FORWARD move — i.e. every call
+    /// site except `redo()` replaying an undone one — invalidates the redo
+    /// stack (standard editor semantics: making a new move after undoing
+    /// forecloses the redone future).
+    private func recordAction(_ action: CleverAction) {
+        state.history.append(action)
+        if !isRedoing { redoStack = [] }
     }
 
     // MARK: - Persistence

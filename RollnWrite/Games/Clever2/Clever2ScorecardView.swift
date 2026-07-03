@@ -112,6 +112,10 @@ public struct Clever2ScorecardView: View {
                         .disabled(!game.canUndo)
                         .opacity(game.canUndo ? 1 : 0.5)
                         .accessibilityLabel("Undo")
+                    Button { game.redo() } label: { Image(systemName: "arrow.uturn.forward") }
+                        .disabled(!game.canRedo)
+                        .opacity(game.canRedo ? 1 : 0.5)
+                        .accessibilityLabel("Redo")
                     Button(role: .destructive) { confirmNewGame = true } label: {
                         Image(systemName: "trash")
                     }
