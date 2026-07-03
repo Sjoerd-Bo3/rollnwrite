@@ -25,7 +25,13 @@ public enum Clever4Area: String, Codable, CaseIterable, Identifiable {
         switch self {
         case .yellow: return Color(red: 0.96, green: 0.80, blue: 0.10)
         case .blue:   return Color(red: 0.16, green: 0.45, blue: 0.82)
-        case .grey:   return Color(red: 0.45, green: 0.47, blue: 0.50)
+        // The enum is named `.grey` after the polyomino grid's grey/white
+        // cells, but the AREA's theme on the official sheet (art. 49424) is
+        // ORANGE — orange border, orange column seals, and every "orange ?"
+        // bonus elsewhere on the card points HERE. The grid cells stay white
+        // (empty-label tiles), so this only colours the band/seals/pointing
+        // badges — matching the sheet and making them legible.
+        case .grey:   return Color(red: 0.95, green: 0.52, blue: 0.10)
         case .green:  return Color(red: 0.18, green: 0.62, blue: 0.30)
         case .pink:   return Color(red: 0.86, green: 0.28, blue: 0.56)
         }
@@ -73,6 +79,13 @@ public enum Clever4Layout {
     public static let pinkValues = [2, 4, 6, 9, 12, 15, 19, 23, 27, 32, 37, 42]
     public static var pinkFields: Int { pinkValues.count }
     /// Circled-number bonuses added on top: entered 2 → +2, 4 → +4, 6 → +3.
+    /// The sheet's printed legend (`crops/pink-legend3-big.png`) reads
+    /// "2:+2  3:3  4:+4  5:❗  6:❗+3" — the "3" callout has no bonus (there to
+    /// contrast with 2/4/6), and the "❗" under 5/6 marks that `pinkFieldBonus`
+    /// positions only fire when that EXACT value (5 or 6) is written there, not
+    /// any value — a scoring-engine nuance the app does not yet enforce
+    /// (`Clever4Game.completedTriggers()` fires on any non-nil write; flagged,
+    /// not fixed here since `Clever4Game.swift` is the read-only rules engine).
     public static let pinkBonuses: [Int: Int] = [2: 2, 4: 4, 6: 3]
 
     // MARK: - Bonus maps (transcribed from the official Clever 4ever score sheet)
@@ -88,15 +101,22 @@ public enum Clever4Layout {
     /// the *middle* row fire when that column's middle cell is filled.
     /// Top-row dividers (cols 0–4): –, ○extraDie, ?orange, ?green, fox.
     /// Mid-row dividers (cols 0–4): reroll, ?purple, ?blue, +1, ?yellow.
+    /// Verified against clever4-sheet.png crop `crops/yellow-big.png` (2026-07):
+    /// columns confirmed 0-indexed exactly as commented. A coloured "?" badge
+    /// POINTS AT the area the sheet prints in that colour — so it maps to the
+    /// `Clever4Area` whose theme is that colour, NOT the nearest hue among the
+    /// enum's display colours: orange badge → `.grey` (the 4×16 area is
+    /// orange-themed on the sheet), purple badge → `.pink` (the 12-field bar is
+    /// purple-themed). Blue/green/yellow badges map to their like-named areas.
     public static let yellowTopColBonus: [Int: C4Bonus] = [
         1: .extraDie,
-        2: .pick(.pink),    // orange "?" — nearest area is pink on this card
+        2: .pick(.grey),    // orange "?" — points to the orange (grey-enum) area
         3: .pick(.green),
         // col 4 = fox (manual stepper) → omitted
     ]
     public static let yellowMidColBonus: [Int: C4Bonus] = [
         0: .reroll,
-        1: .pick(.pink),    // purple "?"
+        1: .pick(.pink),    // purple "?" — points to the purple (pink-enum) area
         2: .pick(.blue),
         3: .plusOne,
         4: .pick(.yellow),
@@ -106,20 +126,23 @@ public enum Clever4Layout {
     /// that whole row (all 6) is crossed.
     /// Rows 0–5: ?green, ?purple, ?yellow, +1, ?orange, fox. (The TR→BL diagonal
     /// ends in a re-roll, granted when the diagonal is fully crossed.)
+    /// Verified against `crops/blue-big.png`: row order and colours confirmed.
     public static let blueRowBonus: [Int: C4Bonus] = [
         0: .pick(.green),
-        1: .pick(.pink),    // purple "?"
+        1: .pick(.pink),    // purple "?" — points to the purple (pink-enum) area
         2: .pick(.yellow),
         3: .plusOne,
-        4: .pick(.pink),    // orange "?"
+        4: .pick(.grey),    // orange "?" — points to the orange (grey-enum) area
         // row 5 = fox (manual stepper) → omitted
     ]
     public static let blueDiagonalBonus: C4Bonus = .reroll
 
     /// Grey 4×16 grid — bonuses printed inside specific cells; fire when that
     /// exact cell is crossed. Encoded as (row, col) → icon, 0-indexed.
-    /// Positions read from the sheet (dense grid; cols are a best reading and
-    /// may be ±1 — verify against the official sheet before relying on them).
+    /// Verified pixel-exact against the official sheet (`crops/grey-row0-1-idx.png`
+    /// / `crops/grey-row2-3-idx3.png`, 2026-07, columns confirmed against the
+    /// printed 1,2,3,4,5,6,6,7,7,8,8,9,9,10,10,11 header) — every position below
+    /// is exact, not a best reading.
     public static let greyCellBonus: [GridPos: C4Bonus] = [
         GridPos(0, 0):  .extraDie,    // ○ top-left
         GridPos(0, 5):  .pick(.green),
@@ -139,15 +162,15 @@ public enum Clever4Layout {
     /// Green 11 split fields — a bonus under each field, earned once both its
     /// triangles are filled.
     /// Fields 0–10: reroll, ?blue, ○extraDie, ?yellow, ?orange, +1, ?purple,
-    /// ?blue, ?yellow, fox, +1.
+    /// ?blue, ?yellow, fox, +1. Verified against `crops/green-full-big.png`.
     public static let greenFieldBonus: [Int: C4Bonus] = [
         0: .reroll,
         1: .pick(.blue),
         2: .extraDie,
         3: .pick(.yellow),
-        4: .pick(.pink),    // orange "?"
+        4: .pick(.grey),    // orange "?" — points to the orange (grey-enum) area
         5: .plusOne,
-        6: .pick(.pink),    // purple "?"
+        6: .pick(.pink),    // purple "?" — points to the purple (pink-enum) area
         7: .pick(.blue),
         8: .pick(.yellow),
         // field 9 = fox (manual stepper) → omitted
@@ -156,13 +179,13 @@ public enum Clever4Layout {
 
     /// Pink 12-field bar — a bonus under some fields, earned once that field is
     /// written. Fields 0–11: ○extraDie, –, ?green, +1, reroll, –, ?orange, fox,
-    /// –, ?blue, –, ?yellow.
+    /// –, ?blue, –, ?yellow. Verified against `crops/pink-full-big.png`.
     public static let pinkFieldBonus: [Int: C4Bonus] = [
         0: .extraDie,
         2: .pick(.green),
         3: .plusOne,
         4: .reroll,
-        6: .pick(.pink),    // orange "?"
+        6: .pick(.grey),    // orange "?" — points to the orange (grey-enum) area
         // field 7 = fox (manual stepper) → omitted
         9: .pick(.blue),
         11: .pick(.yellow),

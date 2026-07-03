@@ -755,8 +755,12 @@ struct C4PinkBand: View {
             } else {
                 segment(0..<Clever4Layout.pinkFields, tint: tint)
             }
-            // The printed extra-points legend under the bar.
-            Text(verbatim: "2 = +2   ·   4 = +4   ·   6 = +3")
+            // The printed extra-points legend under the bar: "2:+2 3:3 4:+4
+            // 5:❗ 6:❗+3" (crops/pink-legend3-big.png) — writing a 2/4/6 adds
+            // the bonus points shown; the "❗" on 5/6 marks that a field's
+            // printed icon bonus (above) only fires when EXACTLY that value is
+            // written there, not any value.
+            Text(verbatim: "2 = +2   ·   4 = +4   ·   6 = ❗+3   ·   ❗ on 5/6 only")
                 .font(.system(size: cell * 0.24, weight: .bold, design: .rounded))
                 .foregroundStyle(tint.textColor.opacity(0.85))
         }
