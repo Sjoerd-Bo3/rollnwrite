@@ -123,11 +123,15 @@ enum C3SheetArt {
 
 public struct Clever3ScorecardView: View {
     @StateObject private var game = Clever3Game()
+    /// Independent second engine for the across-the-table mirror.
+    @StateObject private var opponent = Clever3Game(persistenceKey: "rollnwrite.clever3.p2.state")
     let rules: RulesDocument
 
     @State private var confirmNewGame = false
     /// Session-only rounds/action-track pen strokes (see the header note).
     @State private var tracks = C3Tracks()
+    /// The opponent's own pen strokes — never shared across the table.
+    @State private var opponentTracks = C3Tracks()
     @AppStorage(Clever3BoardLayout.storageKey) private var layoutRaw = Clever3BoardLayout.sheet.rawValue
 
     public init(rules: RulesDocument) {
@@ -147,6 +151,16 @@ public struct Clever3ScorecardView: View {
                     switch layout {
                     case .sheet: Clever3BoardView(game: game, tracks: $tracks)
                     case .list: C3ListBoardView(game: game, tracks: $tracks)
+                    }
+                }
+            },
+            // Across-the-table mirror: landscape halves are portrait-aspect →
+            // two sheet miniatures side by side, the opponent's flipped.
+            opponent: {
+                Group {
+                    switch layout {
+                    case .sheet: Clever3BoardView(game: opponent, tracks: $opponentTracks)
+                    case .list: C3ListBoardView(game: opponent, tracks: $opponentTracks)
                     }
                 }
             },

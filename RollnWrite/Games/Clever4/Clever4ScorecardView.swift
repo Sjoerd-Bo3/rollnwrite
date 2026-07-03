@@ -55,6 +55,8 @@ enum Clever4BoardLayout: String {
 
 public struct Clever4ScorecardView: View {
     @StateObject private var game = Clever4Game()
+    /// Independent second engine for the across-the-table mirror.
+    @StateObject private var opponent = Clever4Game(persistenceKey: "rollnwrite.clever4.p2.state")
     let rules: RulesDocument
 
     @State private var confirmNewGame = false
@@ -77,6 +79,16 @@ public struct Clever4ScorecardView: View {
                     switch layout {
                     case .sheet: Clever4BoardView(game: game)
                     case .list: Clever4ListBoardView(game: game)
+                    }
+                }
+            },
+            // Across-the-table mirror: landscape halves are portrait-aspect →
+            // two sheet miniatures side by side, the opponent's flipped.
+            opponent: {
+                Group {
+                    switch layout {
+                    case .sheet: Clever4BoardView(game: opponent)
+                    case .list: Clever4ListBoardView(game: opponent)
                     }
                 }
             },
