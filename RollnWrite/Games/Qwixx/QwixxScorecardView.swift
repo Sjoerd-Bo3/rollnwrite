@@ -19,6 +19,8 @@ struct QwixxBoardView: View {
     @State private var confirmConcede: GameColor?
     @State private var confirmFinish = false
     @State private var newBest = false
+    /// Where leftover height parks (two-player portrait anchors outward).
+    @Environment(\.boardAnchor) private var boardAnchor
 
     private let tileGap: CGFloat = 4
     private let rowGap: CGFloat = 4
@@ -36,7 +38,10 @@ struct QwixxBoardView: View {
         GeometryReader { geo in
             let s = sizing(for: geo.size)
             boardStack(w: s.w, th: s.th)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                // Leftover height goes where the host asks: `.center` alone
+                // (the default), `.bottom` in the two-player portrait stack so
+                // the board hugs its player's table edge (see ScorecardScaffold).
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: boardAnchor)
                 .padding(outerPad)
         }
         // Content stays inside the bottom safe area so the bar's controls and
