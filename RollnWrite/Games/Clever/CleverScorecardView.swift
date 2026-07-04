@@ -283,6 +283,17 @@ public struct CleverScorecardView: View {
                 withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { showBonus = true }
             }
         }
+        // Auto-dismiss the banner just after the icons leave it for their bonus
+        // areas (fly-in 0.8s + dwell 2s), so the count LANDING on the track isn't
+        // hidden behind the banner. Restarts if a new bonus arrives. The fly
+        // continues independently (driven by `bonusEvents`, not the banner).
+        .task(id: game.earnedBonuses) {
+            guard !game.earnedBonuses.isEmpty else { return }
+            try? await Task.sleep(nanoseconds: 2_900_000_000)
+            guard !Task.isCancelled else { return }
+            withAnimation { showBonus = false }
+            game.clearEarnedBonuses()
+        }
         // The engine can't read `@AppStorage` itself (issue #57's `isGameOver`
         // needs to know if round management is on to treat "all rounds
         // crossed" as an end condition), so this view — which already reads
@@ -459,13 +470,13 @@ struct CleverSheetBoardView: View {
             }
             SheetCircleTrack(slots: CleverLayout.rerollTrackSlots,
                              used: game.state.rerollUsed,
-                             earned: game.rerollsEarned,
+                             earned: game.rerollsEarnedDisplayed,
                              diameter: 17, ink: cleverInk, stretch: stretch,
                              icon: { BonusBadge(icon: .reroll, game: game, size: 21) },
                              tap: { game.toggleReroll($0) })
             SheetCircleTrack(slots: CleverLayout.extraDieTrackSlots,
                              used: game.state.extraDieUsed,
-                             earned: game.extraDiceEarned,
+                             earned: game.extraDiceEarnedDisplayed,
                              diameter: 17, ink: cleverInk, stretch: stretch,
                              icon: { BonusBadge(icon: .plusOne, game: game, size: 21) },
                              tap: { game.toggleExtraDie($0) })
@@ -1520,13 +1531,13 @@ struct CleverListBoardView: View {
             }
             SheetCircleTrack(slots: CleverLayout.rerollTrackSlots,
                              used: game.state.rerollUsed,
-                             earned: game.rerollsEarned,
+                             earned: game.rerollsEarnedDisplayed,
                              diameter: 26, ink: cleverInk,
                              icon: { BonusBadge(icon: .reroll, game: game, size: 30) },
                              tap: { game.toggleReroll($0) })
             SheetCircleTrack(slots: CleverLayout.extraDieTrackSlots,
                              used: game.state.extraDieUsed,
-                             earned: game.extraDiceEarned,
+                             earned: game.extraDiceEarnedDisplayed,
                              diameter: 26, ink: cleverInk,
                              icon: { BonusBadge(icon: .plusOne, game: game, size: 30) },
                              tap: { game.toggleExtraDie($0) })
@@ -1626,13 +1637,13 @@ struct CleverEditorSheet: View {
             }
             SheetCircleTrack(slots: CleverLayout.rerollTrackSlots,
                              used: game.state.rerollUsed,
-                             earned: game.rerollsEarned,
+                             earned: game.rerollsEarnedDisplayed,
                              diameter: 26, ink: cleverInk,
                              icon: { BonusBadge(icon: .reroll, game: game, size: 30) },
                              tap: { game.toggleReroll($0) })
             SheetCircleTrack(slots: CleverLayout.extraDieTrackSlots,
                              used: game.state.extraDieUsed,
-                             earned: game.extraDiceEarned,
+                             earned: game.extraDiceEarnedDisplayed,
                              diameter: 26, ink: cleverInk,
                              icon: { BonusBadge(icon: .plusOne, game: game, size: 30) },
                              tap: { game.toggleExtraDie($0) })

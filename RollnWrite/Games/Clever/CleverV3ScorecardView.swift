@@ -191,14 +191,14 @@ struct CleverV3LandscapeBoard: View {
         HStack(spacing: 10) {
             SheetCircleTrack(slots: CleverLayout.rerollTrackSlots,
                              used: game.state.rerollUsed,
-                             earned: game.rerollsEarned,
+                             earned: game.rerollsEarnedDisplayed,
                              diameter: 19, ink: cleverInk, stretch: stretch,
                              icon: { BonusBadge(icon: .reroll, game: game, size: 24) },
                              tap: { game.toggleReroll($0) })
                 .cleverFlyDest(.reroll)
             SheetCircleTrack(slots: CleverLayout.extraDieTrackSlots,
                              used: game.state.extraDieUsed,
-                             earned: game.extraDiceEarned,
+                             earned: game.extraDiceEarnedDisplayed,
                              diameter: 19, ink: cleverInk, stretch: stretch,
                              icon: { BonusBadge(icon: .plusOne, game: game, size: 24) },
                              tap: { game.toggleExtraDie($0) })
