@@ -67,7 +67,9 @@ public struct CleverScorecardView: View {
     let rules: RulesDocument
 
     @State private var confirmNewGame = false
+    @State private var confirmPlayerCount = false
     @AppStorage(CleverBoardLayout.storageKey) private var layoutRaw = CleverBoardLayout.sheet.rawValue
+    @AppStorage(CleverRoundManagement.storageKey) private var roundManagement = true
 
     public init(rules: RulesDocument) {
         self.rules = rules
@@ -117,7 +119,13 @@ public struct CleverScorecardView: View {
                         .disabled(!game.canRedo)
                         .opacity(game.canRedo ? 1 : 0.5)
                         .accessibilityLabel("Redo")
-                    Button(role: .destructive) { confirmNewGame = true } label: {
+                    Button(role: .destructive) {
+                        // Round management ON: ask player count first (the
+                        // choice sets the round count); OFF: unchanged
+                        // behaviour — go straight to the reset confirmation.
+                        if roundManagement { confirmPlayerCount = true }
+                        else { confirmNewGame = true }
+                    } label: {
                         Image(systemName: "trash")
                     }
                     .accessibilityLabel("New game")
@@ -139,6 +147,87 @@ public struct CleverScorecardView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("This clears the scorecard.")
+        }
+        // Round management ON: "New game" asks player count first — the
+        // choice sets the round count (1–2 → 6, 3 → 5, 4 → 4) — then resets.
+        .confirmationDialog("How many players?", isPresented: $confirmPlayerCount, titleVisibility: .visible) {
+            ForEach(1...4, id: \.self) { players in
+                Button("\(players)") { game.startNewGame(playerCount: players) }
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+        // Round management ON only: crossing a round on the bar surfaces a
+        // summary of that round (points/marks gained, rounds remaining).
+        // `pendingRoundSummary` is engine-derived bookkeeping (like
+        // `earnedBonuses`) that is harmless to set even with the toggle off —
+        // gating the SHEET here is what actually implements "OFF = unchanged".
+        .sheet(isPresented: Binding(
+            get: { roundManagement && game.pendingRoundSummary != nil },
+            set: { if !$0 { game.clearRoundSummary() } }
+        )) {
+            if let round = game.pendingRoundSummary {
+                CleverRoundSummaryView(game: game, round: round)
+            }
+        }
+    }
+}
+
+// MARK: - Round summary (issue #59)
+
+/// Presented when a round is crossed on the rounds bar (round management
+/// setting ON): what happened THAT round (points + new marks, derived as the
+/// delta between this round's snapshot and the previous one) plus rounds
+/// remaining. Deliberately simple — a pilot the owner will iterate on from
+/// screenshots.
+struct CleverRoundSummaryView: View {
+    @ObservedObject var game: CleverGame
+    let round: Int
+    @Environment(\.dismiss) private var dismiss
+
+    private var snapshot: CleverRoundSnapshot { game.roundSnapshot(for: round) ?? CleverRoundSnapshot() }
+    private var previous: CleverRoundSnapshot { game.previousRoundSnapshot(before: round) }
+    private var pointsGained: Int { snapshot.totalScore - previous.totalScore }
+    private var marksGained: Int { snapshot.markCount - previous.markCount }
+    private var roundsRemaining: Int { max(0, (game.roundsBarDarkFrom) - (round + 1)) }
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 20) {
+                Text("Round \(round + 1) complete")
+                    .font(.title2.bold())
+                VStack(spacing: 12) {
+                    summaryRow("Points this round", pointsGained)
+                    summaryRow("New marks this round", marksGained)
+                    summaryRow("Rounds remaining", roundsRemaining)
+                }
+                .padding(16)
+                .background(
+                    RoundedRectangle(cornerRadius: SheetRadius.panel, style: .continuous)
+                        .fill(Color(white: 0.95))
+                )
+                Spacer()
+            }
+            .padding(20)
+            .navigationTitle("Round summary")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+        .environment(\.colorScheme, .light)
+        .presentationDetents([.height(320), .medium])
+    }
+
+    private func summaryRow(_ label: LocalizedStringKey, _ value: Int) -> some View {
+        HStack {
+            Text(label)
+                .font(.body)
+                .foregroundStyle(.secondary)
+            Spacer()
+            Text("\(value)")
+                .font(.title3.bold().monospacedDigit())
         }
     }
 }
@@ -230,7 +319,7 @@ struct CleverSheetBoardView: View {
 
     private func headerBand(_ stretch: CGFloat) -> some View {
         VStack(spacing: 6 * stretch) {
-            SheetRoundsBar(rounds: 6, darkFrom: 4, cell: 30, ink: cleverInk, stretch: stretch,
+            SheetRoundsBar(rounds: 6, darkFrom: game.roundsBarDarkFrom, cell: 30, ink: cleverInk, stretch: stretch,
                            crossed: game.state.roundsCrossed,
                            tap: { game.toggleRound($0) }) { r in
                 cleverRoundBadge(r, game: game, size: 16)
@@ -955,7 +1044,7 @@ struct CleverListBoardView: View {
 
     private var tracksContent: some View {
         VStack(spacing: 10) {
-            SheetRoundsBar(rounds: 6, darkFrom: 4, cell: 42, ink: cleverInk,
+            SheetRoundsBar(rounds: 6, darkFrom: game.roundsBarDarkFrom, cell: 42, ink: cleverInk,
                            crossed: game.state.roundsCrossed,
                            tap: { game.toggleRound($0) }) { r in
                 cleverRoundBadge(r, game: game, size: 21)
@@ -1059,7 +1148,7 @@ struct CleverEditorSheet: View {
         // The printed sheet's three scratch boxes are pen-and-paper artifacts
         // and are deliberately omitted (owner request) — rounds + tracks only.
         VStack(spacing: 10) {
-            SheetRoundsBar(rounds: 6, darkFrom: 4, cell: 42, ink: cleverInk,
+            SheetRoundsBar(rounds: 6, darkFrom: game.roundsBarDarkFrom, cell: 42, ink: cleverInk,
                            crossed: game.state.roundsCrossed,
                            tap: { game.toggleRound($0) }) { r in
                 cleverRoundBadge(r, game: game, size: 21)

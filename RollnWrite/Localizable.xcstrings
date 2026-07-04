@@ -3169,6 +3169,134 @@
           }
         }
       }
+    },
+    "Round management": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rondebeheer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rundenverwaltung"
+          }
+        }
+      }
+    },
+    "Track rounds and show a summary after each. Off = the rounds bar is just a tally.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Houd rondes bij en toon een samenvatting na elke ronde. Uit = de rondebalk is enkel een telling."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Runden verfolgen und nach jeder eine Zusammenfassung zeigen. Aus = die Rundenleiste ist nur eine Zählung."
+          }
+        }
+      }
+    },
+    "How many players?": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Met hoeveel spelers?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie viele Spieler?"
+          }
+        }
+      }
+    },
+    "Round %lld complete": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ronde %lld voltooid"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Runde %lld abgeschlossen"
+          }
+        }
+      }
+    },
+    "Round summary": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rondesamenvatting"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rundenzusammenfassung"
+          }
+        }
+      }
+    },
+    "Points this round": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Punten deze ronde"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Punkte diese Runde"
+          }
+        }
+      }
+    },
+    "New marks this round": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieuwe kruisjes deze ronde"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Markierungen diese Runde"
+          }
+        }
+      }
+    },
+    "Rounds remaining": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resterende rondes"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbleibende Runden"
+          }
+        }
+      }
     }
   }
 }
