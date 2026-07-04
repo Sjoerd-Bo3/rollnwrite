@@ -150,6 +150,19 @@ sheet, and optional 2-player mirror — exactly like `QwixxBoardView` /
 > and use the local Simulator (ios-simulator MCP: install/launch/screenshot/
 > tap; `-smokeTestGame <id>` launch arg opens any board directly in Debug
 > builds) to review screens without a TestFlight round-trip.
+>
+> **Simulator screenshots — avoid the 32 MB read limit.** A full-res iPad
+> PNG from `simctl io screenshot` is too large for the image reader and comes
+> back "Request too large (max 32MB)". Always downsize before reading:
+> `sips -s format jpeg -s formatOptions 60 --resampleWidth 900 in.png --out
+> small.jpg`, then read `small.jpg`. Better still, for verifying **state or
+> text** (button enabled/disabled, labels, a value) use the accessibility
+> tree (`ui_find_element` / `ui_describe_*`) instead of a screenshot — it's
+> exact, tiny, and immune to the size cap. Reserve screenshots for genuine
+> visual/layout review. Also: `ui_find_element` reports coordinates in the
+> app's LOGICAL orientation while `ui_tap` uses the framebuffer — if the sim
+> is landscape, convert (framebuffer_x = logical_y, framebuffer_y ≈
+> screenH − logical_x) or rotate the sim to portrait first.
 
 - Open `RollnWrite.xcodeproj` in Xcode 16+ if a Mac is available; the project
   uses `objectVersion = 77` (file-system synchronized groups — new files under
@@ -277,6 +290,21 @@ Clever 2/3/4 adopt them verbatim when their redesign lands):
 
 ## Conventions
 
+- **Abstract shared behaviour; never duplicate it across games (DIP).** The
+  codebase already injects at its seams — `GameDefinition`/`GameRegistry`
+  (factory), the `Scoreboard` protocol, `ScoringStrategy` injected into the
+  Qwixx engines, `DiceTheme` via the environment. Follow that: when a
+  behaviour is shared across several engines — the lifecycle bits (undo/redo
+  stacks, round management, round snapshots, end-game/`isGameOver`, manual
+  finish, fox scoring `foxCount × lowestArea`) — put the mechanics in a
+  **protocol + default implementations** (with get/set storage requirements,
+  since protocol extensions can't add stored properties; and a shared Codable
+  "meta" struct for the persisted shared state), and have each engine conform
+  and supply only its specifics (its area list, `roundCount(forPlayers:)`,
+  `foxCount` derivation, `score(for:)`, and the per-`Action` undo-reverse /
+  redo-replay). "Roll a Clever feature out to 2/3/4" must mean *conform to
+  the shared protocol*, NOT paste the code four times. The four Clever
+  engines are the live example: consolidate, don't copy.
 - Keep rule logic in engines, not views. Views ask `can…` and call mutators.
 - Keep `Core` free of game-specific code.
 - Persist game state via the engine (`UserDefaults` + `Codable`). Any new
