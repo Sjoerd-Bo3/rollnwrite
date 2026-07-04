@@ -593,6 +593,15 @@ public final class CleverGame: ObservableObject, Scoreboard, CleverUndoRedo, Cle
     /// Total +1s the player has EARNED so far (rounds + area bonuses).
     public var extraDiceEarned: Int { roundExtraDiceEarned + areaExtraDiceEarned }
 
+    // The DISPLAYED earned counts hold a just-earned slot back until its flying
+    // icon has landed on the track (issue #54): while a reroll/+1 bonus is still
+    // in flight (an un-consumed `bonusEvents` entry), its slot stays dim, so the
+    // track visibly "counts it" the moment the icon arrives. Spending still uses
+    // the real `…Earned` above — this only affects which slots light up.
+    private func inFlight(_ icon: BonusIcon) -> Int { bonusEvents.filter { $0.icon == icon }.count }
+    public var rerollsEarnedDisplayed: Int { max(0, rerollsEarned - inFlight(.reroll)) }
+    public var extraDiceEarnedDisplayed: Int { max(0, extraDiceEarned - inFlight(.plusOne)) }
+
     /// Spend / unspend a reroll slot. Only earned slots (index < `rerollsEarned`)
     /// can be crossed; uncrossing is always allowed.
     public func toggleReroll(_ slot: Int) {
