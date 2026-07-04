@@ -460,6 +460,11 @@ struct SheetTotalStrip: View {
     let total: Int
     var ink: Color = .black
     var height: CGFloat = 46
+    /// Issue #57 "hide live scores": show "•" in the total box instead of the
+    /// number. Entry boxes are blanked by the CALLER (their `value` is just a
+    /// `String`, so `cleverTotalStrip` swaps in "•" directly) — this flag only
+    /// covers the total box, which otherwise always renders its own `Int`.
+    var hideTotal: Bool = false
 
     var body: some View {
         HStack(spacing: height * 0.1) {
@@ -518,7 +523,7 @@ struct SheetTotalStrip: View {
                     RoundedRectangle(cornerRadius: height * 1.08 * 0.2, style: .continuous)
                         .strokeBorder(ink, lineWidth: SheetStroke.medium)
                 )
-            Text("\(total)")
+            Text(hideTotal ? "•" : "\(total)")
                 .font(.system(size: height * 0.42, weight: .heavy, design: .rounded).monospacedDigit())
                 .minimumScaleFactor(0.5)
                 .lineLimit(1)

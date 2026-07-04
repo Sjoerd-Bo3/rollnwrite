@@ -47,6 +47,15 @@ public final class CleverGame: ObservableObject, Scoreboard {
 
     private let persistenceKey: String
 
+    /// Whether the "round management" Settings toggle is on (issue #57/#59).
+    /// The engine cannot read `@AppStorage` itself, so the hosting view syncs
+    /// this in (mirrors how `startNewGame(playerCount:)` already takes the
+    /// player-count CHOICE the view derives from that same toggle) — see
+    /// `CleverScorecardView`'s `.onAppear`/`.onChange(of: roundManagement)`.
+    /// Purely a UI-driven read of a setting, not a game move: NOT persisted
+    /// and NOT part of `state`, so it never touches `Codable`/undo.
+    @Published public var roundManagementOn = false
+
     public init(persistenceKey: String = "rollnwrite.clever1.state") {
         self.persistenceKey = persistenceKey
         load()
@@ -347,6 +356,7 @@ public final class CleverGame: ObservableObject, Scoreboard {
     /// Sets the player count and resets the board — the "New game" flow when
     /// round management is on. Player count is persisted BOOKKEEPING (like
     /// `roundsCrossed`), not a game move, so it is not part of `history`.
+    /// `state = CleverState()` also clears `manuallyFinished`.
     public func startNewGame(playerCount: Int) {
         state = CleverState()
         state.playerCount = playerCount
@@ -546,8 +556,33 @@ public final class CleverGame: ObservableObject, Scoreboard {
         CleverArea.allCases.reduce(0) { $0 + score(for: $1) } + foxScore
     }
 
-    /// A pure scorecard has no enforced end; the player fills it as they play.
-    public var isGameOver: Bool { false }
+    /// Game over when the player manually finishes (issue #57's header flag),
+    /// OR — when round management is ON — every round of the CURRENT game is
+    /// crossed. Round management OFF (or an older save with no `playerCount`
+    /// chosen, so `roundCount` is `nil`) reproduces the historical pure
+    /// scorecard: only a manual finish ends the game; the rounds bar is just a
+    /// tally. `roundManagementOn` is the view-synced read of the Settings
+    /// toggle (see the property's doc) since the engine can't read
+    /// `@AppStorage` itself.
+    public var isGameOver: Bool {
+        if state.manuallyFinished { return true }
+        guard roundManagementOn, let roundCount else { return false }
+        return Set(0..<roundCount).isSubset(of: state.roundsCrossed)
+    }
+
+    /// Manual finish is available any time the game isn't already over —
+    /// mirrors `QwixxGame.canFinishManually`.
+    public var canFinishManually: Bool { !isGameOver }
+
+    /// End the game now, independent of round completion (issue #57). This is
+    /// a real game-ending move (unlike the bookkeeping `toggleRound`), but it
+    /// has no meaningful inverse to `undo()` back onto the LIFO stack — like
+    /// Qwixx's `finishGame()`, it is not pushed to `history`.
+    public func finishGame() {
+        guard canFinishManually else { return }
+        state.manuallyFinished = true
+        save()
+    }
 
     public var canUndo: Bool { !state.history.isEmpty }
 
@@ -630,6 +665,8 @@ public final class CleverGame: ObservableObject, Scoreboard {
         save()
     }
 
+    /// Resets to a fresh `CleverState()`, which zeroes every field including
+    /// `manuallyFinished` — a finished game's flag never survives "New game".
     public func reset() {
         state = CleverState()
         earnedBonuses.removeAll()
