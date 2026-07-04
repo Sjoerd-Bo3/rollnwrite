@@ -729,11 +729,11 @@ func cleverFlyDestination(for icon: BonusIcon) -> CleverFlyDest? {
     }
 }
 
-/// A single earned icon in flight. Phase 1: from its printed badge up into the
-/// banner (grows). Phase 2 (only when `onward` is given — an AUTOMATIC dice
-/// bonus): after a beat it flies on from the banner to its track and lands
-/// (shrinks + fades), so you see the +1 / re-roll drop onto its track. Without
-/// `onward` it just fades at the banner. Purely decorative — no hit testing.
+/// A single earned icon in flight. Phase 1: from its printed badge up INTO the
+/// banner, where it docks and DWELLS for ~2s (so you read what you got). Then —
+/// only when `onward` is given (an AUTOMATIC dice bonus) — it flies on to its
+/// track and lands (shrinks + fades); otherwise it fades in place. Purely
+/// decorative — no hit testing.
 struct CleverFlyingBonus: View {
     let icon: BonusIcon
     @ObservedObject var game: CleverGame
@@ -744,8 +744,13 @@ struct CleverFlyingBonus: View {
     var onward: CGRect? = nil
     let onDone: () -> Void
 
+    /// Seconds the icon rests in the banner before moving on / fading.
+    private let dwell: Double = 2.0
+    private let flyIn: Double = 0.8
+
     @State private var p1: CGFloat = 0   // badge → banner
     @State private var p2: CGFloat = 0   // banner → track
+    @State private var faded = false     // fade-out in place (no track)
 
     var body: some View {
         let start = CGPoint(x: from.midX, y: from.midY)
@@ -758,24 +763,29 @@ struct CleverFlyingBonus: View {
                 return CGPoint(x: banner.x + (dest.x - banner.x) * p2,
                                y: banner.y + (dest.y - banner.y) * p2)
             }()
-        // Grows toward the banner; shrinks as it lands on the track.
-        let scale = 1 + 0.45 * p1 - 0.7 * p2
-        let opacity = p2 > 0.75 ? max(0, 1 - (p2 - 0.75) / 0.25)   // fade onto track
-                                : (onward == nil && p1 > 0.9 ? 1 - (p1 - 0.9) / 0.1 : 1)
+        // Grows into the banner, holds through the dwell, shrinks onto the track.
+        let scale = 1 + 0.4 * p1 - 0.6 * p2
+        let opacity = faded ? 0 : (p2 > 0.8 ? max(0, 1 - (p2 - 0.8) / 0.2) : 1)
         BonusBadge(icon: icon, game: game, size: max(from.width, 22))
             .scaleEffect(scale)
             .opacity(opacity)
             .shadow(color: .black.opacity(0.25), radius: 5, y: 2)
             .position(pos)
             .onAppear {
-                withAnimation(.easeInOut(duration: 0.85)) { p1 = 1 }
+                withAnimation(.easeInOut(duration: flyIn)) { p1 = 1 }
+                let dwellEnd = flyIn + dwell
                 if onward != nil {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.05) {
-                        withAnimation(.easeIn(duration: 0.55)) { p2 = 1 }
+                    // After docking in the banner for `dwell`, move to the track.
+                    DispatchQueue.main.asyncAfter(deadline: .now() + dwellEnd) {
+                        withAnimation(.easeInOut(duration: 0.6)) { p2 = 1 }
                     }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.7) { onDone() }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + dwellEnd + 0.65) { onDone() }
                 } else {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.95) { onDone() }
+                    // No track — fade out in the banner after the dwell.
+                    DispatchQueue.main.asyncAfter(deadline: .now() + dwellEnd) {
+                        withAnimation(.easeOut(duration: 0.4)) { faded = true }
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + dwellEnd + 0.45) { onDone() }
                 }
             }
     }
