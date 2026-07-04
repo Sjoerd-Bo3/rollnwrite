@@ -76,6 +76,8 @@ public struct CleverScorecardView: View {
     /// a normal `.overlay` driven by the observed `game` — can start each earned
     /// icon from its badge (issue #54, 2b).
     @State private var badgeFrames: [CleverBonusSource: CGRect] = [:]
+    /// Track frames (global) an automatic dice bonus flies on to (issue #54, 3a).
+    @State private var destFrames: [CleverFlyDest: CGRect] = [:]
     @AppStorage(CleverBoardLayout.storageKey) private var layoutRaw = CleverBoardLayout.sheet.rawValue
     @AppStorage(CleverRoundManagement.storageKey) private var roundManagement = true
 
@@ -209,7 +211,7 @@ public struct CleverScorecardView: View {
         // every layout (v3 board, landscape, list) just like the game-over
         // overlay. `&& !showResults` keeps it from stacking over the final card.
         .overlay(alignment: .top) {
-            if showBonus && !showResults {
+            if showBonus && !showResults && !game.isClaiming {
                 CleverBonusEarnedOverlay(
                     game: game,
                     onDismiss: {
@@ -223,6 +225,16 @@ public struct CleverScorecardView: View {
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
+        // Issue #54, 3b: while a free "cross any yellow/blue" mark is owed, a
+        // persistent (non-dismissable) cue replaces the bonus banner and the
+        // board is locked until the player taps a ringed cell.
+        .overlay(alignment: .top) {
+            if let area = game.pendingClaimArea, !showResults {
+                CleverClaimCue(area: area, game: game)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: game.isClaiming)
         // Issue #54 increment 2b: render each earned icon in flight from its
         // printed badge up into the banner. Only the BADGE anchors resolve here
         // (they live in the main board subtree); the banner's own anchor sits
@@ -233,6 +245,7 @@ public struct CleverScorecardView: View {
         // every `game.bonusEvents` change (a plain `.overlay` driven by the
         // observed engine), not only when the frames preference changes.
         .onPreferenceChange(CleverFlyFramesKey.self) { badgeFrames = $0 }
+        .onPreferenceChange(CleverFlyDestKey.self) { destFrames = $0 }
         .overlay {
             GeometryReader { proxy in
                 // Badge frames are captured in `.global` (which reflects the
@@ -243,11 +256,16 @@ public struct CleverScorecardView: View {
                 ForEach(game.bonusEvents) { event in
                     if let a = badgeFrames[event.source] {
                         let src = a.offsetBy(dx: -origin.x, dy: -origin.y)
+                        // Automatic dice bonuses fly on to their track and land.
+                        let onward = cleverFlyDestination(for: event.icon)
+                            .flatMap { destFrames[$0] }?
+                            .offsetBy(dx: -origin.x, dy: -origin.y)
                         CleverFlyingBonus(
                             icon: event.icon,
                             game: game,
                             from: src,
                             to: target,
+                            onward: onward,
                             onDone: { game.clearBonusEvent(event.id) }
                         )
                     }
@@ -677,31 +695,143 @@ extension View {
     }
 }
 
-/// A single earned icon in flight: starts centred on its printed badge and
-/// eases into the banner, growing slightly and fading as it lands, then calls
-/// `onDone` to clear the event. Purely decorative — no hit testing.
+/// Fly DESTINATIONS for automatic dice bonuses — the tracks they land on.
+enum CleverFlyDest: Hashable { case reroll, extraDie }
+
+/// Each track's on-screen frame (global), so an automatic bonus can fly on from
+/// the banner and land on it (issue #54 increment 3a).
+struct CleverFlyDestKey: PreferenceKey {
+    static let defaultValue: [CleverFlyDest: CGRect] = [:]
+    static func reduce(value: inout [CleverFlyDest: CGRect],
+                       nextValue: () -> [CleverFlyDest: CGRect]) {
+        value.merge(nextValue()) { current, _ in current }
+    }
+}
+
+extension View {
+    /// Publish a fly destination's global frame (a +1 / re-roll track).
+    func cleverFlyDest(_ dest: CleverFlyDest) -> some View {
+        background(
+            GeometryReader { g in
+                Color.clear.preference(key: CleverFlyDestKey.self, value: [dest: g.frame(in: .global)])
+            }
+        )
+    }
+}
+
+/// The track an automatic dice bonus lands on, if any (re-roll / +1). Other
+/// automatic bonuses (fox, auto marks) and manual ones have no onward track.
+func cleverFlyDestination(for icon: BonusIcon) -> CleverFlyDest? {
+    switch icon {
+    case .reroll:  return .reroll
+    case .plusOne: return .extraDie
+    default:       return nil
+    }
+}
+
+/// A single earned icon in flight. Phase 1: from its printed badge up into the
+/// banner (grows). Phase 2 (only when `onward` is given — an AUTOMATIC dice
+/// bonus): after a beat it flies on from the banner to its track and lands
+/// (shrinks + fades), so you see the +1 / re-roll drop onto its track. Without
+/// `onward` it just fades at the banner. Purely decorative — no hit testing.
 struct CleverFlyingBonus: View {
     let icon: BonusIcon
     @ObservedObject var game: CleverGame
     let from: CGRect
     let to: CGRect
+    /// Optional second destination (the +1 / re-roll track slot) for automatic
+    /// bonuses; nil → the flight ends at the banner.
+    var onward: CGRect? = nil
     let onDone: () -> Void
-    @State private var progress: CGFloat = 0
+
+    @State private var p1: CGFloat = 0   // badge → banner
+    @State private var p2: CGFloat = 0   // banner → track
 
     var body: some View {
         let start = CGPoint(x: from.midX, y: from.midY)
-        let end = CGPoint(x: to.midX, y: to.midY)
-        let pos = CGPoint(x: start.x + (end.x - start.x) * progress,
-                          y: start.y + (end.y - start.y) * progress)
+        let banner = CGPoint(x: to.midX, y: to.midY)
+        let pos: CGPoint = p2 == 0
+            ? CGPoint(x: start.x + (banner.x - start.x) * p1,
+                      y: start.y + (banner.y - start.y) * p1)
+            : {
+                let dest = CGPoint(x: (onward ?? to).midX, y: (onward ?? to).midY)
+                return CGPoint(x: banner.x + (dest.x - banner.x) * p2,
+                               y: banner.y + (dest.y - banner.y) * p2)
+            }()
+        // Grows toward the banner; shrinks as it lands on the track.
+        let scale = 1 + 0.45 * p1 - 0.7 * p2
+        let opacity = p2 > 0.75 ? max(0, 1 - (p2 - 0.75) / 0.25)   // fade onto track
+                                : (onward == nil && p1 > 0.9 ? 1 - (p1 - 0.9) / 0.1 : 1)
         BonusBadge(icon: icon, game: game, size: max(from.width, 22))
-            .scaleEffect(1 + 0.45 * progress)
-            .opacity(progress < 0.9 ? 1 : (1 - (progress - 0.9) / 0.1))
+            .scaleEffect(scale)
+            .opacity(opacity)
             .shadow(color: .black.opacity(0.25), radius: 5, y: 2)
             .position(pos)
             .onAppear {
-                withAnimation(.easeInOut(duration: 0.85)) { progress = 1 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.95) { onDone() }
+                withAnimation(.easeInOut(duration: 0.85)) { p1 = 1 }
+                if onward != nil {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.05) {
+                        withAnimation(.easeIn(duration: 0.55)) { p2 = 1 }
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.7) { onDone() }
+                } else {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.95) { onDone() }
+                }
             }
+    }
+}
+
+/// The persistent, non-dismissable prompt shown while a free "cross any
+/// yellow/blue" mark is owed (issue #54, 3b). The board is locked until the
+/// player taps one of the ringed cells to place it.
+struct CleverClaimCue: View {
+    let area: CleverArea
+    @ObservedObject var game: CleverGame
+
+    var body: some View {
+        HStack(spacing: 13) {
+            Image(systemName: "hand.tap.fill")
+                .font(.system(size: 23, weight: .bold))
+                .foregroundStyle(game.color(area).color)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Free mark earned!")
+                    .font(.system(size: 18, weight: .heavy, design: .rounded))
+                    .foregroundStyle(cleverInk)
+                Text("Tap a highlighted \(area.title.lowercased()) box to place it")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(cleverInk.opacity(0.8))
+            }
+            Spacer(minLength: 8)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
+        .frame(maxWidth: 620)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(game.color(area).color.opacity(0.16),
+                    in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .strokeBorder(game.color(area).color.opacity(0.65), lineWidth: 2.5)
+        )
+        .shadow(color: .black.opacity(0.2), radius: 16, y: 6)
+        .padding(.horizontal, 12)
+        .padding(.top, 54)
+    }
+}
+
+/// A pulsing highlight ring over a cell that can receive a pending free mark
+/// (issue #54, 3b claim mode) — draws the eye to where the player must tap.
+struct CleverClaimRing: View {
+    let size: CGFloat
+    @State private var on = false
+    var body: some View {
+        RoundedRectangle(cornerRadius: size * 0.2, style: .continuous)
+            .strokeBorder(Color.accentColor, lineWidth: max(2.5, size * 0.09))
+            .opacity(on ? 1 : 0.3)
+            .scaleEffect(on ? 1.0 : 0.9)
+            .animation(.easeInOut(duration: 0.65).repeatForever(autoreverses: true), value: on)
+            .onAppear { on = true }
+            .allowsHitTesting(false)
     }
 }
 
@@ -810,6 +940,9 @@ struct CleverYellowGrid: View {
                             height: cellH
                         ) {
                             if undoable { game.undo() } else { game.markYellow(idx) }
+                        }
+                        .overlay {
+                            if game.isClaimTarget(.yellow, idx) { CleverClaimRing(size: cell) }
                         }
                     }
                 }
@@ -1020,6 +1153,9 @@ struct CleverBluePanel: View {
                                 height: cellH
                             ) {
                                 if game.isLastBlue(v) { game.undo() } else { game.markBlue(v) }
+                            }
+                            .overlay {
+                                if game.isClaimTarget(.blue, v) { CleverClaimRing(size: cell) }
                             }
                         } else {
                             diceHint
