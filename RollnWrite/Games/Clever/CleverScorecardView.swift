@@ -70,6 +70,7 @@ public struct CleverScorecardView: View {
     @State private var confirmPlayerCount = false
     @State private var confirmFinish = false
     @State private var showResults = false
+    @State private var showBonus = false
     @State private var newBest = false
     @AppStorage(CleverBoardLayout.storageKey) private var layoutRaw = CleverBoardLayout.sheet.rawValue
     @AppStorage(CleverRoundManagement.storageKey) private var roundManagement = true
@@ -200,6 +201,31 @@ public struct CleverScorecardView: View {
                 .transition(.opacity.combined(with: .scale(scale: 0.92)))
             }
         }
+        // Issue #54: a LOUD, celebratory "bonus earned" moment. Sits above
+        // every layout (v3 board, landscape, list) just like the game-over
+        // overlay. `&& !showResults` keeps it from stacking over the final card.
+        .overlay(alignment: .top) {
+            if showBonus && !showResults {
+                CleverBonusEarnedOverlay(
+                    game: game,
+                    onDismiss: {
+                        withAnimation { showBonus = false }
+                        game.clearEarnedBonuses()
+                    }
+                )
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        // Drive the bonus overlay off the engine's advisory queue: pop it in
+        // with a spring when a bonus is earned, dismiss it when the queue
+        // clears. `[String]` is Equatable, so the change fires reliably.
+        .onChange(of: game.earnedBonuses) { _, bonuses in
+            if bonuses.isEmpty {
+                showBonus = false
+            } else {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { showBonus = true }
+            }
+        }
         // The engine can't read `@AppStorage` itself (issue #57's `isGameOver`
         // needs to know if round management is on to treat "all rounds
         // crossed" as an end condition), so this view — which already reads
@@ -322,10 +348,6 @@ struct CleverSheetBoardView: View {
     var body: some View {
         ScaledSheet(maxStretch: 1.6) { stretch in sheet(stretch) }
             .padding(6)
-            .overlay(alignment: .top) {
-                CleverBonusBanner(game: game)
-                    .padding(.horizontal, 12)
-            }
             .sheet(isPresented: $showEditor) {
                 CleverEditorSheet(game: game, selection: $editorSection)
             }
@@ -519,6 +541,67 @@ struct CleverGameOverOverlay: View {
             .shadow(radius: 24, y: 8)
             .padding(24)
         }
+    }
+}
+
+// MARK: - Bonus-earned overlay (issue #54)
+
+/// The "you just earned a bonus" announcement — a prominent BANNER that slides
+/// down across the top of the board (issue #54; owner wants a top banner, not a
+/// centred card). Presentation only: it reads the engine's advisory queue
+/// (`earnedBonuses`) and clears it on dismiss (`onDismiss`). It deliberately
+/// does NOT dim the board — the board must stay visible for the earned icon to
+/// visibly fly up into this banner (increment 2) and on to its track (3).
+struct CleverBonusEarnedOverlay: View {
+    @ObservedObject var game: CleverGame
+    let onDismiss: () -> Void
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 14) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 27, weight: .bold))
+                .foregroundStyle(.tint)
+                .symbolRenderingMode(.hierarchical)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Bonus earned!")
+                    .font(.system(size: 19, weight: .heavy, design: .rounded))
+                    .foregroundStyle(cleverInk)
+                ForEach(Array(game.earnedBonuses.enumerated()), id: \.offset) { _, msg in
+                    HStack(spacing: 6) {
+                        Image(systemName: "gift.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.tint)
+                        Text(msg)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(cleverInk)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+
+            Spacer(minLength: 8)
+
+            Button(action: onDismiss) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 13)
+        .frame(maxWidth: 640)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .strokeBorder(.tint.opacity(0.4), lineWidth: 2)
+        )
+        .shadow(color: .black.opacity(0.18), radius: 16, y: 6)
+        .padding(.horizontal, 12)
+        // Clear the in-board header (back/undo/redo/finish/info) so the banner
+        // slides in just beneath it rather than covering the toolbar.
+        .padding(.top, 54)
     }
 }
 
@@ -1111,7 +1194,6 @@ struct CleverListBoardView: View {
             let cardW = geo.size.width - 24
             ScrollView {
                 VStack(spacing: 14) {
-                    CleverBonusBanner(game: game)
                     card(.tracks, width: cardW) { tracksContent }
                     card(.yellow, width: cardW) {
                         CleverYellowGrid(game: game, cell: 54)
@@ -1247,7 +1329,6 @@ struct CleverEditorSheet: View {
 
     private func page(_ section: CleverSheetSection) -> some View {
         VStack(spacing: 12) {
-            CleverBonusBanner(game: game)
             ScaledSheet {
                 pageContent(section)
                     .padding(18)
@@ -1335,44 +1416,6 @@ struct CleverEditorSheet: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
             .background(Color.white.opacity(0.7), in: RoundedRectangle(cornerRadius: SheetRadius.pill, style: .continuous))
-        }
-    }
-}
-
-// MARK: - Earned-bonus banner
-
-/// Advisories for bonuses the player must act on themselves (re-rolls, +1s,
-/// free marks of the player's choice). Shared by the overview and the editor.
-struct CleverBonusBanner: View {
-    @ObservedObject var game: CleverGame
-
-    var body: some View {
-        if !game.earnedBonuses.isEmpty {
-            HStack(alignment: .top, spacing: 8) {
-                Image(systemName: "gift.fill")
-                    .font(.caption)
-                    .foregroundStyle(.tint)
-                VStack(alignment: .leading, spacing: 2) {
-                    ForEach(Array(game.earnedBonuses.suffix(4).enumerated()), id: \.offset) { _, msg in
-                        Text(msg).font(.caption.weight(.medium)).foregroundStyle(cleverInk)
-                    }
-                }
-                Spacer(minLength: 0)
-                Button { game.clearEarnedBonuses() } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.body)
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(.white.opacity(0.92), in: RoundedRectangle(cornerRadius: SheetRadius.pill, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: SheetRadius.pill, style: .continuous)
-                    .strokeBorder(.black.opacity(0.08), lineWidth: SheetStroke.small)
-            )
-            .frame(maxWidth: .infinity)
         }
     }
 }

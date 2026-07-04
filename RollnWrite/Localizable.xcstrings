@@ -386,6 +386,38 @@
         }
       }
     },
+    "Bonus earned!": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bonus verdiend!"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bonus erhalten!"
+          }
+        }
+      }
+    },
+    "Got it": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oké"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verstanden"
+          }
+        }
+      }
+    },
     "marked": {
       "localizations": {
         "nl": {
