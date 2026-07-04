@@ -96,6 +96,10 @@ struct ScaledSheet<Content: View>: View {
                         .hidden()
                         .allowsHitTesting(false)
                         .onGeometryChange(for: CGSize.self) { $0.size } action: { base = $0 }
+                        // The hidden probe would ALSO publish bonus-badge frames
+                        // (at stretch 1, wrong position) — drop them so only the
+                        // real content's frames survive (issue #54 fly).
+                        .transformPreference(CleverFlyFramesKey.self) { $0 = [:] }
                 }
                 content(stretch)
                     .fixedSize()

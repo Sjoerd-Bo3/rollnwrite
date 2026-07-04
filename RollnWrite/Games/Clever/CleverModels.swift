@@ -57,6 +57,43 @@ public enum BonusIcon: Equatable {
     case crossOrSix
 }
 
+// MARK: - Fly-to-banner bonus events (presentation only; issue #54)
+
+/// Identity of the printed bonus badge that fired — mirrors the positions of
+/// `CleverGame`'s private `Trigger` so a view can locate the source badge on
+/// the sheet for the "fly to banner" animation (issue #54). Presentation only.
+public enum CleverBonusSource: Hashable {
+    case yellowRow(Int)
+    case yellowDiagonal
+    case blueRow(Int)
+    case blueColumn(Int)
+    case greenCell(Int)
+    case orangeCell(Int)
+    case purpleCell(Int)
+}
+
+/// A bonus that was just earned — the payload of the fly-to-banner animation
+/// (issue #54). Transient and presentation-only: NEVER persisted, NEVER part of
+/// undo/redo. Emitted the moment a trigger completes; the view consumes and
+/// clears it once the animation finishes.
+public struct CleverBonusEvent: Identifiable, Equatable {
+    public let id: UUID
+    public let source: CleverBonusSource
+    public let icon: BonusIcon
+    /// Automatic bonuses (re-roll, +1, fox, auto green mark, auto orange/purple
+    /// number) reach their destination with no player action; MANUAL ones — the
+    /// free choice marks (`.mark(.yellow)` / `.mark(.blue)`) — need the player
+    /// to pick a board target. Drives increment 3 (auto-fill vs highlight).
+    public let isAutomatic: Bool
+
+    public init(id: UUID = UUID(), source: CleverBonusSource, icon: BonusIcon, isAutomatic: Bool) {
+        self.id = id
+        self.source = source
+        self.icon = icon
+        self.isAutomatic = isAutomatic
+    }
+}
+
 // MARK: - Exact official layout
 
 public enum CleverLayout {

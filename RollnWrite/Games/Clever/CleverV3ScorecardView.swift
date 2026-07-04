@@ -95,10 +95,6 @@ struct CleverV3LandscapeBoard: View {
                     .padding(4)
             )
         }
-        .overlay(alignment: .top) {
-            CleverBonusBanner(game: game)
-                .padding(.horizontal, 12)
-        }
         .cleverValueEntry($entry)
     }
 

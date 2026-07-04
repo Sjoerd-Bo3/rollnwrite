@@ -25,6 +25,18 @@ public final class CleverGame: ObservableObject, Scoreboard, CleverUndoRedo, Cle
     /// appear here — they are written straight onto the card and pushed to undo.
     @Published public private(set) var earnedBonuses: [String] = []
 
+    /// Structured earned-bonus events for the fly-to-banner animation (issue
+    /// #54). Parallel to `earnedBonuses` (which stays the banner's text source);
+    /// this carries the icon identity + source position so the view can fly a
+    /// copy of the printed badge into the banner. Transient/presentation only —
+    /// not persisted, not part of `state`/undo, cleared once consumed.
+    @Published public private(set) var bonusEvents: [CleverBonusEvent] = []
+
+    /// Remove a consumed event (its animation finished).
+    public func clearBonusEvent(_ id: UUID) { bonusEvents.removeAll { $0.id == id } }
+    /// Drop all pending events (e.g. on reset / new game / dismiss).
+    public func clearBonusEvents() { bonusEvents.removeAll() }
+
     /// The round index (0…5) whose summary the UI should present, set right
     /// after `toggleRound` crosses (not un-crosses) a round. The view reads
     /// `roundSnapshot(for:)` for the content and calls `clearRoundSummary()`
@@ -249,7 +261,34 @@ public final class CleverGame: ObservableObject, Scoreboard, CleverUndoRedo, Cle
         // Apply in a stable order so banner messages read consistently.
         for trigger in newlyDone.sorted(by: { triggerOrder($0) < triggerOrder($1) }) {
             guard let icon = bonus(for: trigger) else { continue }
+            bonusEvents.append(CleverBonusEvent(
+                source: source(for: trigger),
+                icon: icon,
+                isAutomatic: isAutomatic(icon)
+            ))
             apply(icon, depth: depth)
+        }
+    }
+
+    /// Map a private `Trigger` to its public source position.
+    private func source(for trigger: Trigger) -> CleverBonusSource {
+        switch trigger {
+        case let .yellowRow(r):   return .yellowRow(r)
+        case .yellowDiagonal:     return .yellowDiagonal
+        case let .blueRow(r):     return .blueRow(r)
+        case let .blueColumn(c):  return .blueColumn(c)
+        case let .greenCell(i):   return .greenCell(i)
+        case let .orangeCell(i):  return .orangeCell(i)
+        case let .purpleCell(i):  return .purpleCell(i)
+        }
+    }
+
+    /// Choice marks (cross any yellow/blue box) need a player decision; every
+    /// other earned bonus reaches its destination automatically.
+    private func isAutomatic(_ icon: BonusIcon) -> Bool {
+        switch icon {
+        case .mark(.yellow), .mark(.blue): return false
+        default: return true
         }
     }
 
@@ -367,6 +406,7 @@ public final class CleverGame: ObservableObject, Scoreboard, CleverUndoRedo, Cle
         state = CleverState()
         state.playerCount = playerCount
         earnedBonuses.removeAll()
+        bonusEvents.removeAll()
         pendingRoundSummary = nil
         redoStack = []
         save()
@@ -676,6 +716,7 @@ public final class CleverGame: ObservableObject, Scoreboard, CleverUndoRedo, Cle
     public func reset() {
         state = CleverState()
         earnedBonuses.removeAll()
+        bonusEvents.removeAll()
         pendingRoundSummary = nil
         redoStack = []
         save()

@@ -70,7 +70,12 @@ public struct CleverScorecardView: View {
     @State private var confirmPlayerCount = false
     @State private var confirmFinish = false
     @State private var showResults = false
+    @State private var showBonus = false
     @State private var newBest = false
+    /// Printed-badge frames (global), captured via preference so the fly overlay —
+    /// a normal `.overlay` driven by the observed `game` — can start each earned
+    /// icon from its badge (issue #54, 2b).
+    @State private var badgeFrames: [CleverBonusSource: CGRect] = [:]
     @AppStorage(CleverBoardLayout.storageKey) private var layoutRaw = CleverBoardLayout.sheet.rawValue
     @AppStorage(CleverRoundManagement.storageKey) private var roundManagement = true
 
@@ -200,6 +205,66 @@ public struct CleverScorecardView: View {
                 .transition(.opacity.combined(with: .scale(scale: 0.92)))
             }
         }
+        // Issue #54: a LOUD, celebratory "bonus earned" moment. Sits above
+        // every layout (v3 board, landscape, list) just like the game-over
+        // overlay. `&& !showResults` keeps it from stacking over the final card.
+        .overlay(alignment: .top) {
+            if showBonus && !showResults {
+                CleverBonusEarnedOverlay(
+                    game: game,
+                    onDismiss: {
+                        withAnimation { showBonus = false }
+                        game.clearEarnedBonuses()
+                        // Also drop any un-flown events so they don't wait on a
+                        // now-gone banner (issue #54, increment 2b).
+                        game.clearBonusEvents()
+                    }
+                )
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        // Issue #54 increment 2b: render each earned icon in flight from its
+        // printed badge up into the banner. Only the BADGE anchors resolve here
+        // (they live in the main board subtree); the banner's own anchor sits
+        // inside an `.overlay`, whose preferences do NOT propagate out — so the
+        // flight target is a computed point at the top-centre, where the banner
+        // sits (just under the header). Purely decorative — no hit testing.
+        // Capture badge frames into @State so the fly overlay below re-renders on
+        // every `game.bonusEvents` change (a plain `.overlay` driven by the
+        // observed engine), not only when the frames preference changes.
+        .onPreferenceChange(CleverFlyFramesKey.self) { badgeFrames = $0 }
+        .overlay {
+            GeometryReader { proxy in
+                // Badge frames are captured in `.global` (which reflects the
+                // ScaledSheet's scaleEffect); convert to this overlay's local
+                // space by subtracting the overlay's own global origin.
+                let origin = proxy.frame(in: .global).origin
+                let target = CGRect(x: proxy.size.width / 2 - 22, y: 74, width: 44, height: 44)
+                ForEach(game.bonusEvents) { event in
+                    if let a = badgeFrames[event.source] {
+                        let src = a.offsetBy(dx: -origin.x, dy: -origin.y)
+                        CleverFlyingBonus(
+                            icon: event.icon,
+                            game: game,
+                            from: src,
+                            to: target,
+                            onDone: { game.clearBonusEvent(event.id) }
+                        )
+                    }
+                }
+            }
+            .allowsHitTesting(false)
+        }
+        // Drive the bonus overlay off the engine's advisory queue: pop it in
+        // with a spring when a bonus is earned, dismiss it when the queue
+        // clears. `[String]` is Equatable, so the change fires reliably.
+        .onChange(of: game.earnedBonuses) { _, bonuses in
+            if bonuses.isEmpty {
+                showBonus = false
+            } else {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { showBonus = true }
+            }
+        }
         // The engine can't read `@AppStorage` itself (issue #57's `isGameOver`
         // needs to know if round management is on to treat "all rounds
         // crossed" as an end condition), so this view — which already reads
@@ -322,10 +387,6 @@ struct CleverSheetBoardView: View {
     var body: some View {
         ScaledSheet(maxStretch: 1.6) { stretch in sheet(stretch) }
             .padding(6)
-            .overlay(alignment: .top) {
-                CleverBonusBanner(game: game)
-                    .padding(.horizontal, 12)
-            }
             .sheet(isPresented: $showEditor) {
                 CleverEditorSheet(game: game, selection: $editorSection)
             }
@@ -522,6 +583,128 @@ struct CleverGameOverOverlay: View {
     }
 }
 
+// MARK: - Bonus-earned overlay (issue #54)
+
+/// The "you just earned a bonus" announcement — a prominent BANNER that slides
+/// down across the top of the board (issue #54; owner wants a top banner, not a
+/// centred card). Presentation only: it reads the engine's advisory queue
+/// (`earnedBonuses`) and clears it on dismiss (`onDismiss`). It deliberately
+/// does NOT dim the board — the board must stay visible for the earned icon to
+/// visibly fly up into this banner (increment 2) and on to its track (3).
+struct CleverBonusEarnedOverlay: View {
+    @ObservedObject var game: CleverGame
+    let onDismiss: () -> Void
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 16) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 34, weight: .bold))
+                .foregroundStyle(.tint)
+                .symbolRenderingMode(.hierarchical)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Bonus earned!")
+                    .font(.system(size: 23, weight: .heavy, design: .rounded))
+                    .foregroundStyle(cleverInk)
+                ForEach(Array(game.earnedBonuses.enumerated()), id: \.offset) { _, msg in
+                    HStack(spacing: 7) {
+                        Image(systemName: "gift.fill")
+                            .font(.footnote)
+                            .foregroundStyle(.tint)
+                        Text(msg)
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(cleverInk)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+
+            Spacer(minLength: 8)
+
+            Button(action: onDismiss) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title)
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 22)
+        .padding(.vertical, 16)
+        .frame(maxWidth: 680)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        // A soft tint wash over the material makes the banner read as a reward
+        // moment, not a system alert — a bit more present (owner: "a bit more").
+        .background(.tint.opacity(0.14), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .strokeBorder(.tint.opacity(0.55), lineWidth: 2.5)
+        )
+        .shadow(color: .black.opacity(0.22), radius: 20, y: 7)
+        .padding(.horizontal, 12)
+        // Clear the in-board header (back/undo/redo/finish/info) so the banner
+        // slides in just beneath it rather than covering the toolbar.
+        .padding(.top, 54)
+    }
+}
+
+// MARK: - Fly-to-banner animation (issue #54, increment 2b)
+
+/// Every printed bonus badge's on-screen FRAME (in `.global`, which reflects the
+/// `ScaledSheet` scale transform the badges sit inside — unlike
+/// `anchorPreference(.bounds)`), keyed by its `CleverBonusSource`, so the flight
+/// starts from exactly where the badge is drawn.
+struct CleverFlyFramesKey: PreferenceKey {
+    static let defaultValue: [CleverBonusSource: CGRect] = [:]
+    static func reduce(value: inout [CleverBonusSource: CGRect],
+                       nextValue: () -> [CleverBonusSource: CGRect]) {
+        value.merge(nextValue()) { current, _ in current }
+    }
+}
+
+extension View {
+    /// Publish this badge's global frame under its source id (no-op when nil).
+    @ViewBuilder func cleverBonusAnchor(_ source: CleverBonusSource?) -> some View {
+        if let source {
+            background(
+                GeometryReader { g in
+                    Color.clear.preference(
+                        key: CleverFlyFramesKey.self,
+                        value: [source: g.frame(in: .global)]
+                    )
+                }
+            )
+        } else { self }
+    }
+}
+
+/// A single earned icon in flight: starts centred on its printed badge and
+/// eases into the banner, growing slightly and fading as it lands, then calls
+/// `onDone` to clear the event. Purely decorative — no hit testing.
+struct CleverFlyingBonus: View {
+    let icon: BonusIcon
+    @ObservedObject var game: CleverGame
+    let from: CGRect
+    let to: CGRect
+    let onDone: () -> Void
+    @State private var progress: CGFloat = 0
+
+    var body: some View {
+        let start = CGPoint(x: from.midX, y: from.midY)
+        let end = CGPoint(x: to.midX, y: to.midY)
+        let pos = CGPoint(x: start.x + (end.x - start.x) * progress,
+                          y: start.y + (end.y - start.y) * progress)
+        BonusBadge(icon: icon, game: game, size: max(from.width, 22))
+            .scaleEffect(1 + 0.45 * progress)
+            .opacity(progress < 0.9 ? 1 : (1 - (progress - 0.9) / 0.1))
+            .shadow(color: .black.opacity(0.25), radius: 5, y: 2)
+            .position(pos)
+            .onAppear {
+                withAnimation(.easeInOut(duration: 0.85)) { progress = 1 }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.95) { onDone() }
+            }
+    }
+}
+
 // MARK: - Round badges (bonus icons + player-count markers)
 
 /// The badge under a round number: the printed start-of-round bonus for
@@ -588,6 +771,7 @@ struct CleverYellowGrid: View {
                             .frame(width: arrowW)
                         BonusBadge(icon: CleverLayout.yellowRowBonus[r], game: game, size: badgeBox)
                             .frame(width: badgeBox, height: badgeBox)
+                            .cleverBonusAnchor(.yellowRow(r))
                     }
                     // Vertically centred against its grid row (same height).
                     .frame(width: bonusColW, height: cellH)
@@ -598,6 +782,7 @@ struct CleverYellowGrid: View {
                     Color.clear.frame(width: arrowW, height: 1)
                     BonusBadge(icon: .plusOne, game: game, size: cell * 0.7)
                         .frame(width: badgeBox, height: badgeBox)
+                        .cleverBonusAnchor(.yellowDiagonal)
                 }
                 .frame(width: bonusColW, height: cell * 0.9)
             }
@@ -777,6 +962,7 @@ struct CleverBluePanel: View {
                                 .frame(width: arrowW)
                             BonusBadge(icon: CleverLayout.blueRowBonus[r], game: game, size: badgeBox)
                                 .frame(width: badgeBox, height: badgeBox)
+                                .cleverBonusAnchor(.blueRow(r))
                         }
                         .frame(width: bonusColW, height: cellH)
                     }
@@ -885,6 +1071,7 @@ struct CleverBluePanel: View {
             HStack(spacing: gap) {
                 ForEach(0..<4, id: \.self) { c in
                     BonusBadge(icon: CleverLayout.blueColBonus[c], game: game, size: cell * 0.78)
+                        .cleverBonusAnchor(.blueColumn(c))
                         .frame(width: cell)
                 }
             }
@@ -943,7 +1130,8 @@ struct CleverGreenRow: View {
                     ) {
                         if undoable { game.undo() } else { game.markGreen() }
                     }
-                    cleverBonusSlot(CleverLayout.greenBonus[i], game: game, size: cell * 0.6)
+                    cleverBonusSlot(CleverLayout.greenBonus[i], game: game, size: cell * 0.6,
+                                    source: .greenCell(i))
                 }
             }
         }
@@ -1000,7 +1188,8 @@ struct CleverOrangeRow: View {
                             })
                         }
                     }
-                    cleverBonusSlot(CleverLayout.orangeBonus[i], game: game, size: cell * 0.6)
+                    cleverBonusSlot(CleverLayout.orangeBonus[i], game: game, size: cell * 0.6,
+                                    source: .orangeCell(i))
                 }
             }
         }
@@ -1070,7 +1259,8 @@ struct CleverPurpleRow: View {
                             })
                         }
                     }
-                    cleverBonusSlot(CleverLayout.purpleBonus[i], game: game, size: bCell * 0.6)
+                    cleverBonusSlot(CleverLayout.purpleBonus[i], game: game, size: bCell * 0.6,
+                                    source: .purpleCell(i))
                 }
             }
         }
@@ -1080,9 +1270,11 @@ struct CleverPurpleRow: View {
 /// A fixed-size slot for a printed bonus icon (keeps columns aligned when a
 /// cell has no bonus).
 @MainActor @ViewBuilder
-func cleverBonusSlot(_ icon: BonusIcon?, game: CleverGame, size: CGFloat) -> some View {
+func cleverBonusSlot(_ icon: BonusIcon?, game: CleverGame, size: CGFloat,
+                     source: CleverBonusSource? = nil) -> some View {
     if let icon {
         BonusBadge(icon: icon, game: game, size: size)
+            .cleverBonusAnchor(source)
     } else {
         Color.clear.frame(width: size, height: size)
     }
@@ -1111,7 +1303,6 @@ struct CleverListBoardView: View {
             let cardW = geo.size.width - 24
             ScrollView {
                 VStack(spacing: 14) {
-                    CleverBonusBanner(game: game)
                     card(.tracks, width: cardW) { tracksContent }
                     card(.yellow, width: cardW) {
                         CleverYellowGrid(game: game, cell: 54)
@@ -1247,7 +1438,6 @@ struct CleverEditorSheet: View {
 
     private func page(_ section: CleverSheetSection) -> some View {
         VStack(spacing: 12) {
-            CleverBonusBanner(game: game)
             ScaledSheet {
                 pageContent(section)
                     .padding(18)
@@ -1335,44 +1525,6 @@ struct CleverEditorSheet: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
             .background(Color.white.opacity(0.7), in: RoundedRectangle(cornerRadius: SheetRadius.pill, style: .continuous))
-        }
-    }
-}
-
-// MARK: - Earned-bonus banner
-
-/// Advisories for bonuses the player must act on themselves (re-rolls, +1s,
-/// free marks of the player's choice). Shared by the overview and the editor.
-struct CleverBonusBanner: View {
-    @ObservedObject var game: CleverGame
-
-    var body: some View {
-        if !game.earnedBonuses.isEmpty {
-            HStack(alignment: .top, spacing: 8) {
-                Image(systemName: "gift.fill")
-                    .font(.caption)
-                    .foregroundStyle(.tint)
-                VStack(alignment: .leading, spacing: 2) {
-                    ForEach(Array(game.earnedBonuses.suffix(4).enumerated()), id: \.offset) { _, msg in
-                        Text(msg).font(.caption.weight(.medium)).foregroundStyle(cleverInk)
-                    }
-                }
-                Spacer(minLength: 0)
-                Button { game.clearEarnedBonuses() } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.body)
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(.white.opacity(0.92), in: RoundedRectangle(cornerRadius: SheetRadius.pill, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: SheetRadius.pill, style: .continuous)
-                    .strokeBorder(.black.opacity(0.08), lineWidth: SheetStroke.small)
-            )
-            .frame(maxWidth: .infinity)
         }
     }
 }
