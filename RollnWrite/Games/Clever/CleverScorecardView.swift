@@ -184,13 +184,8 @@ public struct CleverScorecardView: View {
         }
         .overlay {
             if showResults {
-                GameOverCard(
-                    lines: CleverArea.allCases.map {
-                        GameOverCard.Line(label: $0.title, value: game.score(for: $0), tint: game.color($0).color)
-                    } + (game.foxCount > 0
-                         ? [GameOverCard.Line(label: "Foxes", value: game.foxScore, tint: .red)]
-                         : []),
-                    total: game.totalScore,
+                CleverGameOverOverlay(
+                    game: game,
                     best: HighScores.best(for: "That's Pretty Clever"),
                     isNewBest: newBest,
                     onNewGame: {
@@ -454,6 +449,77 @@ func cleverTotalStrip(game: CleverGame, height: CGFloat, hideLive: Bool = false)
                                          caption: "🦊×\(game.foxCount)", tint: .red))
     return SheetTotalStrip(entries: entries, total: game.totalScore,
                            ink: cleverInk, height: height, hideTotal: hide)
+}
+
+// MARK: - Game-over overlay
+
+/// Clever's end-of-game results card. Unlike the generic `GameOverCard` line
+/// list, it presents the scores in the board's OWN idiom — the printed
+/// `cleverTotalStrip` (per-area colour boxes, the 🦊 fox box, and the Total),
+/// so the final tally reads exactly like the live scorecard and the foxes are
+/// always visible (owner request).
+struct CleverGameOverOverlay: View {
+    @ObservedObject var game: CleverGame
+    let best: Int?
+    let isNewBest: Bool
+    let onNewGame: () -> Void
+    let onDismiss: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.45)
+                .ignoresSafeArea()
+                .contentShape(Rectangle())
+                .onTapGesture(perform: onDismiss)
+
+            VStack(spacing: 16) {
+                VStack(spacing: 2) {
+                    Text("Game over")
+                        .font(.system(size: 26, weight: .heavy, design: .rounded))
+                    if isNewBest {
+                        Label("New best!", systemImage: "trophy.fill")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(.orange)
+                            .padding(.top, 2)
+                    } else if let best {
+                        Text("Best: \(best)")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                // The original score display — always shows the fox box.
+                cleverTotalStrip(game: game, height: 48)
+                    .padding(.horizontal, 4)
+
+                HStack(spacing: 10) {
+                    Button(action: onDismiss) {
+                        Text("View board")
+                            .font(.system(size: 16, weight: .semibold))
+                            .frame(maxWidth: .infinity).padding(.vertical, 10)
+                            .background(Color.gray.opacity(0.2))
+                            .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    Button(action: onNewGame) {
+                        Text("New game")
+                            .font(.system(size: 16, weight: .bold))
+                            .frame(maxWidth: .infinity).padding(.vertical, 10)
+                            .foregroundStyle(.white)
+                            .background(Color.accentColor)
+                            .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(20)
+            .frame(maxWidth: 480)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(.white.opacity(0.15)))
+            .shadow(radius: 24, y: 8)
+            .padding(24)
+        }
+    }
 }
 
 // MARK: - Round badges (bonus icons + player-count markers)
