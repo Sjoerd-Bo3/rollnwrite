@@ -14,7 +14,7 @@
 import SwiftUI
 
 @MainActor
-public final class CleverGame: ObservableObject, Scoreboard {
+public final class CleverGame: ObservableObject, Scoreboard, CleverUndoRedo, CleverFoxScoring {
 
     @Published public private(set) var state = CleverState()
 
@@ -38,12 +38,18 @@ public final class CleverGame: ObservableObject, Scoreboard {
     /// `Codable` is untouched) and NOT part of `state` — redo is an in-memory,
     /// per-session convenience. Any new forward move (via `recordAction`)
     /// clears it, matching standard undo/redo semantics.
-    private var redoStack: [CleverAction] = []
+    var redoStack: [CleverAction] = []
 
     /// `true` while `redo()` is replaying an undone action's raw mutation, so
     /// `recordAction` knows NOT to treat it as a fresh move and clear the rest
     /// of the redo stack.
-    private var isRedoing = false
+    var isRedoing = false
+
+    /// The persisted LIFO history, exposed to `CleverUndoRedo` (backed by state).
+    var history: [CleverAction] {
+        get { state.history }
+        set { state.history = newValue }
+    }
 
     private let persistenceKey: String
 
@@ -548,8 +554,6 @@ public final class CleverGame: ObservableObject, Scoreboard {
         CleverArea.allCases.map { score(for: $0) }.min() ?? 0
     }
 
-    public var foxScore: Int { foxCount * lowestAreaScore }
-
     // MARK: - Scoreboard
 
     public var totalScore: Int {
@@ -584,7 +588,7 @@ public final class CleverGame: ObservableObject, Scoreboard {
         save()
     }
 
-    public var canUndo: Bool { !state.history.isEmpty }
+    public var canUndo: Bool { undoAvailable }
 
     // MARK: - Tap-to-undo helpers
     //
@@ -620,22 +624,9 @@ public final class CleverGame: ObservableObject, Scoreboard {
         return false
     }
 
-    public func undo() {
-        guard let last = state.history.popLast() else { return }
-        switch last {
-        case let .yellow(i): state.yellowCrossed.remove(i)
-        case let .blue(v): state.blueCrossed.remove(v)
-        case .green: state.greenCount = max(0, state.greenCount - 1)
-        case let .orange(i, _): state.orange[i] = nil
-        case let .purple(i, _): state.purple[i] = nil
-        case let .reroll(s): state.rerollUsed.remove(s)
-        case let .extraDie(s): state.extraDieUsed.remove(s)
-        }
-        redoStack.append(last)
-        save()
-    }
+    public func undo() { if performUndo() { save() } }
 
-    public var canRedo: Bool { !redoStack.isEmpty }
+    public var canRedo: Bool { redoAvailable }
 
     /// Re-apply the most recently undone action by replaying its RAW state
     /// mutation only — the exact inverse of `undo()`'s reversal for that case.
@@ -648,10 +639,28 @@ public final class CleverGame: ObservableObject, Scoreboard {
     /// and double-chain bonuses that are already sitting on the card. Pushing
     /// the raw mutation back—and re-appending the exact same leaf action to
     /// `state.history`—restores precisely the state `undo()` took away.
-    public func redo() {
-        guard let next = redoStack.popLast() else { return }
-        isRedoing = true
-        switch next {
+    public func redo() { if performRedo() { save() } }
+
+    // MARK: - CleverUndoRedo (raw per-action mutations)
+
+    /// Undo the raw mutation for `action` (called by `performUndo`).
+    func reverse(_ action: CleverAction) {
+        switch action {
+        case let .yellow(i): state.yellowCrossed.remove(i)
+        case let .blue(v): state.blueCrossed.remove(v)
+        case .green: state.greenCount = max(0, state.greenCount - 1)
+        case let .orange(i, _): state.orange[i] = nil
+        case let .purple(i, _): state.purple[i] = nil
+        case let .reroll(s): state.rerollUsed.remove(s)
+        case let .extraDie(s): state.extraDieUsed.remove(s)
+        }
+    }
+
+    /// Re-apply the raw mutation for `action` (called by `performRedo`). Raw
+    /// mutation only — never the public mutators — so already-applied bonus
+    /// chains are not re-fired.
+    func replay(_ action: CleverAction) {
+        switch action {
         case let .yellow(i): state.yellowCrossed.insert(i)
         case let .blue(v): state.blueCrossed.insert(v)
         case .green: state.greenCount += 1
@@ -660,9 +669,6 @@ public final class CleverGame: ObservableObject, Scoreboard {
         case let .reroll(s): state.rerollUsed.insert(s)
         case let .extraDie(s): state.extraDieUsed.insert(s)
         }
-        recordAction(next)
-        isRedoing = false
-        save()
     }
 
     /// Resets to a fresh `CleverState()`, which zeroes every field including
@@ -673,15 +679,6 @@ public final class CleverGame: ObservableObject, Scoreboard {
         pendingRoundSummary = nil
         redoStack = []
         save()
-    }
-
-    /// Appends a new action to the history. Any FORWARD move — i.e. every call
-    /// site except `redo()` replaying an undone one — invalidates the redo
-    /// stack (standard editor semantics: making a new move after undoing
-    /// forecloses the redone future).
-    private func recordAction(_ action: CleverAction) {
-        state.history.append(action)
-        if !isRedoing { redoStack = [] }
     }
 
     // MARK: - Persistence
