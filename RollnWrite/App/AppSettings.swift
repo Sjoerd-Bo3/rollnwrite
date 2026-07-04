@@ -47,10 +47,18 @@ enum CleverRoundManagement {
     static let storageKey = "clever.roundManagement"
 }
 
+/// Clever 1 (issue #57): hide the running per-area/total scores WHILE playing,
+/// revealing them only on the end-of-game `GameOverCard`. Default OFF —
+/// unchanged behaviour (scores always visible).
+enum CleverHideLiveScores {
+    static let storageKey = "clever.hideLiveScores"
+}
+
 /// Settings sheet — presented from the catalogue.
 struct SettingsView: View {
     @AppStorage(AppearanceMode.storageKey) private var appearanceRaw = AppearanceMode.system.rawValue
     @AppStorage(CleverRoundManagement.storageKey) private var roundManagement = true
+    @AppStorage(CleverHideLiveScores.storageKey) private var hideLiveScores = false
     @ObservedObject private var diceTheme = DiceTheme.shared
     @Environment(\.dismiss) private var dismiss
     @State private var scores: [(name: String, best: Int)] = []
@@ -98,6 +106,12 @@ struct SettingsView: View {
                     Toggle("Round management", isOn: $roundManagement)
                 } footer: {
                     Text("Track rounds and show a summary after each. Off = the rounds bar is just a tally.")
+                }
+
+                Section {
+                    Toggle("Hide live scores", isOn: $hideLiveScores)
+                } footer: {
+                    Text("Hide running scores until the game ends.")
                 }
 
                 Section {

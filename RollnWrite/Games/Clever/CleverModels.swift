@@ -162,6 +162,11 @@ public struct CleverState: Codable, Equatable {
     /// round simply drops its snapshot (see `CleverGame.toggleRound`).
     public var roundSnapshots: [CleverRoundSnapshot] = []
     public var history: [CleverAction] = []
+    /// Set by `CleverGame.finishGame()` (issue #57): the player has ended the
+    /// game manually via the header's finish flag, independent of round
+    /// management. Pure bookkeeping like `roundsCrossed` in spirit, but it
+    /// DOES gate `isGameOver`, so it is a real stored field (not history).
+    public var manuallyFinished = false
     // Note: older saves carry a per-game `theme` key; the decoder ignores it
     // (dice colours are an app-wide setting now — see `DiceTheme`).
 
@@ -170,6 +175,7 @@ public struct CleverState: Codable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case yellowCrossed, blueCrossed, greenCount, orange, purple
         case rerollUsed, extraDieUsed, roundsCrossed, playerCount, roundSnapshots, history
+        case manuallyFinished
     }
 
     // Tolerant decode so saved games from earlier builds (which lack newer
@@ -191,6 +197,7 @@ public struct CleverState: Codable, Equatable {
         playerCount = try c.decodeIfPresent(Int.self, forKey: .playerCount) ?? nil
         roundSnapshots = try c.decodeIfPresent([CleverRoundSnapshot].self, forKey: .roundSnapshots) ?? []
         history = try c.decodeIfPresent([CleverAction].self, forKey: .history) ?? []
+        manuallyFinished = try c.decodeIfPresent(Bool.self, forKey: .manuallyFinished) ?? false
     }
 }
 

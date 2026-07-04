@@ -68,6 +68,9 @@ public struct CleverScorecardView: View {
 
     @State private var confirmNewGame = false
     @State private var confirmPlayerCount = false
+    @State private var confirmFinish = false
+    @State private var showResults = false
+    @State private var newBest = false
     @AppStorage(CleverBoardLayout.storageKey) private var layoutRaw = CleverBoardLayout.sheet.rawValue
     @AppStorage(CleverRoundManagement.storageKey) private var roundManagement = true
 
@@ -129,6 +132,10 @@ public struct CleverScorecardView: View {
                         Image(systemName: "trash")
                     }
                     .accessibilityLabel("New game")
+                    Button { confirmFinish = true } label: { Image(systemName: "flag.checkered") }
+                        .disabled(game.isGameOver)
+                        .opacity(game.isGameOver ? 0.4 : 1)
+                        .accessibilityLabel("Finish game")
                 }
             }
         )
@@ -167,6 +174,51 @@ public struct CleverScorecardView: View {
         )) {
             if let round = game.pendingRoundSummary {
                 CleverRoundSummaryView(game: game, round: round)
+            }
+        }
+        .confirmationDialog("Finish the game?", isPresented: $confirmFinish, titleVisibility: .visible) {
+            Button("Finish", role: .destructive) { game.finishGame() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("End the game now and show the final score.")
+        }
+        .overlay {
+            if showResults {
+                CleverGameOverOverlay(
+                    game: game,
+                    best: HighScores.best(for: "That's Pretty Clever"),
+                    isNewBest: newBest,
+                    onNewGame: {
+                        // Respect the player-count picker when round
+                        // management is on (mirrors the header's "New game").
+                        showResults = false
+                        if roundManagement { confirmPlayerCount = true }
+                        else { game.reset() }
+                    },
+                    onDismiss: { withAnimation { showResults = false } }
+                )
+                .transition(.opacity.combined(with: .scale(scale: 0.92)))
+            }
+        }
+        // The engine can't read `@AppStorage` itself (issue #57's `isGameOver`
+        // needs to know if round management is on to treat "all rounds
+        // crossed" as an end condition), so this view — which already reads
+        // the toggle for the New-game/round-summary wiring above — pushes it
+        // into both engines whenever it changes, plus once up front.
+        .onAppear {
+            game.roundManagementOn = roundManagement
+            opponent.roundManagementOn = roundManagement
+        }
+        .onChange(of: roundManagement) { _, isOn in
+            game.roundManagementOn = isOn
+            opponent.roundManagementOn = isOn
+        }
+        .onChange(of: game.isGameOver) { _, isOver in
+            if isOver {
+                newBest = HighScores.record(game.totalScore, for: "That's Pretty Clever")
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) { showResults = true }
+            } else {
+                showResults = false
             }
         }
     }
@@ -238,6 +290,8 @@ struct CleverSheetBoardView: View {
     @ObservedObject var game: CleverGame
     /// Observed so an open board recolours when Settings changes the palette.
     @ObservedObject var diceTheme = DiceTheme.shared
+    /// Issue #57: hide the live per-area/total scores until game-over.
+    @AppStorage(CleverHideLiveScores.storageKey) private var hideLiveScores = false
 
     @State private var editorSection: CleverSheetSection = .yellow
     @State private var showEditor = false
@@ -304,7 +358,7 @@ struct CleverSheetBoardView: View {
                 CleverPurpleRow(game: game, cell: purpleRowCell, stretch: stretch,
                                 bonusCell: rowCell) { entry = $0 }
             }
-            cleverTotalStrip(game: game, height: 44 * min(stretch, 1.25))
+            cleverTotalStrip(game: game, height: 44 * min(stretch, 1.25), hideLive: hideLiveScores)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 14 * stretch)
@@ -381,16 +435,91 @@ struct CleverSheetBoardView: View {
     }
 }
 
-/// The bottom summary strip (per-area scores + foxes + total).
+/// The bottom summary strip (per-area scores + foxes + total). `hideLive`
+/// (issue #57's Settings toggle) blanks every value to "•" WHILE the game is
+/// in progress — scores always reveal once `game.isGameOver`, since the
+/// `GameOverCard` is the payoff moment, not the live strip.
 @MainActor
-func cleverTotalStrip(game: CleverGame, height: CGFloat) -> some View {
+func cleverTotalStrip(game: CleverGame, height: CGFloat, hideLive: Bool = false) -> some View {
+    let hide = hideLive && !game.isGameOver
     var entries: [SheetTotalStrip.Entry] = CleverArea.allCases.map {
-        SheetTotalStrip.Entry(value: "\(game.score(for: $0))", tint: game.color($0).color)
+        SheetTotalStrip.Entry(value: hide ? "•" : "\(game.score(for: $0))", tint: game.color($0).color)
     }
-    entries.append(SheetTotalStrip.Entry(value: "\(game.foxScore)",
+    entries.append(SheetTotalStrip.Entry(value: hide ? "•" : "\(game.foxScore)",
                                          caption: "🦊×\(game.foxCount)", tint: .red))
     return SheetTotalStrip(entries: entries, total: game.totalScore,
-                           ink: cleverInk, height: height)
+                           ink: cleverInk, height: height, hideTotal: hide)
+}
+
+// MARK: - Game-over overlay
+
+/// Clever's end-of-game results card. Unlike the generic `GameOverCard` line
+/// list, it presents the scores in the board's OWN idiom — the printed
+/// `cleverTotalStrip` (per-area colour boxes, the 🦊 fox box, and the Total),
+/// so the final tally reads exactly like the live scorecard and the foxes are
+/// always visible (owner request).
+struct CleverGameOverOverlay: View {
+    @ObservedObject var game: CleverGame
+    let best: Int?
+    let isNewBest: Bool
+    let onNewGame: () -> Void
+    let onDismiss: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.45)
+                .ignoresSafeArea()
+                .contentShape(Rectangle())
+                .onTapGesture(perform: onDismiss)
+
+            VStack(spacing: 16) {
+                VStack(spacing: 2) {
+                    Text("Game over")
+                        .font(.system(size: 26, weight: .heavy, design: .rounded))
+                    if isNewBest {
+                        Label("New best!", systemImage: "trophy.fill")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(.orange)
+                            .padding(.top, 2)
+                    } else if let best {
+                        Text("Best: \(best)")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                // The original score display — always shows the fox box.
+                cleverTotalStrip(game: game, height: 48)
+                    .padding(.horizontal, 4)
+
+                HStack(spacing: 10) {
+                    Button(action: onDismiss) {
+                        Text("View board")
+                            .font(.system(size: 16, weight: .semibold))
+                            .frame(maxWidth: .infinity).padding(.vertical, 10)
+                            .background(Color.gray.opacity(0.2))
+                            .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    Button(action: onNewGame) {
+                        Text("New game")
+                            .font(.system(size: 16, weight: .bold))
+                            .frame(maxWidth: .infinity).padding(.vertical, 10)
+                            .foregroundStyle(.white)
+                            .background(Color.accentColor)
+                            .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(20)
+            .frame(maxWidth: 480)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(.white.opacity(0.15)))
+            .shadow(radius: 24, y: 8)
+            .padding(24)
+        }
+    }
 }
 
 // MARK: - Round badges (bonus icons + player-count markers)
@@ -972,7 +1101,10 @@ struct CleverListBoardView: View {
     @ObservedObject var game: CleverGame
     /// Observed so an open board recolours when Settings changes the palette.
     @ObservedObject var diceTheme = DiceTheme.shared
+    /// Issue #57: hide the live per-area/total scores until game-over.
+    @AppStorage(CleverHideLiveScores.storageKey) private var hideLiveScores = false
     @State private var entry: ValueEntry?
+    private var hideLive: Bool { hideLiveScores && !game.isGameOver }
 
     var body: some View {
         GeometryReader { geo in
@@ -997,7 +1129,7 @@ struct CleverListBoardView: View {
                         CleverPurpleRow(game: game, cell: 52, split: true) { entry = $0 }
                     }
                     WidthScaledCard(width: cardW) {
-                        cleverTotalStrip(game: game, height: 46)
+                        cleverTotalStrip(game: game, height: 46, hideLive: hideLiveScores)
                             .padding(12)
                     }
                     .background(
@@ -1026,7 +1158,7 @@ struct CleverListBoardView: View {
                     .foregroundStyle(.secondary)
                 Spacer()
                 if let area = section.area {
-                    Text("\(game.score(for: area))")
+                    Text(hideLive ? "•" : "\(game.score(for: area))")
                         .font(.headline.monospacedDigit())
                 }
             }
@@ -1076,8 +1208,11 @@ struct CleverEditorSheet: View {
     @ObservedObject var game: CleverGame
     @ObservedObject var diceTheme = DiceTheme.shared
     @Binding var selection: CleverSheetSection
+    /// Issue #57: hide the live per-area/lowest-area scores until game-over.
+    @AppStorage(CleverHideLiveScores.storageKey) private var hideLiveScores = false
 
     @State private var entry: ValueEntry?
+    private var hideLive: Bool { hideLiveScores && !game.isGameOver }
 
     var body: some View {
         SheetEditorPager(
@@ -1180,7 +1315,7 @@ struct CleverEditorSheet: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.secondary)
                 Spacer()
-                Text("\(game.score(for: area))")
+                Text(hideLive ? "•" : "\(game.score(for: area))")
                     .font(.title3.bold().monospacedDigit())
                     .foregroundStyle(cleverInk)
                     .contentTransition(.numericText())
@@ -1191,7 +1326,9 @@ struct CleverEditorSheet: View {
         } else {
             VStack(spacing: 2) {
                 Text("🦊 Foxes earned: \(game.foxCount)")
-                Text("Foxes score the lowest area (\(game.lowestAreaScore)) each")
+                Text(hideLive
+                     ? "Foxes score the lowest area each"
+                     : "Foxes score the lowest area (\(game.lowestAreaScore)) each")
             }
             .font(.footnote)
             .foregroundStyle(.secondary)
