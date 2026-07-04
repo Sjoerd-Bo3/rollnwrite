@@ -86,16 +86,16 @@ public enum Clever3Layout {
         0: [
             0: .reroll,
             1: .extraDie,       // joker — closest available C3Bonus case
-            2: .pick(.pink),    // ? green
+            2: .pick(.green),   // ? green
             3: .plusOne,
-            4: .pick(.turquoise), // ? blue
+            4: .pick(.blue),    // ? blue
             // col 5 = fox (manual stepper) → omitted
         ],
         1: [
             0: .extraDie,       // joker — closest available C3Bonus case
-            1: .pick(.turquoise), // ? blue
-            2: .pick(.blue),    // ? purple
-            3: .pick(.brown),   // ? orange
+            1: .pick(.blue),    // ? blue
+            2: .pick(.purple),  // ? purple
+            3: .pick(.orange),  // ? orange
             4: .wild,           // wild-?
             5: .plusOne,
         ],
