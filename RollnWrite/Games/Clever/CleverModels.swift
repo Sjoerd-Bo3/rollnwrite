@@ -204,6 +204,12 @@ public struct CleverState: Codable, Equatable {
     /// management. Pure bookkeeping like `roundsCrossed` in spirit, but it
     /// DOES gate `isGameOver`, so it is a real stored field (not history).
     public var manuallyFinished = false
+    /// Free "cross any yellow/blue" marks the player has REDEEMED, keyed by area
+    /// rawValue (issue #54, 3b). Earned free marks are DERIVED from completed
+    /// triggers; `earned − claimed = pending`, and a pending mark blocks play
+    /// until placed. Only `claimed` is stored — bumped by a `.claimMark` action
+    /// (so undo reverses it), never a free-floating counter.
+    public var claimedFreeMarks: [String: Int] = [:]
     // Note: older saves carry a per-game `theme` key; the decoder ignores it
     // (dice colours are an app-wide setting now — see `DiceTheme`).
 
@@ -212,7 +218,7 @@ public struct CleverState: Codable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case yellowCrossed, blueCrossed, greenCount, orange, purple
         case rerollUsed, extraDieUsed, roundsCrossed, playerCount, roundSnapshots, history
-        case manuallyFinished
+        case manuallyFinished, claimedFreeMarks
     }
 
     // Tolerant decode so saved games from earlier builds (which lack newer
@@ -235,6 +241,7 @@ public struct CleverState: Codable, Equatable {
         roundSnapshots = try c.decodeIfPresent([CleverRoundSnapshot].self, forKey: .roundSnapshots) ?? []
         history = try c.decodeIfPresent([CleverAction].self, forKey: .history) ?? []
         manuallyFinished = try c.decodeIfPresent(Bool.self, forKey: .manuallyFinished) ?? false
+        claimedFreeMarks = try c.decodeIfPresent([String: Int].self, forKey: .claimedFreeMarks) ?? [:]
     }
 }
 
@@ -275,4 +282,9 @@ public enum CleverAction: Codable, Equatable {
     case purple(Int, value: Int)
     case reroll(Int)
     case extraDie(Int)
+    /// A free "cross any yellow/blue" mark placed to REDEEM an earned choice
+    /// bonus (issue #54, 3b). Crosses the cell AND bumps `claimedFreeMarks` for
+    /// the area, so undo reverses both in one step. `Int` is the yellow grid
+    /// index or the blue value, matching `.yellow` / `.blue`.
+    case claimMark(CleverArea, Int)
 }

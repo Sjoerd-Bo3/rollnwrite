@@ -99,6 +99,14 @@ public final class CleverGame: ObservableObject, Scoreboard, CleverUndoRedo, Cle
 
     public func markYellow(_ index: Int) {
         guard canMarkYellow(index) else { return }
+        // In claim mode, a yellow tap REDEEMS a pending "cross any yellow" bonus
+        // (and nothing else is allowed until it's placed). A blue-claim blocks
+        // yellow entirely.
+        if isClaiming {
+            guard pendingClaimArea == .yellow else { return }
+            performClaim(.yellow, index)
+            return
+        }
         let before = completedTriggers()
         state.yellowCrossed.insert(index)
         recordAction(.yellow(index))
@@ -114,6 +122,11 @@ public final class CleverGame: ObservableObject, Scoreboard, CleverUndoRedo, Cle
 
     public func markBlue(_ value: Int) {
         guard canMarkBlue(value) else { return }
+        if isClaiming {
+            guard pendingClaimArea == .blue else { return }
+            performClaim(.blue, value)
+            return
+        }
         let before = completedTriggers()
         state.blueCrossed.insert(value)
         recordAction(.blue(value))
@@ -126,7 +139,7 @@ public final class CleverGame: ObservableObject, Scoreboard, CleverUndoRedo, Cle
     public func canMarkGreen() -> Bool { state.greenCount < CleverLayout.rowLength }
 
     public func markGreen() {
-        guard canMarkGreen() else { return }
+        guard !isClaiming, canMarkGreen() else { return }
         let before = completedTriggers()
         state.greenCount += 1
         recordAction(.green)
@@ -142,7 +155,7 @@ public final class CleverGame: ObservableObject, Scoreboard, CleverUndoRedo, Cle
     public func allowedOrangeValues() -> [Int] { orangeNextIndex == nil ? [] : Array(1...6) }
 
     public func fillOrange(_ value: Int) {
-        guard let i = orangeNextIndex, (1...6).contains(value) else { return }
+        guard !isClaiming, let i = orangeNextIndex, (1...6).contains(value) else { return }
         let before = completedTriggers()
         state.orange[i] = value
         recordAction(.orange(i, value: value))
@@ -162,10 +175,73 @@ public final class CleverGame: ObservableObject, Scoreboard, CleverUndoRedo, Cle
     }
 
     public func fillPurple(_ value: Int) {
-        guard let i = purpleNextIndex, allowedPurpleValues().contains(value) else { return }
+        guard !isClaiming, let i = purpleNextIndex, allowedPurpleValues().contains(value) else { return }
         let before = completedTriggers()
         state.purple[i] = value
         recordAction(.purple(i, value: value))
+        applyNewlyEarned(before: before)
+        save()
+    }
+
+    // MARK: - Free-mark claims ("cross any yellow/blue" — issue #54, 3b)
+    //
+    // A completed trigger whose bonus is `.mark(.yellow/.blue)` grants a free
+    // mark. Like the game itself, placing it is REQUIRED: while one is
+    // outstanding the board is in CLAIM MODE — only a cell in the claim area is
+    // tappable (routing to `performClaim`), everything else is blocked. The
+    // EARNED count is derived from state (like foxes); only the REDEEMED count
+    // is stored, bumped by an undoable `.claimMark`, so the two never desync.
+
+    /// Free marks EARNED for `area` — completed triggers with bonus `.mark(area)`.
+    public func earnedFreeMarks(_ area: CleverArea) -> Int {
+        completedTriggers().filter { bonus(for: $0) == .mark(area) }.count
+    }
+
+    private func claimed(_ area: CleverArea) -> Int { state.claimedFreeMarks[area.rawValue] ?? 0 }
+
+    /// Whether `area` has a cell a free mark could go on (else the bonus is
+    /// un-placeable and must not block — it's simply forfeited).
+    private func hasEligibleCell(_ area: CleverArea) -> Bool {
+        switch area {
+        case .yellow: return (0..<CleverLayout.yellowGrid.count).contains { canMarkYellow($0) }
+        case .blue:   return CleverLayout.blueValues.contains { canMarkBlue($0) }
+        default:      return false
+        }
+    }
+
+    /// The area with an outstanding, placeable free mark (yellow before blue),
+    /// or nil. While non-nil the board is in blocking claim mode.
+    public var pendingClaimArea: CleverArea? {
+        for area in [CleverArea.yellow, .blue]
+        where earnedFreeMarks(area) - claimed(area) > 0 && hasEligibleCell(area) {
+            return area
+        }
+        return nil
+    }
+
+    public var isClaiming: Bool { pendingClaimArea != nil }
+
+    /// True when this specific cell is a valid target for the current claim —
+    /// the view rings these and dims the rest.
+    public func isClaimTarget(_ area: CleverArea, _ index: Int) -> Bool {
+        guard pendingClaimArea == area else { return false }
+        switch area {
+        case .yellow: return canMarkYellow(index)
+        case .blue:   return canMarkBlue(index)
+        default:      return false
+        }
+    }
+
+    /// Place the free mark redeeming a pending claim (yellow index / blue value).
+    private func performClaim(_ area: CleverArea, _ index: Int) {
+        let before = completedTriggers()
+        switch area {
+        case .yellow: state.yellowCrossed.insert(index)
+        case .blue:   state.blueCrossed.insert(index)
+        default:      return
+        }
+        state.claimedFreeMarks[area.rawValue, default: 0] += 1
+        recordAction(.claimMark(area, index))
         applyNewlyEarned(before: before)
         save()
     }
@@ -327,10 +403,12 @@ public final class CleverGame: ObservableObject, Scoreboard, CleverUndoRedo, Cle
                 } else {
                     note("Green is full — mark skipped")
                 }
-            case .yellow:
-                note("Cross any yellow box")
-            case .blue:
-                note("Cross any blue box")
+            case .yellow, .blue:
+                // A free "cross any yellow/blue" mark: NOT an advisory string —
+                // it enters blocking CLAIM MODE (derived from the trigger), and
+                // the persistent claim cue + ringed cells drive it (issue #54,
+                // 3b). No `note` here, so the bonus banner doesn't double up.
+                break
             case .orange, .purple:
                 // No free-mark bonuses target orange/purple; advisory fallback.
                 note("Cross any \(area.title.lowercased()) box")
@@ -444,7 +522,7 @@ public final class CleverGame: ObservableObject, Scoreboard, CleverUndoRedo, Cle
     /// un-crossing any round — not just the most recently crossed one — drops
     /// exactly its own snapshot and leaves the rest consistent.
     public func toggleRound(_ index: Int) {
-        guard CleverLayout.roundBonuses.indices.contains(index) else { return }
+        guard !isClaiming, CleverLayout.roundBonuses.indices.contains(index) else { return }
         let sortedCrossed = state.roundsCrossed.sorted()
         if state.roundsCrossed.contains(index) {
             let rank = sortedCrossed.firstIndex(of: index) ?? 0
@@ -518,6 +596,7 @@ public final class CleverGame: ObservableObject, Scoreboard, CleverUndoRedo, Cle
     /// Spend / unspend a reroll slot. Only earned slots (index < `rerollsEarned`)
     /// can be crossed; uncrossing is always allowed.
     public func toggleReroll(_ slot: Int) {
+        guard !isClaiming else { return }
         if state.rerollUsed.contains(slot) {
             state.rerollUsed.remove(slot)
         } else {
@@ -531,6 +610,7 @@ public final class CleverGame: ObservableObject, Scoreboard, CleverUndoRedo, Cle
     /// Spend / unspend a +1 slot. Only earned slots (index < `extraDiceEarned`)
     /// can be crossed; uncrossing is always allowed.
     public func toggleExtraDie(_ slot: Int) {
+        guard !isClaiming else { return }
         if state.extraDieUsed.contains(slot) {
             state.extraDieUsed.remove(slot)
         } else {
@@ -623,7 +703,7 @@ public final class CleverGame: ObservableObject, Scoreboard, CleverUndoRedo, Cle
     /// has no meaningful inverse to `undo()` back onto the LIFO stack — like
     /// Qwixx's `finishGame()`, it is not pushed to `history`.
     public func finishGame() {
-        guard canFinishManually else { return }
+        guard !isClaiming, canFinishManually else { return }
         state.manuallyFinished = true
         save()
     }
@@ -693,6 +773,9 @@ public final class CleverGame: ObservableObject, Scoreboard, CleverUndoRedo, Cle
         case let .purple(i, _): state.purple[i] = nil
         case let .reroll(s): state.rerollUsed.remove(s)
         case let .extraDie(s): state.extraDieUsed.remove(s)
+        case let .claimMark(area, i):
+            if area == .yellow { state.yellowCrossed.remove(i) } else if area == .blue { state.blueCrossed.remove(i) }
+            state.claimedFreeMarks[area.rawValue] = max(0, (state.claimedFreeMarks[area.rawValue] ?? 0) - 1)
         }
     }
 
@@ -708,6 +791,9 @@ public final class CleverGame: ObservableObject, Scoreboard, CleverUndoRedo, Cle
         case let .purple(i, value): state.purple[i] = value
         case let .reroll(s): state.rerollUsed.insert(s)
         case let .extraDie(s): state.extraDieUsed.insert(s)
+        case let .claimMark(area, i):
+            if area == .yellow { state.yellowCrossed.insert(i) } else if area == .blue { state.blueCrossed.insert(i) }
+            state.claimedFreeMarks[area.rawValue, default: 0] += 1
         }
     }
 

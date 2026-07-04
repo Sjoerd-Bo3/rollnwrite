@@ -211,7 +211,7 @@ public struct CleverScorecardView: View {
         // every layout (v3 board, landscape, list) just like the game-over
         // overlay. `&& !showResults` keeps it from stacking over the final card.
         .overlay(alignment: .top) {
-            if showBonus && !showResults {
+            if showBonus && !showResults && !game.isClaiming {
                 CleverBonusEarnedOverlay(
                     game: game,
                     onDismiss: {
@@ -225,6 +225,16 @@ public struct CleverScorecardView: View {
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
+        // Issue #54, 3b: while a free "cross any yellow/blue" mark is owed, a
+        // persistent (non-dismissable) cue replaces the bonus banner and the
+        // board is locked until the player taps a ringed cell.
+        .overlay(alignment: .top) {
+            if let area = game.pendingClaimArea, !showResults {
+                CleverClaimCue(area: area, game: game)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: game.isClaiming)
         // Issue #54 increment 2b: render each earned icon in flight from its
         // printed badge up into the banner. Only the BADGE anchors resolve here
         // (they live in the main board subtree); the banner's own anchor sits
@@ -771,6 +781,60 @@ struct CleverFlyingBonus: View {
     }
 }
 
+/// The persistent, non-dismissable prompt shown while a free "cross any
+/// yellow/blue" mark is owed (issue #54, 3b). The board is locked until the
+/// player taps one of the ringed cells to place it.
+struct CleverClaimCue: View {
+    let area: CleverArea
+    @ObservedObject var game: CleverGame
+
+    var body: some View {
+        HStack(spacing: 13) {
+            Image(systemName: "hand.tap.fill")
+                .font(.system(size: 23, weight: .bold))
+                .foregroundStyle(game.color(area).color)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Free mark earned!")
+                    .font(.system(size: 18, weight: .heavy, design: .rounded))
+                    .foregroundStyle(cleverInk)
+                Text("Tap a highlighted \(area.title.lowercased()) box to place it")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(cleverInk.opacity(0.8))
+            }
+            Spacer(minLength: 8)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
+        .frame(maxWidth: 620)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(game.color(area).color.opacity(0.16),
+                    in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .strokeBorder(game.color(area).color.opacity(0.65), lineWidth: 2.5)
+        )
+        .shadow(color: .black.opacity(0.2), radius: 16, y: 6)
+        .padding(.horizontal, 12)
+        .padding(.top, 54)
+    }
+}
+
+/// A pulsing highlight ring over a cell that can receive a pending free mark
+/// (issue #54, 3b claim mode) — draws the eye to where the player must tap.
+struct CleverClaimRing: View {
+    let size: CGFloat
+    @State private var on = false
+    var body: some View {
+        RoundedRectangle(cornerRadius: size * 0.2, style: .continuous)
+            .strokeBorder(Color.accentColor, lineWidth: max(2.5, size * 0.09))
+            .opacity(on ? 1 : 0.3)
+            .scaleEffect(on ? 1.0 : 0.9)
+            .animation(.easeInOut(duration: 0.65).repeatForever(autoreverses: true), value: on)
+            .onAppear { on = true }
+            .allowsHitTesting(false)
+    }
+}
+
 // MARK: - Round badges (bonus icons + player-count markers)
 
 /// The badge under a round number: the printed start-of-round bonus for
@@ -876,6 +940,9 @@ struct CleverYellowGrid: View {
                             height: cellH
                         ) {
                             if undoable { game.undo() } else { game.markYellow(idx) }
+                        }
+                        .overlay {
+                            if game.isClaimTarget(.yellow, idx) { CleverClaimRing(size: cell) }
                         }
                     }
                 }
@@ -1086,6 +1153,9 @@ struct CleverBluePanel: View {
                                 height: cellH
                             ) {
                                 if game.isLastBlue(v) { game.undo() } else { game.markBlue(v) }
+                            }
+                            .overlay {
+                                if game.isClaimTarget(.blue, v) { CleverClaimRing(size: cell) }
                             }
                         } else {
                             diceHint
