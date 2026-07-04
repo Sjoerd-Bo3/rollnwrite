@@ -150,6 +150,17 @@ public struct CleverState: Codable, Equatable {
     /// a game move: it never enters `history` (see `CleverGame.toggleRound`).
     /// Crossing a round with a printed bonus feeds the reroll/+1 earned counts.
     public var roundsCrossed: Set<Int> = []
+    /// Number of players chosen on "New game" when round management is on
+    /// (issue #59). Drives the round count (1–2 → 6, 3 → 5, 4 → 4). `nil`
+    /// means "not chosen" (round management off, or a pre-#59 save) — the
+    /// rounds bar then falls back to the historical 6-round look.
+    public var playerCount: Int?
+    /// One snapshot captured each time a round is crossed on the bar (issue
+    /// #59), in round order, so the UI can show what changed THAT round
+    /// (delta vs. the previous snapshot). Pure derived BOOKKEEPING like
+    /// `roundsCrossed` itself — never enters `history` — so un-crossing a
+    /// round simply drops its snapshot (see `CleverGame.toggleRound`).
+    public var roundSnapshots: [CleverRoundSnapshot] = []
     public var history: [CleverAction] = []
     // Note: older saves carry a per-game `theme` key; the decoder ignores it
     // (dice colours are an app-wide setting now — see `DiceTheme`).
@@ -158,7 +169,7 @@ public struct CleverState: Codable, Equatable {
 
     private enum CodingKeys: String, CodingKey {
         case yellowCrossed, blueCrossed, greenCount, orange, purple
-        case rerollUsed, extraDieUsed, roundsCrossed, history
+        case rerollUsed, extraDieUsed, roundsCrossed, playerCount, roundSnapshots, history
     }
 
     // Tolerant decode so saved games from earlier builds (which lack newer
@@ -177,7 +188,37 @@ public struct CleverState: Codable, Equatable {
         rerollUsed = try c.decodeIfPresent(Set<Int>.self, forKey: .rerollUsed) ?? []
         extraDieUsed = try c.decodeIfPresent(Set<Int>.self, forKey: .extraDieUsed) ?? []
         roundsCrossed = try c.decodeIfPresent(Set<Int>.self, forKey: .roundsCrossed) ?? []
+        playerCount = try c.decodeIfPresent(Int.self, forKey: .playerCount) ?? nil
+        roundSnapshots = try c.decodeIfPresent([CleverRoundSnapshot].self, forKey: .roundSnapshots) ?? []
         history = try c.decodeIfPresent([CleverAction].self, forKey: .history) ?? []
+    }
+}
+
+/// A small snapshot of board totals captured when a round is crossed on the
+/// rounds bar (issue #59), so the round-summary UI can report the delta vs.
+/// the previous round. Value type with defaults for every field, so it
+/// decodes tolerantly even if future fields are added without a custom
+/// `init(from:)` (missing keys just fall back to `0`).
+public struct CleverRoundSnapshot: Codable, Equatable {
+    public var totalScore: Int = 0
+    public var markCount: Int = 0
+
+    public init(totalScore: Int = 0, markCount: Int = 0) {
+        self.totalScore = totalScore
+        self.markCount = markCount
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case totalScore, markCount
+    }
+
+    // Tolerant decode, same discipline as `CleverState`: any future field
+    // added to this struct must go through `decodeIfPresent(...) ?? default`
+    // too, so snapshots saved by older builds keep loading.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        totalScore = try c.decodeIfPresent(Int.self, forKey: .totalScore) ?? 0
+        markCount = try c.decodeIfPresent(Int.self, forKey: .markCount) ?? 0
     }
 }
 

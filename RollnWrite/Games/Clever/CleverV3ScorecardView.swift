@@ -145,7 +145,7 @@ struct CleverV3LandscapeBoard: View {
                 .frame(maxWidth: .infinity)
                 .background(
                     RoundedRectangle(cornerRadius: SheetRadius.pill, style: .continuous)
-                        .fill(r >= 4 ? Color.black : Color(white: 0.3))
+                        .fill(r >= game.roundsBarDarkFrom ? Color.black : Color(white: 0.3))
                 )
             }
         }

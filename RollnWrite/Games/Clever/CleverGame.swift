@@ -25,6 +25,14 @@ public final class CleverGame: ObservableObject, Scoreboard {
     /// appear here — they are written straight onto the card and pushed to undo.
     @Published public private(set) var earnedBonuses: [String] = []
 
+    /// The round index (0…5) whose summary the UI should present, set right
+    /// after `toggleRound` crosses (not un-crosses) a round. The view reads
+    /// `roundSnapshot(for:)` for the content and calls `clearRoundSummary()`
+    /// to dismiss — same advisory pattern as `earnedBonuses`. `nil` when there
+    /// is nothing to show (issue #59; only ever set when round management is
+    /// presented by the UI, but harmless if read regardless).
+    @Published public private(set) var pendingRoundSummary: Int?
+
     /// Actions undone via `undo()`, most-recently-undone last, so `redo()` can
     /// re-apply them in LIFO order. Deliberately NOT persisted (`CleverState` /
     /// `Codable` is untouched) and NOT part of `state` — redo is an in-memory,
@@ -316,17 +324,106 @@ public final class CleverGame: ObservableObject, Scoreboard {
         earnedBonuses.removeAll()
     }
 
+    // MARK: - Player count & round count (issue #59)
+
+    /// Standard round count for a player count, per the official rules
+    /// (matches the sheet's dark round-5/6 tiles for 3–4 players):
+    /// 1–2 players → 6 rounds, 3 → 5, 4 → 4.
+    public static func roundCount(forPlayers players: Int) -> Int {
+        switch players {
+        case 3: return 5
+        case 4: return 4
+        default: return 6 // 1–2 players (and any unexpected value) → 6
+        }
+    }
+
+    /// The active round count for the CURRENT game, derived from
+    /// `state.playerCount`. `nil` (not chosen — round management off, or an
+    /// older save) falls back to the historical 6-round bar.
+    public var roundCount: Int? {
+        state.playerCount.map(CleverGame.roundCount(forPlayers:))
+    }
+
+    /// Sets the player count and resets the board — the "New game" flow when
+    /// round management is on. Player count is persisted BOOKKEEPING (like
+    /// `roundsCrossed`), not a game move, so it is not part of `history`.
+    public func startNewGame(playerCount: Int) {
+        state = CleverState()
+        state.playerCount = playerCount
+        earnedBonuses.removeAll()
+        pendingRoundSummary = nil
+        redoStack = []
+        save()
+    }
+
+    /// Total crossed/written cells across every area — the "marks" figure for
+    /// the round-summary delta. Purely derived from state, like `foxCount`.
+    public var markCount: Int {
+        state.yellowCrossed.count
+            + state.blueCrossed.count
+            + state.greenCount
+            + state.orange.compactMap { $0 }.count
+            + state.purple.compactMap { $0 }.count
+    }
+
+    /// `SheetRoundsBar`'s `darkFrom` for THIS game: the round count when a
+    /// player count was chosen (issue #59), else the historical constant `4`
+    /// — i.e. round management off, or a pre-#59 save, look exactly as
+    /// before. The bar's total tile count stays 6 either way (the printed
+    /// sheet always shows all 6 numbers; fewer players just start the dark
+    /// "already past the end" tiles earlier).
+    public var roundsBarDarkFrom: Int { roundCount ?? 4 }
+
     // MARK: - Rounds bar (bookkeeping, not a game move)
 
     /// Cross / uncross a round tile (index 0…5). This is BOOKKEEPING, not a
     /// move: it never enters the LIFO `history` (so undo skips it entirely)
     /// and is never blocked by game rules. Crossing a round with a printed
     /// start-of-round bonus (rounds 1–3) feeds the reroll/+1 earned counts.
+    /// Also captures/removes a `CleverRoundSnapshot` (issue #59) so a
+    /// round-summary UI can report the delta vs. the previous round; this is
+    /// derived bookkeeping too, so it stays out of `history` just like the
+    /// crossed-round set itself. `roundSnapshots` is always kept sorted by
+    /// ROUND INDEX (not crossing order), one entry per crossed round, so
+    /// un-crossing any round — not just the most recently crossed one — drops
+    /// exactly its own snapshot and leaves the rest consistent.
     public func toggleRound(_ index: Int) {
         guard CleverLayout.roundBonuses.indices.contains(index) else { return }
-        if state.roundsCrossed.contains(index) { state.roundsCrossed.remove(index) }
-        else { state.roundsCrossed.insert(index) }
+        let sortedCrossed = state.roundsCrossed.sorted()
+        if state.roundsCrossed.contains(index) {
+            let rank = sortedCrossed.firstIndex(of: index) ?? 0
+            state.roundsCrossed.remove(index)
+            if state.roundSnapshots.indices.contains(rank) { state.roundSnapshots.remove(at: rank) }
+            if pendingRoundSummary == index { pendingRoundSummary = nil }
+        } else {
+            let rank = sortedCrossed.filter { $0 < index }.count
+            state.roundsCrossed.insert(index)
+            let snapshot = CleverRoundSnapshot(totalScore: totalScore, markCount: markCount)
+            state.roundSnapshots.insert(snapshot, at: min(rank, state.roundSnapshots.count))
+            pendingRoundSummary = index
+        }
         save()
+    }
+
+    /// The previous round's snapshot (the one just before round `index` in
+    /// round order), or a zeroed snapshot if `index` is the first crossed
+    /// round — the baseline the round-summary delta is computed against.
+    public func previousRoundSnapshot(before index: Int) -> CleverRoundSnapshot {
+        let rank = state.roundsCrossed.sorted().firstIndex(of: index) ?? 0
+        guard rank > 0, state.roundSnapshots.indices.contains(rank - 1) else { return CleverRoundSnapshot() }
+        return state.roundSnapshots[rank - 1]
+    }
+
+    /// The snapshot captured when round `index` was crossed, if any.
+    public func roundSnapshot(for index: Int) -> CleverRoundSnapshot? {
+        guard state.roundsCrossed.contains(index) else { return nil }
+        let rank = state.roundsCrossed.sorted().firstIndex(of: index) ?? 0
+        return state.roundSnapshots.indices.contains(rank) ? state.roundSnapshots[rank] : nil
+    }
+
+    /// Dismiss the round-summary sheet/banner.
+    public func clearRoundSummary() {
+        pendingRoundSummary = nil
     }
 
     // MARK: - Reroll / +1 tracks (earned counted, spending tracked)
@@ -536,6 +633,7 @@ public final class CleverGame: ObservableObject, Scoreboard {
     public func reset() {
         state = CleverState()
         earnedBonuses.removeAll()
+        pendingRoundSummary = nil
         redoStack = []
         save()
     }

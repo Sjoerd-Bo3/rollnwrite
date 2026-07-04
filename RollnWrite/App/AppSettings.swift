@@ -39,9 +39,18 @@ enum AppearanceMode: String, CaseIterable, Identifiable {
     static let storageKey = "appearance"
 }
 
+/// Clever 1 (issue #59): whether "New game" asks for a player count and
+/// crossing a round shows a round summary. Default ON; OFF reproduces the
+/// pre-#59 behaviour exactly (no picker, plain crossable rounds bar, no
+/// summaries) — see `CleverScorecardView`.
+enum CleverRoundManagement {
+    static let storageKey = "clever.roundManagement"
+}
+
 /// Settings sheet — presented from the catalogue.
 struct SettingsView: View {
     @AppStorage(AppearanceMode.storageKey) private var appearanceRaw = AppearanceMode.system.rawValue
+    @AppStorage(CleverRoundManagement.storageKey) private var roundManagement = true
     @ObservedObject private var diceTheme = DiceTheme.shared
     @Environment(\.dismiss) private var dismiss
     @State private var scores: [(name: String, best: Int)] = []
@@ -81,9 +90,16 @@ struct SettingsView: View {
                     .pickerStyle(.segmented)
                 }
 
-                // Dice colours drive the Clever areas; the Qwixx-only App
-                // Store cut ships nothing that uses them, so hide the section.
+                // Round management + dice colours are Clever-only; the
+                // Qwixx-only App Store cut ships nothing that uses them
+                // (Qwixx has no rounds), so hide both sections.
                 #if !QWIXX_ONLY
+                Section {
+                    Toggle("Round management", isOn: $roundManagement)
+                } footer: {
+                    Text("Track rounds and show a summary after each. Off = the rounds bar is just a tally.")
+                }
+
                 Section {
                     ForEach(0..<DiceTheme.slotCount, id: \.self) { i in
                         ColorPicker("Die \(i + 1)", selection: dieColor(i), supportsOpacity: false)
