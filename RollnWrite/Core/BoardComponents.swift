@@ -175,15 +175,17 @@ public struct BonusTile: View {
     let aActive: Bool
     let bActive: Bool
     let undoable: Bool
+    let w: CGFloat
+    let h: CGFloat
     let onTap: () -> Void
 
     public init(_ text: String, tintA: Color, tintB: Color, marked: Bool, legal: Bool,
                 aActive: Bool = false, bActive: Bool = false,
-                undoable: Bool = false, onTap: @escaping () -> Void) {
+                undoable: Bool = false, w: CGFloat, h: CGFloat, onTap: @escaping () -> Void) {
         self.text = text; self.tintA = tintA; self.tintB = tintB
         self.marked = marked; self.legal = legal
         self.aActive = aActive; self.bActive = bActive
-        self.undoable = undoable; self.onTap = onTap
+        self.undoable = undoable; self.w = w; self.h = h; self.onTap = onTap
     }
 
     // A half lights up (full tint) when its colour can reach this number, or the
@@ -197,27 +199,32 @@ public struct BonusTile: View {
     private var litForWhiteText: Bool { marked || (aActive && bActive) }
 
     public var body: some View {
-        ZStack {
+        // Diameter of the inscribed circle → all glyphs and strokes scale off it,
+        // matching `NumberTile`'s convention so the bonus numbers stay legible at
+        // every board size (they were a fixed 13pt, tiny inside iPad's big circles).
+        let s = min(w, h)
+        return ZStack {
             // Light base, like `NumberTile`: identical in light and dark mode.
             Circle().fill(Color.white.opacity(0.95))
             // Upper-left half = colour A, lower-right half = colour B; each is lit
             // or washed-out independently to show which side enables the bonus.
             Circle().fill(tintA.opacity(aOpacity)).mask(DiagonalHalf(upperLeft: true))
             Circle().fill(tintB.opacity(bOpacity)).mask(DiagonalHalf(upperLeft: false))
-            Circle().strokeBorder(.black.opacity(0.18), lineWidth: 1)
-            Circle().strokeBorder(.white, lineWidth: undoable ? 2.5 : 0)
+            Circle().strokeBorder(.black.opacity(0.18), lineWidth: BoardStroke.small(s))
+            Circle().strokeBorder(.white, lineWidth: undoable ? BoardStroke.medium(s) : 0)
             Text(text)
-                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .font(.system(size: s * 0.46, weight: .bold, design: .rounded))
                 .minimumScaleFactor(0.4)
                 .lineLimit(1)
                 .foregroundStyle(litForWhiteText ? Color.white : Color.black.opacity(0.55))
                 .shadow(color: .black.opacity(litForWhiteText ? 0.35 : 0), radius: 0.5)
             if marked {
-                Image(systemName: "xmark").font(.system(size: 18, weight: .black)).foregroundStyle(.white)
+                Image(systemName: "xmark").font(.system(size: s * 0.62, weight: .black)).foregroundStyle(.white)
                     .shadow(color: .black.opacity(0.3), radius: 0.5)
                     .transition(.scale(scale: 0.4).combined(with: .opacity))
             }
         }
+        .frame(width: w, height: h)
         .contentShape(Circle())
         .onTapGesture { if (legal && !marked) || undoable { onTap() } }
         .animation(.spring(response: 0.26, dampingFraction: 0.6), value: marked)

@@ -197,10 +197,9 @@ struct QwixxBoardView: View {
                           marked: bonus.marks.contains(i), legal: game.canMarkBonus(id, i),
                           aActive: game.row(for: a).marks.contains(i),
                           bActive: game.row(for: b).marks.contains(i),
-                          undoable: undoable) {
+                          undoable: undoable, w: w, h: h) {
                     if undoable { game.undo() } else { game.markBonus(id, i) }
                 }
-                .frame(width: w, height: h)
             }
             Color.clear.frame(width: w * 2 + tileGap, height: h) // lock + score columns
         }
