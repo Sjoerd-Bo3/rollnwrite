@@ -2,14 +2,10 @@
 //  Feedback.swift
 //  RollnWrite – App
 //
-//  In-app bug reports & feature requests that funnel into GitHub issues
-//  without a backend and without embedding a token (anything shipped in the
-//  binary is extractable). Instead the user composes the report here and we
-//  open GitHub's "new issue" page with `title`, `body` and `labels` pre-filled
-//  as percent-encoded query parameters — Safari (or the GitHub app) shows the
-//  form fully filled in and the user just taps Submit. A GitHub account is
-//  required to submit; that is inherent to the no-backend approach and is
-//  stated in the UI footer.
+//  In-app bug reports & feature requests, backend-free. The user composes the
+//  report here and we open a `mailto:` link with the subject and body
+//  pre-filled as percent-encoded query parameters — the system Mail app opens
+//  ready to send. No account beyond the mail app the user already has.
 //
 
 import SwiftUI
@@ -39,11 +35,11 @@ enum FeedbackKind: String, CaseIterable, Identifiable {
         }
     }
 
-    /// The GitHub label pre-applied to the created issue.
-    var gitHubLabel: String {
+    /// Prefix for the email subject, so reports are easy to spot and filter.
+    var subjectPrefix: String {
         switch self {
-        case .bug:     return "bug"
-        case .feature: return "enhancement"
+        case .bug:     return "Bug"
+        case .feature: return "Feature request"
         }
     }
 }
@@ -94,27 +90,28 @@ enum FeedbackDeviceInfo {
     }
 }
 
-// MARK: - URL builder
+// MARK: - Mail URL builder
 
-/// Builds GitHub "new issue" URLs with the report pre-filled.
+/// Builds a `mailto:` URL with the report pre-filled into the subject and body,
+/// so the user's Mail app opens ready to send.
 ///
 /// Values are strictly percent-encoded (everything outside RFC 3986
 /// "unreserved" is escaped) so `&`, `#`, `+`, `=`, newlines and emoji all
-/// survive: `URLQueryItem`'s default encoding leaves `+` bare, which GitHub —
-/// like most form decoders — would turn into a space.
-enum GitHubIssueURL {
-    static let repository = "Sjoerd-Bo3/rollnwrite"
+/// survive — space becomes `%20`, not `+`, which some mail clients would leave
+/// literal.
+enum FeedbackMailURL {
+    static let recipient = "sjoerd.bozon@gmail.com"
 
-    /// Practical cap well below browser/server URL limits; longer bodies are
-    /// truncated with an ellipsis note.
-    static let maxURLLength = 6000
+    /// Practical cap: some mail clients truncate very long `mailto:` links, so
+    /// the body is shrunk to fit.
+    static let maxURLLength = 2000
 
-    private static let truncationNote = "\n\n…\n\n_(Description truncated — it was too long to fit in a pre-filled link.)_"
+    private static let truncationNote = "\n\n…\n\n(Description truncated — it was too long to fit in a pre-filled link.)"
 
-    /// The pre-filled new-issue URL, truncating the body if the total URL
-    /// would exceed `maxURLLength`.
-    static func newIssue(title: String, body: String, labels: [String]) -> URL? {
-        guard let url = build(title: title, body: body, labels: labels) else { return nil }
+    /// The pre-filled `mailto:` URL, truncating the body if the total URL would
+    /// exceed `maxURLLength`.
+    static func compose(subject: String, body: String) -> URL? {
+        guard let url = build(subject: subject, body: body) else { return nil }
         guard url.absoluteString.count > maxURLLength else { return url }
 
         // Too long — shrink the body geometrically until the URL fits.
@@ -122,27 +119,16 @@ enum GitHubIssueURL {
         var kept = body
         while !kept.isEmpty {
             kept = String(kept.prefix(kept.count * 3 / 4))
-            if let shorter = build(title: title, body: kept + truncationNote, labels: labels),
+            if let shorter = build(subject: subject, body: kept + truncationNote),
                shorter.absoluteString.count <= maxURLLength {
                 return shorter
             }
         }
-        return build(title: title, body: truncationNote, labels: labels)
+        return build(subject: subject, body: truncationNote)
     }
 
-    private static func build(title: String, body: String, labels: [String]) -> URL? {
-        var components = URLComponents()
-        components.scheme = "https"
-        components.host = "github.com"
-        components.path = "/\(repository)/issues/new"
-        // `percentEncodedQueryItems` takes pre-encoded values verbatim; the
-        // plain `queryItems` setter would re-encode too loosely (see above).
-        components.percentEncodedQueryItems = [
-            ("title", title),
-            ("labels", labels.joined(separator: ",")),
-            ("body", body),
-        ].map { URLQueryItem(name: $0.0, value: strictlyEncoded($0.1)) }
-        return components.url
+    private static func build(subject: String, body: String) -> URL? {
+        URL(string: "mailto:\(recipient)?subject=\(strictlyEncoded(subject))&body=\(strictlyEncoded(body))")
     }
 
     private static func strictlyEncoded(_ value: String) -> String {
@@ -222,11 +208,11 @@ struct FeedbackComposerView: View {
 
                 Section {
                     Button(action: submit) {
-                        Label("Open GitHub", systemImage: "arrow.up.forward.app")
+                        Label("Compose email", systemImage: "envelope")
                     }
                     .disabled(trimmedTitle.isEmpty)
                 } footer: {
-                    Text("Opens GitHub with your report pre-filled — a GitHub account is needed to submit.")
+                    Text("Opens your Mail app with your report pre-filled.")
                 }
             }
             .navigationTitle(kind.composerTitle)
@@ -240,10 +226,9 @@ struct FeedbackComposerView: View {
     }
 
     private func submit() {
-        guard let url = GitHubIssueURL.newIssue(
-            title: trimmedTitle,
-            body: issueBody,
-            labels: [kind.gitHubLabel]
+        guard let url = FeedbackMailURL.compose(
+            subject: "\(kind.subjectPrefix): \(trimmedTitle)",
+            body: issueBody
         ) else { return }
         openURL(url)
         dismiss()

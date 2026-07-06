@@ -157,7 +157,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Feedback")
                 } footer: {
-                    Text("Opens GitHub with your report pre-filled — a GitHub account is needed to submit.")
+                    Text("Opens your Mail app with your report pre-filled.")
                 }
 
                 Section {
