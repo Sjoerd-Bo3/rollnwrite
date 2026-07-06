@@ -210,6 +210,14 @@ Release path: Google Play internal track for iteration; production requires
 completing the closed test track first (12 testers, 14 days minimum — use a
 fresh personal Play account, this requirement is per-app).
 
+Both platforms have a golden-fixture runner that replays `spec/fixtures/`
+against the real engine: Android's is `android/engine/src/test/kotlin/dev/bo3/
+rollnwrite/engine/FixtureFormatTest.kt`; iOS's is `RollnWriteTests/
+QwixxFixtureTests.swift` (target `RollnWriteTests`, run via the shared
+`RollnWrite` scheme). Run them with:
+`cd android && ./gradlew :engine:test`
+`xcodebuild test -project RollnWrite.xcodeproj -scheme RollnWrite -destination '...' CODE_SIGNING_ALLOWED=NO`
+
 Mirror the iOS scorecard layout requirements (fullscreen edge-to-edge, tap-
 to-undo, two-player mirror, etc.) rather than reinventing them for Android.
 
