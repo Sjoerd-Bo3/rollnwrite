@@ -24,7 +24,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import dev.bo3.rollnwrite.catalogue.GameCatalogueEntry
+import dev.bo3.rollnwrite.catalogue.GameRegistry
 import dev.bo3.rollnwrite.qwixx.QwixxScorecardScreen
+import dev.bo3.rollnwrite.xchange.XChangeScorecardScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,6 +64,7 @@ class MainActivity : ComponentActivity() {
 private enum class Screen {
     Catalogue,
     QwixxBigPoints,
+    QwixxXChange,
 }
 
 /**
@@ -71,6 +75,14 @@ private enum class Screen {
  */
 private fun screenForSmokeTestGame(id: String?): Screen? = when (id) {
     "qwixx-big-points" -> Screen.QwixxBigPoints
+    "qwixx-xchange" -> Screen.QwixxXChange
+    else -> null
+}
+
+/** Maps a [GameCatalogueEntry.id] to its `Screen` — the tap-to-open counterpart of [screenForSmokeTestGame]. */
+private fun screenForGameId(id: String): Screen? = when (id) {
+    "qwixx-big-points" -> Screen.QwixxBigPoints
+    "qwixx-xchange" -> Screen.QwixxXChange
     else -> null
 }
 
@@ -91,13 +103,19 @@ private fun RootScreen(smokeTestGame: String? = null) {
     }
 
     when (screen) {
-        Screen.Catalogue -> CatalogueScreen(onOpenQwixxBigPoints = { screen = Screen.QwixxBigPoints })
+        Screen.Catalogue -> CatalogueScreen(onOpenGame = { id -> screenForGameId(id)?.let { screen = it } })
         Screen.QwixxBigPoints -> QwixxScorecardScreen(onBack = { screen = Screen.Catalogue })
+        Screen.QwixxXChange -> XChangeScorecardScreen(onBack = { screen = Screen.Catalogue })
     }
 }
 
+/**
+ * Renders one card per [GameRegistry.games] entry (OCP: adding a game means
+ * adding a registry entry + a `Screen` case, not touching this composable) —
+ * mirrors iOS `RootView` iterating `GameRegistry.games`.
+ */
 @Composable
-private fun CatalogueScreen(onOpenQwixxBigPoints: () -> Unit) {
+private fun CatalogueScreen(onOpenGame: (String) -> Unit) {
     Scaffold { innerPadding ->
         Surface(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             Column(
@@ -109,27 +127,28 @@ private fun CatalogueScreen(onOpenQwixxBigPoints: () -> Unit) {
                     text = stringResource(R.string.catalogue_title),
                     style = MaterialTheme.typography.headlineLarge,
                 )
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    onClick = onOpenQwixxBigPoints,
-                ) {
-                    Column(
-                        modifier = Modifier.padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.qwixx_big_points_title),
-                            style = MaterialTheme.typography.titleMedium,
-                        )
-                        Text(
-                            text = stringResource(R.string.qwixx_big_points_subtitle),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    }
+                GameRegistry.games.forEach { entry ->
+                    GameCatalogueCard(entry = entry, onClick = { onOpenGame(entry.id) })
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun GameCatalogueCard(entry: GameCatalogueEntry, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp),
+        onClick = onClick,
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(text = stringResource(entry.titleRes), style = MaterialTheme.typography.titleMedium)
+            Text(text = stringResource(entry.subtitleRes), style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
