@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.GridOn
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.outlined.Casino
 import androidx.compose.runtime.Composable
@@ -17,6 +18,7 @@ import dev.bo3.rollnwrite.qwixx.QwixxScorecardScreen
 import dev.bo3.rollnwrite.qwixx.qwixxBigPointsViewModels
 import dev.bo3.rollnwrite.qwixx.qwixxClassicViewModels
 import dev.bo3.rollnwrite.bonus.BonusScorecardScreen
+import dev.bo3.rollnwrite.mixx.MixxScorecardScreen
 import dev.bo3.rollnwrite.qwixxdouble.DoubleScorecardScreen
 import dev.bo3.rollnwrite.xchange.XChangeScorecardScreen
 
@@ -119,6 +121,16 @@ object GameRegistry {
             icon = Icons.Filled.GridOn,
             family = "Qwixx",
             makeScreen = { onBack -> BonusScorecardScreen(onBack = onBack) },
+        ),
+        GameDefinition(
+            id = "qwixx-mixx",
+            title = { stringResource(R.string.qwixx_mixx_title) },
+            subtitle = { stringResource(R.string.qwixx_mixx_subtitle) },
+            // Matches QwixxMixxGame.swift's red accent and shuffle icon.
+            accent = Color(red = 0.86f, green = 0.18f, blue = 0.18f),
+            icon = Icons.Filled.Shuffle,
+            family = "Qwixx",
+            makeScreen = { onBack -> MixxScorecardScreen(onBack = onBack) },
         ),
     )
 

@@ -1,0 +1,20 @@
+{
+  "game": "qwixx-mixx",
+  "variant": "variantA",
+  "config": { "board": "variantA", "scoringCap": 12 },
+  "name": "left-to-right",
+  "description": "Cells are markable only strictly right of the highest already-marked index in that row; a skipped cell is forfeited forever, even on a different row than a legal mark.",
+  "steps": [
+    { "do": "mark", "row": 0, "index": 3, "expect": true, "note": "first mark of the row: any starting index is fine" },
+    { "assert": { "crosses": { "0": 1 } } },
+    { "do": "mark", "row": 0, "index": 2, "expect": false, "note": "left of index 3: refused" },
+    { "do": "mark", "row": 0, "index": 3, "expect": false, "note": "already marked" },
+    { "assert": { "crosses": { "0": 1 } } },
+    { "do": "mark", "row": 0, "index": 4, "expect": true, "note": "strictly right: legal" },
+    { "assert": { "crosses": { "0": 2 } } },
+    { "do": "mark", "row": 0, "index": 2, "expect": false, "note": "index 2 forfeited forever, even after marking 4" },
+    { "do": "mark", "row": 1, "index": 5, "expect": true, "note": "row 1 is independent of row 0's marks" },
+    { "do": "mark", "row": 1, "index": 0, "expect": false, "note": "left of 5 in row 1: refused" },
+    { "assert": { "crosses": { "0": 2, "1": 1 } } }
+  ]
+}

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Catalogue -->
+    <string name="qwixx_mixx_title">Qwixx Mixx</string>
+    <string name="qwixx_mixx_subtitle">Gemischte Reihen · zwei Tafeln (A und B)</string>
+
+    <!-- Board header: A/B board segmented toggle -->
+    <string name="mixx_board_a_short">A</string>
+    <string name="mixx_board_b_short">B</string>
+    <string name="mixx_board_a_full">Variante A</string>
+    <string name="mixx_board_b_full">Variante B</string>
+
+    <!-- Dialogs -->
+    <string name="mixx_start_new_game_message">Dies löscht den Spielzettel der aktuellen Tafel.</string>
+
+    <!-- Rules dialog -->
+    <string name="mixx_rules_title">Qwixx — gemixxt (Mixx)</string>
+    <string name="mixx_rules_subtitle">Offizielle Regeln für die beiden Mixx-Tafeln (Variante A und Variante B)</string>
+
+    <string name="mixx_rules_body_goal">Qwixx gemixxt behält alle Regeln des klassischen Qwixx exakt bei — nur die Reihen sind gemischt. Das Set enthält zwei Tafeln; wechsle mit dem A/B-Schalter oben auf der Karte zwischen ihnen.</string>
+
+    <string name="mixx_rules_heading_variant_a">Variante A — Farbsegmente</string>
+    <string name="mixx_rules_body_variant_a_1">Die vier Reihen verlaufen weiterhin 2 → 12 (obere zwei) und 12 → 2 (untere zwei), genau wie im Original.</string>
+    <string name="mixx_rules_body_variant_a_2">Aber jede Reihe ist in kleine Segmente unterteilt, und jedes Zahlenfeld gehört zu einer der vier Würfelfarben. Um ein Feld anzukreuzen, benutzt du einen Würfel dieser Farbe (oder die beiden weißen Würfel), wie beim gewöhnlichen Qwixx.</string>
+    <string name="mixx_rules_body_variant_a_3">Das Schloss jeder Reihe (ihre Bandfarbe) zeigt an, welcher farbige Würfel beim Schließen der Reihe aus dem Spiel genommen wird: Das Schließen der rot geschlossenen Reihe entfernt den roten Würfel, und so weiter. Ist eine Farbe entfernt, können Felder dieser Farbe in den anderen Reihen weiterhin mit den beiden weißen Würfeln angekreuzt werden (aber nie in einer geschlossenen Reihe).</string>
+
+    <string name="mixx_rules_heading_variant_b">Variante B — durcheinandergewürfelte Zahlen</string>
+    <string name="mixx_rules_body_variant_b_1">Es gibt eine Reihe pro Würfelfarbe (Rot, Gelb, Grün, Blau), aber die elf Zahlen innerhalb jeder Reihe sind nicht mehr geordnet — sie sind wild verstreut.</string>
+    <string name="mixx_rules_body_variant_b_2">Du kreuzt weiterhin strikt von links nach rechts an, und um eine Zahl anzukreuzen, musst du sie mit dem Würfel dieser Reihenfarbe würfeln (oder mit den weißen Würfeln). Um z. B. eine 11 in der roten Reihe anzukreuzen, brauchst du eine rote 11.</string>
+    <string name="mixx_rules_body_variant_b_3">Wie bei Variante A entfernt das Schließen einer Reihe den Würfel dieser Farbe aus dem Spiel.</string>
+
+    <string name="mixx_rules_body_crossing_1">Innerhalb jeder Reihe musst du von links nach rechts ankreuzen. Du darfst Felder überspringen, aber übersprungene Felder können später nie mehr angekreuzt werden.</string>
+    <string name="mixx_rules_body_crossing_2">In einem Zug darf die Summe der weißen Würfel in einer beliebigen Reihe angekreuzt werden; der aktive Spieler darf außerdem einen weißen Würfel zu einem Farbwürfel addieren und ein passendes Feld ankreuzen.</string>
+
+    <string name="mixx_rules_body_locking_1">Um das äußerst rechte Feld anzukreuzen, musst du bereits mindestens 5 Kreuze in dieser Reihe haben.</string>
+    <string name="mixx_rules_body_locking_2">Das Ankreuzen schließt die Reihe und zählt als ein zusätzliches Kreuz — und entfernt den entsprechenden farbigen Würfel für alle aus dem Spiel.</string>
+
+    <string name="mixx_rules_body_scoring_1">Die Wertung ist identisch zum klassischen Qwixx. Zähle pro Reihe die Kreuze (eigene Zahlen + Schloss, max. 12) und werte 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78.</string>
+    <string name="mixx_rules_body_scoring_2">Gesamt = Reihe 1 + Reihe 2 + Reihe 3 + Reihe 4 − (5 × Strafpunkte).</string>
+
+    <string name="mixx_rules_source">Qwixx gemixxt von Nürnberger-Spielkarten-Verlag (NSV, Art. 4033) / White Goblin Games; offizieller Spielzettel und Spielregeln.</string>
+</resources>

@@ -1,0 +1,48 @@
+{
+  "game": "qwixx-mixx",
+  "variant": "variantA",
+  "config": { "board": "variantA", "scoringCap": 12 },
+  "name": "undo-redo",
+  "description": "Undo is strictly LIFO across mark/penalty/concede actions on any row, exactly reverses a self-lock and a concede, redo re-applies through the normal mutator, and a fresh move after an undo clears the redo stack.",
+  "steps": [
+    { "assert": { "canUndo": false, "canRedo": false } },
+    { "do": "undo", "expect": false, "note": "nothing to undo yet" },
+    { "do": "redo", "expect": false, "note": "nothing to redo yet" },
+
+    { "do": "mark", "row": 0, "index": 0, "expect": true },
+    { "do": "mark", "row": 0, "index": 1, "expect": true },
+    { "do": "mark", "row": 0, "index": 2, "expect": true },
+    { "do": "mark", "row": 0, "index": 3, "expect": true },
+    { "do": "mark", "row": 0, "index": 4, "expect": true },
+    { "do": "mark", "row": 0, "index": 10, "expect": true, "note": "locks row 0" },
+    { "assert": { "rowLocked": { "0": true }, "crosses": { "0": 7 }, "canUndo": true } },
+
+    { "do": "undo", "expect": true, "note": "undoes the lock mark: unlocks row 0, removes index 10 and the lock bonus" },
+    { "assert": { "rowLocked": { "0": false }, "crosses": { "0": 5 }, "canRedo": true } },
+
+    { "do": "penalty", "expect": true, "note": "fresh move after undo must clear the redo stack" },
+    { "assert": { "penalties": 1, "canRedo": false } },
+
+    { "do": "undo", "expect": true, "note": "undoes the penalty" },
+    { "assert": { "penalties": 0, "canRedo": true } },
+    { "do": "redo", "expect": true, "note": "re-applies the penalty" },
+    { "assert": { "penalties": 1, "canRedo": false } },
+
+    { "do": "undo", "expect": true, "note": "undo the penalty again" },
+    { "do": "undo", "expect": true, "note": "undo the 5th mark (index 4) - LIFO: most recent applied action, not the earlier lock-mark which was already undone and never redone" },
+    { "assert": { "rowLocked": { "0": false }, "crosses": { "0": 4 }, "penalties": 0 } },
+
+    { "do": "mark", "row": 1, "index": 0, "expect": true, "note": "fresh forward move: must clear the redo stack" },
+    { "assert": { "canRedo": false } },
+    { "do": "redo", "expect": false },
+
+    { "do": "mark", "row": 2, "index": 0, "expect": true },
+    { "do": "mark", "row": 2, "index": 1, "expect": true },
+    { "do": "concede", "row": 2, "expect": true, "note": "2 marks; concede flips locked true, which alone adds +1 to scoringCrosses (same formula as a self-lock)" },
+    { "assert": { "rowLocked": { "2": true }, "crosses": { "2": 3 }, "lockedRowCount": 1 } },
+    { "do": "undo", "expect": true, "note": "undoes the concede: unlocks row 2, marks unchanged so crosses drops by the lock bonus only" },
+    { "assert": { "rowLocked": { "2": false }, "crosses": { "2": 2 }, "lockedRowCount": 0 } },
+    { "do": "redo", "expect": true, "note": "re-applies the concede through concedeRow" },
+    { "assert": { "rowLocked": { "2": true }, "crosses": { "2": 3 }, "lockedRowCount": 1 } }
+  ]
+}
