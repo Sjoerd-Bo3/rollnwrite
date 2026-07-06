@@ -2658,22 +2658,6 @@
         }
       }
     },
-    "Opens GitHub with your report pre-filled — a GitHub account is needed to submit.": {
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opent GitHub met je melding vooraf ingevuld — een GitHub-account is nodig om te versturen."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Öffnet GitHub mit deinem Bericht vorausgefüllt — zum Absenden ist ein GitHub-Konto nötig."
-          }
-        }
-      }
-    },
     "Type": {
       "localizations": {
         "nl": {
@@ -2750,22 +2734,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Geräteinfos anhängen"
-          }
-        }
-      }
-    },
-    "Open GitHub": {
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "GitHub openen"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "GitHub öffnen"
           }
         }
       }
@@ -3406,6 +3374,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Füchse"
+          }
+        }
+      }
+    },
+    "Compose email": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-mail opstellen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-Mail verfassen"
+          }
+        }
+      }
+    },
+    "Opens your Mail app with your report pre-filled.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opent je Mail-app met je melding vooraf ingevuld."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnet deine Mail-App mit deinem Bericht vorausgefüllt."
           }
         }
       }
