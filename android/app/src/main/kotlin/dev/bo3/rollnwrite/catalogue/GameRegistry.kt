@@ -96,6 +96,16 @@ object GameRegistry {
             makeScreen = { onBack -> Lucky15ScorecardScreen(onBack = onBack) },
         ),
         GameDefinition(
+            id = "qwixx-connect15",
+            title = { stringResource(R.string.qwixx_connect15_title) },
+            subtitle = { stringResource(R.string.qwixx_connect15_subtitle) },
+            // Mirrors iOS QwixxConnect15Game's orange accent and link icon.
+            accent = Color(red = 0.93f, green = 0.45f, blue = 0.13f),
+            icon = Icons.Filled.Link,
+            family = "Qwixx",
+            makeScreen = { onBack -> Connect15ScorecardScreen(onBack = onBack) },
+        ),
+        GameDefinition(
             id = "qwixx-connected",
             title = { stringResource(R.string.qwixx_connected_title) },
             subtitle = { stringResource(R.string.qwixx_connected_subtitle) },
@@ -144,16 +154,6 @@ object GameRegistry {
             icon = Icons.Filled.Shuffle,
             family = "Qwixx",
             makeScreen = { onBack -> MixxScorecardScreen(onBack = onBack) },
-        ),
-        GameDefinition(
-            id = "qwixx-connect15",
-            title = { stringResource(R.string.qwixx_connect15_title) },
-            subtitle = { stringResource(R.string.qwixx_connect15_subtitle) },
-            // Mirrors iOS QwixxConnect15Game's orange accent and link icon.
-            accent = Color(red = 0.93f, green = 0.45f, blue = 0.13f),
-            icon = Icons.Filled.Link,
-            family = "Qwixx",
-            makeScreen = { onBack -> Connect15ScorecardScreen(onBack = onBack) },
         ),
     )
 

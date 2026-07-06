@@ -110,7 +110,7 @@ jobs:
             # execs EACH line as its own separate `sh -c` process, so shell
             # state (loop variables, `for`/`do`/`done` blocks) cannot span
             # lines. A multi-line `for` here would break the shell parser.
-            for id in qwixx-big-points qwixx-classic; do adb shell am force-stop "$PACKAGE"; adb shell am start -n "$ACTIVITY" --es smokeTestGame "$id"; sleep 6; adb exec-out screencap -p > "shots/${id}.png"; done
+            for id in qwixx-big-points qwixx-classic qwixx-lucky15 qwixx-connect15 qwixx-connected qwixx-xchange qwixx-double qwixx-bonus qwixx-mixx; do adb shell am force-stop "$PACKAGE"; adb shell am start -n "$ACTIVITY" --es smokeTestGame "$id"; sleep 6; adb exec-out screencap -p > "shots/${id}.png"; done
 
             adb shell am broadcast -a com.android.systemui.demo -e command exit
             adb shell am force-stop "$PACKAGE"
