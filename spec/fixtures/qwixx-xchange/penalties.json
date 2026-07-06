@@ -1,0 +1,34 @@
+{
+  "game": "qwixx",
+  "variant": "xchange",
+  "config": { "scoringCap": 12 },
+  "name": "penalties",
+  "description": "Each penalty costs 5 points; the 4th ends the game immediately, and every action (including X-Change marks) refuses once the game is over.",
+  "steps": [
+    { "do": "markColor", "color": "red", "index": 0, "expect": true },
+    { "do": "markColor", "color": "red", "index": 1, "expect": true },
+    { "do": "penalty", "expect": true },
+    { "assert": { "penalties": 1, "penaltyPoints": 5, "totalScore": -2, "isGameOver": false } },
+    { "do": "penalty", "expect": true },
+    { "assert": { "penalties": 2, "penaltyPoints": 10, "totalScore": -7 } },
+    { "do": "markXChange", "index": 0, "expect": true, "note": "still legal - game not over yet" },
+    { "do": "penalty", "expect": true },
+    { "assert": { "penalties": 3, "penaltyPoints": 15, "totalScore": -12, "isGameOver": false } },
+    { "do": "penalty", "expect": true, "note": "4th penalty ends the game" },
+    { "assert": {
+        "penalties": 4,
+        "penaltyPoints": 20,
+        "totalScore": -17,
+        "isGameOver": true,
+        "xchangeCrossed": 1
+    } },
+    { "do": "penalty", "expect": false, "note": "game already over" },
+    { "do": "markColor", "color": "green", "index": 0, "expect": false },
+    { "do": "markXChange", "index": 1, "expect": false, "note": "X-Change freezes too" },
+    { "assert": { "penalties": 4, "xchangeCrossed": 1 } },
+    { "do": "undo", "expect": true, "note": "undoing the 4th penalty resumes play" },
+    { "assert": { "penalties": 3, "penaltyPoints": 15, "totalScore": -12, "isGameOver": false } },
+    { "do": "markXChange", "index": 1, "expect": true, "note": "legal again now the game resumed" },
+    { "assert": { "xchangeCrossed": 2, "xchangeMarks": [0, 1] } }
+  ]
+}

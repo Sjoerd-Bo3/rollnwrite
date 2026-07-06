@@ -1,0 +1,57 @@
+{
+  "game": "qwixx",
+  "variant": "xchange",
+  "config": { "scoringCap": 12 },
+  "name": "undo-redo",
+  "description": "Undo/redo is one strict LIFO history shared across colour marks, X-Change marks, and penalties; illegal attempts are silent no-ops that are never recorded; a fresh move after an undo clears the redo stack.",
+  "steps": [
+    { "do": "undo", "expect": false, "note": "empty history refuses undo" },
+    { "assert": { "canUndo": false, "canRedo": false } },
+    { "do": "markColor", "color": "red", "index": 0, "expect": true },
+    { "do": "markXChange", "index": 0, "expect": true },
+    { "do": "markColor", "color": "red", "index": 1, "expect": true },
+    { "assert": {
+        "crosses": { "red": 2 },
+        "points": { "red": 3 },
+        "xchangeCrossed": 1,
+        "xchangeMarks": [0],
+        "totalScore": 3,
+        "canUndo": true,
+        "canRedo": false
+    } },
+    { "do": "undo", "expect": true, "note": "LIFO: undoes red index 1, the most recent action" },
+    { "assert": {
+        "crosses": { "red": 1 },
+        "points": { "red": 1 },
+        "xchangeCrossed": 1,
+        "totalScore": 1,
+        "canRedo": true
+    } },
+    { "do": "undo", "expect": true, "note": "undoes the X-Change mark next" },
+    { "assert": {
+        "crosses": { "red": 1 },
+        "xchangeCrossed": 0,
+        "xchangeMarks": [],
+        "totalScore": 1,
+        "canRedo": true
+    } },
+    { "do": "redo", "expect": true, "note": "redo re-applies the X-Change mark exactly" },
+    { "assert": { "xchangeCrossed": 1, "xchangeMarks": [0], "canRedo": true } },
+    { "do": "redo", "expect": true, "note": "redo re-applies red index 1" },
+    { "assert": { "crosses": { "red": 2 }, "points": { "red": 3 }, "totalScore": 3, "canRedo": false } },
+    { "do": "undo", "expect": true, "note": "undo red index 1 again to set up redo-clearing" },
+    { "assert": { "canRedo": true } },
+    { "do": "markXChange", "index": 1, "expect": true, "note": "a fresh move clears the redo stack" },
+    { "assert": { "canRedo": false, "xchangeCrossed": 2, "xchangeMarks": [0, 1] } },
+    { "do": "redo", "expect": false, "note": "nothing to redo - refused, state unchanged" },
+    { "assert": { "crosses": { "red": 1 }, "totalScore": 1, "xchangeCrossed": 2 } },
+    { "do": "penalty", "expect": true, "note": "penalties join the same shared history" },
+    { "assert": { "penalties": 1, "totalScore": -4, "canRedo": false } },
+    { "do": "undo", "expect": true, "note": "undoing the penalty restores the prior total" },
+    { "assert": { "penalties": 0, "penaltyPoints": 0, "totalScore": 1, "canRedo": true } },
+    { "do": "markXChange", "index": 2, "expect": true, "note": "fresh move clears the penalty redo" },
+    { "assert": { "canRedo": false, "xchangeCrossed": 3, "xchangeMarks": [0, 1, 2] } },
+    { "do": "redo", "expect": false } ,
+    { "assert": { "penalties": 0, "totalScore": 1 } }
+  ]
+}

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Catalogue -->
+    <string name="qwixx_xchange_title">Qwixx X-Change</string>
+    <string name="qwixx_xchange_subtitle">Klassische Reihen · X-Change-Tauschreihe</string>
+
+    <!-- X-Change row content -->
+    <string name="xchange_content_description">X-Change %1$d tausche %2$d</string>
+
+    <!-- Rules dialog -->
+    <string name="rules_title_xchange">Qwixx — X-Change</string>
+    <string name="rules_subtitle_xchange">Offizielle Regeln für die X-Change-Variante</string>
+
+    <string name="rules_body_goal_xchange">Spiele klassisches Qwixx, aber eine neue X-Change-Reihe aus neun Rautenfeldern lässt dich die Summe der weißen Würfel gegen eine nützlichere Zahl eintauschen, bevor du eine Farbe ankreuzt.</string>
+
+    <string name="rules_body_card_1_xchange">Rote und gelbe Reihen laufen 2 → 12 (von links nach rechts). Grüne und blaue Reihen laufen 12 → 2.</string>
+    <string name="rules_body_card_2_xchange">Unter den Farbreihen liegt die X-Change-Reihe: neun Rauten, jede mit zwei Zahlen und einem Tauschpfeil (8/5, 9/7, 11/3, 7/4, 10/3, 8/6, 10/5, 11/9, 6/4).</string>
+
+    <string name="rules_body_crossing_1_xchange">Innerhalb jeder Reihe muss von links nach rechts angekreuzt werden. Du kannst Zahlen überspringen, aber übersprungene Zahlen können später nie mehr angekreuzt werden.</string>
+    <string name="rules_body_crossing_2_xchange">In einem Zug darf die Summe der weißen Würfel in einer beliebigen Reihe angekreuzt werden; der aktive Spieler darf auch einen weißen Würfel zu einem Farbwürfel addieren und diese Farbe ankreuzen.</string>
+
+    <string name="rules_heading_xchange_row">Die X-Change-Reihe</string>
+    <string name="rules_body_xchange_row_1">Wenn die Summe der weißen Würfel angesagt wird, darfst du stattdessen eine verfügbare X-Change-Raute ankreuzen, deren Zahl dieser Summe entspricht (frühere Rauten dürfen dabei übersprungen werden), und sie dann gegen die andere Zahl der Raute EINTAUSCHEN.</string>
+    <string name="rules_body_xchange_row_2">Verwende den eingetauschten Wert genau so, als wäre er die Summe der weißen Würfel: Kreuze ihn in einer beliebigen Farbreihe an (unter Beachtung der Von-links-nach-rechts-Regel dieser Reihe).</string>
+    <string name="rules_body_xchange_row_3">Der Tausch funktioniert in beide Richtungen — von oben nach unten oder von unten nach oben (der Doppelpfeil der Raute).</string>
+    <string name="rules_body_xchange_row_4">Jeder Spieler darf auf seinem eigenen Zettel tauschen, nicht nur der aktive Spieler — der Tausch gilt aber nur für dich selbst. Die Würfel ändern sich nicht; alle anderen verwenden weiterhin die angesagte Summe.</string>
+    <string name="rules_body_xchange_row_5">Die X-Change-Reihe wird strikt von links nach rechts angekreuzt. Du darfst Rauten überspringen, um die gewünschte zu erreichen, aber jede übersprungene Raute ist dann für den Rest des Spiels verloren.</string>
+
+    <string name="rules_body_locking_1_xchange">Um die am weitesten rechts stehende Zahl anzukreuzen (12 für Rot/Gelb, 2 für Grün/Blau), musst du in dieser Reihe bereits mindestens 5 Kreuze haben.</string>
+    <string name="rules_body_locking_2_xchange">Kreuzt du sie an, wird die Reihe geschlossen und das Schloss zählt als zusätzliches Kreuz.</string>
+
+    <string name="rules_body_penalties_1_xchange">Kreuzt du in deinem Zug nichts an, erhältst du eine Strafe (−5 Punkte). Vier Strafen beenden das Spiel.</string>
+    <string name="rules_body_penalties_2_xchange">Das Spiel endet außerdem sofort, wenn zwei Reihen geschlossen sind.</string>
+
+    <string name="rules_body_scoring_1_xchange">Zähle pro Farbe die Kreuze (eigene Zahlen + Schloss, max. 12) und werte 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78.</string>
+    <string name="rules_body_scoring_2_xchange">Die X-Change-Reihe bringt selbst keine Punkte — ihr Wert liegt in den zusätzlichen Farbkreuzen, die die Tauschvorgänge ermöglichen.</string>
+    <string name="rules_body_scoring_3_xchange">Gesamt = Rot + Gelb + Grün + Blau − (5 × Strafen).</string>
+
+    <string name="rules_source_xchange">Qwixx X-Change von Nürnberger-Spielkarten-Verlag (NSV) / White Goblin Games (Art. 4290); offizielle Punktekarte &amp; Regeln.</string>
+</resources>

@@ -2,6 +2,7 @@ package dev.bo3.rollnwrite.catalogue
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Casino
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.outlined.Casino
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -13,6 +14,7 @@ import dev.bo3.rollnwrite.qwixx.QwixxRulesVariant
 import dev.bo3.rollnwrite.qwixx.QwixxScorecardScreen
 import dev.bo3.rollnwrite.qwixx.qwixxBigPointsViewModels
 import dev.bo3.rollnwrite.qwixx.qwixxClassicViewModels
+import dev.bo3.rollnwrite.xchange.XChangeScorecardScreen
 
 /**
  * One catalogue entry: metadata for the menu row plus a factory for its
@@ -83,6 +85,16 @@ object GameRegistry {
             icon = Icons.Filled.Casino,
             family = "Qwixx",
             makeScreen = { onBack -> Lucky15ScorecardScreen(onBack = onBack) },
+        ),
+        GameDefinition(
+            id = "qwixx-xchange",
+            title = { stringResource(R.string.qwixx_xchange_title) },
+            subtitle = { stringResource(R.string.qwixx_xchange_subtitle) },
+            // Mirrors iOS QwixxXChangeGame's deep-magenta accent and swap icon.
+            accent = Color(red = 0.55f, green = 0.10f, blue = 0.42f),
+            icon = Icons.Filled.SwapHoriz,
+            family = "Qwixx",
+            makeScreen = { onBack -> XChangeScorecardScreen(onBack = onBack) },
         ),
     )
 

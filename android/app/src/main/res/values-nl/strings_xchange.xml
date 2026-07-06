@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Catalogue -->
+    <string name="qwixx_xchange_title">Qwixx X-Change</string>
+    <string name="qwixx_xchange_subtitle">Klassieke rijen · X-Change wisselrij</string>
+
+    <!-- X-Change row content -->
+    <string name="xchange_content_description">X-Change %1$d wissel %2$d</string>
+
+    <!-- Rules dialog -->
+    <string name="rules_title_xchange">Qwixx — X-Change</string>
+    <string name="rules_subtitle_xchange">Officiële regels voor de X-Change-variant</string>
+
+    <string name="rules_body_goal_xchange">Speel klassiek Qwixx, maar een nieuwe X-Change-rij van negen ruitvakjes laat je de som van de witte dobbelstenen inwisselen voor een handiger getal voordat je een kleur wegstreept.</string>
+
+    <string name="rules_body_card_1_xchange">Rode en gele rijen lopen 2 → 12 (van links naar rechts). Groene en blauwe rijen lopen 12 → 2.</string>
+    <string name="rules_body_card_2_xchange">Onder de kleurrijen staat de X-Change-rij: negen ruiten, elk met twee getallen en een wisselpijl (8/5, 9/7, 11/3, 7/4, 10/3, 8/6, 10/5, 11/9, 6/4).</string>
+
+    <string name="rules_body_crossing_1_xchange">Binnen elke rij moet je van links naar rechts wegstrepen. Je mag getallen overslaan, maar overgeslagen getallen kunnen later nooit meer worden weggestreept.</string>
+    <string name="rules_body_crossing_2_xchange">Op een beurt mag de som van de witte dobbelstenen in één rij worden weggestreept; de actieve speler mag ook een witte dobbelsteen bij een kleurendobbelsteen optellen en die kleur wegstrepen.</string>
+
+    <string name="rules_heading_xchange_row">De X-Change-rij</string>
+    <string name="rules_body_xchange_row_1">Wanneer de som van de witte dobbelstenen wordt omgeroepen, mag je in plaats daarvan een beschikbaar X-Change-ruitje wegstrepen waarvan een getal overeenkomt met die som (je mag eerdere ruitjes overslaan), en dat vervolgens INWISSELEN voor het andere getal van dat ruitje.</string>
+    <string name="rules_body_xchange_row_2">Gebruik de ingewisselde waarde precies alsof het de som van de witte dobbelstenen was: streep die weg in één kleurrij (volgens de van-links-naar-rechts-regel van die rij).</string>
+    <string name="rules_body_xchange_row_3">De wissel werkt in beide richtingen — van boven naar beneden of van beneden naar boven (de dubbele pijl van het ruitje).</string>
+    <string name="rules_body_xchange_row_4">Elke speler mag op zijn eigen kaart wisselen, niet alleen de actieve speler — maar de wissel geldt alleen voor jou. De dobbelstenen veranderen niet; iedereen gebruikt nog steeds de omgeroepen som.</string>
+    <string name="rules_body_xchange_row_5">De X-Change-rij wordt strikt van links naar rechts weggestreept. Je mag ruitjes overslaan om bij het gewenste ruitje te komen, maar elk overgeslagen ruitje is dan voor de rest van het spel verloren.</string>
+
+    <string name="rules_body_locking_1_xchange">Om het meest rechtse getal weg te strepen (12 voor rood/geel, 2 voor groen/blauw) moet je al minstens 5 kruisjes in die rij hebben.</string>
+    <string name="rules_body_locking_2_xchange">Als je dit wegstreept, wordt de rij vergrendeld en telt het slot als extra kruisje.</string>
+
+    <string name="rules_body_penalties_1_xchange">Streep je op je beurt niets weg, dan krijg je een strafpunt (−5 punten). Vier strafpunten beëindigen het spel.</string>
+    <string name="rules_body_penalties_2_xchange">Het spel eindigt ook zodra twee rijen zijn vergrendeld.</string>
+
+    <string name="rules_body_scoring_1_xchange">Tel per kleur de kruisjes (eigen getallen + het slot, max 12) en scoor 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78.</string>
+    <string name="rules_body_scoring_2_xchange">De X-Change-rij levert zelf geen punten op — de waarde ervan zit in de extra kleurkruisjes die de wissels mogelijk maken.</string>
+    <string name="rules_body_scoring_3_xchange">Totaal = rood + geel + groen + blauw − (5 × strafpunten).</string>
+
+    <string name="rules_source_xchange">Qwixx X-Change van Nürnberger-Spielkarten-Verlag (NSV) / White Goblin Games (art. 4290); officiële scorekaart &amp; regels.</string>
+</resources>

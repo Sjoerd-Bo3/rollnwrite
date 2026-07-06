@@ -1,0 +1,51 @@
+{
+  "game": "qwixx",
+  "variant": "xchange",
+  "config": { "scoringCap": 12 },
+  "name": "concede-finish",
+  "description": "Concede locks a row with no lock bonus and counts toward the two-lock game end; manual finish ends the game immediately; both are exactly undoable; the X-Change row never contributes to score regardless of how the game ends.",
+  "steps": [
+    { "do": "markColor", "color": "red", "index": 0, "expect": true },
+    { "do": "markColor", "color": "red", "index": 1, "expect": true },
+    { "do": "markXChange", "index": 0, "expect": true },
+    { "do": "markXChange", "index": 1, "expect": true },
+    { "do": "concede", "color": "red", "expect": true, "note": "another player locked red - close it for free" },
+    { "assert": {
+        "rowLocked": { "red": true },
+        "lockedRowCount": 1,
+        "crosses": { "red": 2 },
+        "points": { "red": 3 },
+        "totalScore": 3,
+        "isGameOver": false,
+        "xchangeCrossed": 2
+    } },
+    { "do": "concede", "color": "red", "expect": false, "note": "cannot concede an already-locked row" },
+    { "do": "markColor", "color": "red", "index": 5, "expect": false, "note": "conceded row refuses marks" },
+    { "do": "undo", "expect": true, "note": "undo the concede - row reopens" },
+    { "assert": { "rowLocked": { "red": false }, "lockedRowCount": 0, "isGameOver": false, "canRedo": true } },
+    { "do": "concede", "color": "red", "expect": true, "note": "fresh move clears the redo stack" },
+    { "assert": { "canRedo": false } },
+    { "do": "concede", "color": "yellow", "expect": true, "note": "second locked row - game ends" },
+    { "assert": {
+        "lockedRowCount": 2,
+        "isGameOver": true,
+        "crosses": { "yellow": 0 },
+        "points": { "yellow": 0 },
+        "totalScore": 3,
+        "xchangeCrossed": 2,
+        "xchangeMarks": [0, 1]
+    } },
+    { "do": "markXChange", "index": 2, "expect": false, "note": "frozen - game over" },
+    { "do": "undo", "expect": true, "note": "undo the yellow concede - play resumes" },
+    { "assert": { "lockedRowCount": 1, "isGameOver": false } },
+    { "do": "finish", "expect": true, "note": "manual finish ends the game immediately, without any locked-row requirement" },
+    { "assert": { "isGameOver": true, "lockedRowCount": 1, "totalScore": 3, "xchangeCrossed": 2 } },
+    { "do": "markXChange", "index": 2, "expect": false },
+    { "do": "markColor", "color": "green", "index": 0, "expect": false },
+    { "do": "undo", "expect": true, "note": "undo the finish - play resumes" },
+    { "assert": { "isGameOver": false, "canRedo": true } },
+    { "do": "markXChange", "index": 2, "expect": true, "note": "legal again" },
+    { "do": "redo", "expect": false, "note": "fresh markXChange move cleared the redo stack" },
+    { "assert": { "isGameOver": false, "xchangeCrossed": 3, "xchangeMarks": [0, 1, 2], "totalScore": 3 } }
+  ]
+}

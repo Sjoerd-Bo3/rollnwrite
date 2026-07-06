@@ -36,8 +36,11 @@ import java.io.File
  *   "steps": [ ... ]
  * }
  * ```
- * `variant` is `"big-points"` (config: cap 15, bonus rows true) or
- * `"classic"` (config: cap 12, bonus rows false) — `config` MUST agree with
+ * `variant` is `"big-points"` (config: cap 15, bonus rows true), `"classic"`
+ * (config: cap 12, bonus rows false), or `"xchange"` (config: cap 12, no
+ * `hasBonusRows` key at all — see `spec/fixtures/qwixx-xchange/README.md` for
+ * that variant's extended vocabulary: `markXChange` and the
+ * `xchangeCrossed`/`xchangeMarks` assert keys). `config` MUST agree with
  * `variant`.
  *
  * A step is EITHER a "do" or an "assert":
@@ -141,19 +144,32 @@ class FixtureFormatTest {
         require(game, "game", "qwixx", label)
 
         val variant = root.stringField("variant", label)
-        val variantBounds = variantConfigs[variant]
-            ?: fail<Nothing>("$label: variant '$variant' must be one of ${variantConfigs.keys}")
 
         val config = root["config"]?.jsonObject
             ?: fail<Nothing>("$label: missing 'config' object")
-        val scoringCap = config.intField("scoringCap", label)
-        val hasBonusRows = config.boolField("hasBonusRows", label)
-        val (expectedCap, expectedBonus) = variantBounds
-        assertTrue(scoringCap == expectedCap) {
-            "$label: config.scoringCap=$scoringCap inconsistent with variant '$variant' (expected $expectedCap)"
-        }
-        assertTrue(hasBonusRows == expectedBonus) {
-            "$label: config.hasBonusRows=$hasBonusRows inconsistent with variant '$variant' (expected $expectedBonus)"
+
+        // X-Change (spec/fixtures/qwixx-xchange/README.md) has its own
+        // config shape (no `hasBonusRows` — the variant has no bonus rows at
+        // all) and its own "do"/"assert" vocabulary extension (`markXChange`,
+        // `xchangeCrossed`, `xchangeMarks`), so it validates on a separate
+        // path from the base big-points/classic fixtures.
+        if (variant == "xchange") {
+            val scoringCap = config.intField("scoringCap", label)
+            assertTrue(scoringCap == 12) {
+                "$label: config.scoringCap=$scoringCap inconsistent with variant 'xchange' (expected 12)"
+            }
+        } else {
+            val variantBounds = variantConfigs[variant]
+                ?: fail<Nothing>("$label: variant '$variant' must be one of ${variantConfigs.keys + "xchange"}")
+            val scoringCap = config.intField("scoringCap", label)
+            val hasBonusRows = config.boolField("hasBonusRows", label)
+            val (expectedCap, expectedBonus) = variantBounds
+            assertTrue(scoringCap == expectedCap) {
+                "$label: config.scoringCap=$scoringCap inconsistent with variant '$variant' (expected $expectedCap)"
+            }
+            assertTrue(hasBonusRows == expectedBonus) {
+                "$label: config.hasBonusRows=$hasBonusRows inconsistent with variant '$variant' (expected $expectedBonus)"
+            }
         }
 
         root.stringField("name", label)
@@ -168,16 +184,116 @@ class FixtureFormatTest {
             val step = stepElement.jsonObject
             val stepLabel = "$label: step[$index]"
             when {
-                "do" in step -> validateDoStep(step, stepLabel)
+                "do" in step -> if (variant == "xchange") validateXChangeDoStep(step, stepLabel) else validateDoStep(step, stepLabel)
                 "assert" in step -> {
                     hasAssert = true
-                    validateAssertStep(step, stepLabel)
+                    if (variant == "xchange") validateXChangeAssertStep(step, stepLabel) else validateAssertStep(step, stepLabel)
                 }
                 else -> fail<Unit>("$stepLabel: must contain exactly one of 'do' or 'assert', found keys ${step.keys}")
             }
         }
 
         assertTrue(hasAssert) { "$label: must contain at least one 'assert' step" }
+    }
+
+    // --- X-Change vocabulary (spec/fixtures/qwixx-xchange/README.md) ---
+
+    private fun validateXChangeDoStep(step: JsonObject, stepLabel: String) {
+        val action = step.stringField("do", stepLabel)
+        if ("expect" !in step) {
+            fail<Unit>("$stepLabel: 'do':\"$action\" is missing required 'expect' boolean")
+        }
+        step.boolField("expect", stepLabel)
+
+        val knownKeys = setOf("do", "expect", "color", "index", "note")
+        val extra = step.keys - knownKeys
+        assertTrue(extra.isEmpty()) { "$stepLabel: unexpected keys $extra on 'do' step" }
+        if ("note" in step) step.stringField("note", stepLabel)
+
+        when (action) {
+            "markColor" -> {
+                val color = step.stringField("color", stepLabel)
+                assertTrue(color in colors) { "$stepLabel: markColor color '$color' not in $colors" }
+                val index = step.intField("index", stepLabel)
+                assertTrue(index in 0..10) { "$stepLabel: markColor index $index out of range 0..10" }
+            }
+            "markXChange" -> {
+                val index = step.intField("index", stepLabel)
+                assertTrue(index in 0..8) { "$stepLabel: markXChange index $index out of range 0..8" }
+            }
+            "penalty" -> {
+                assertTrue(step.keys - setOf("note") == setOf("do", "expect")) {
+                    "$stepLabel: penalty takes no fields besides 'do'/'expect', found ${step.keys}"
+                }
+            }
+            "concede" -> {
+                val color = step.stringField("color", stepLabel)
+                assertTrue(color in colors) { "$stepLabel: concede color '$color' not in $colors" }
+            }
+            "finish", "undo", "redo" -> {
+                assertTrue(step.keys - setOf("note") == setOf("do", "expect")) {
+                    "$stepLabel: '$action' takes no fields besides 'do'/'expect', found ${step.keys}"
+                }
+            }
+            else -> fail<Unit>(
+                "$stepLabel: unknown 'do' action '$action' " +
+                    "(expected one of markColor, markXChange, penalty, concede, finish, undo, redo)",
+            )
+        }
+    }
+
+    private fun validateXChangeAssertStep(step: JsonObject, stepLabel: String) {
+        val assertion = step["assert"]?.jsonObject
+            ?: fail<Nothing>("$stepLabel: 'assert' must be an object")
+        assertTrue(step.keys - setOf("note") == setOf("assert")) {
+            "$stepLabel: 'assert' step must not have sibling keys, found ${step.keys}"
+        }
+        if ("note" in step) step.stringField("note", stepLabel)
+        assertTrue(assertion.isNotEmpty()) { "$stepLabel: 'assert' object must not be empty" }
+
+        val knownKeys = setOf(
+            "points", "crosses", "penalties", "penaltyPoints", "totalScore",
+            "isGameOver", "lockedRowCount", "rowLocked", "canUndo", "canRedo",
+            "xchangeCrossed", "xchangeMarks",
+        )
+        val extra = assertion.keys - knownKeys
+        assertTrue(extra.isEmpty()) { "$stepLabel: unknown assert keys $extra" }
+
+        assertion["points"]?.let { validatePerColorMap(it, "$stepLabel.points", colors) }
+        assertion["crosses"]?.let { validatePerColorMap(it, "$stepLabel.crosses", colors) }
+        assertion["rowLocked"]?.let { validatePerColorBoolMap(it, "$stepLabel.rowLocked", colors) }
+
+        assertion["penalties"]?.let {
+            assertTrue(it.jsonPrimitive.intOrNull != null) { "$stepLabel.penalties must be an int" }
+        }
+        assertion["penaltyPoints"]?.let {
+            assertTrue(it.jsonPrimitive.intOrNull != null) { "$stepLabel.penaltyPoints must be an int" }
+        }
+        assertion["totalScore"]?.let {
+            assertTrue(it.jsonPrimitive.intOrNull != null) { "$stepLabel.totalScore must be an int" }
+        }
+        assertion["lockedRowCount"]?.let {
+            assertTrue(it.jsonPrimitive.intOrNull != null) { "$stepLabel.lockedRowCount must be an int" }
+        }
+        assertion["isGameOver"]?.let {
+            assertTrue(it.jsonPrimitive.booleanOrNull != null) { "$stepLabel.isGameOver must be a bool" }
+        }
+        assertion["canUndo"]?.let {
+            assertTrue(it.jsonPrimitive.booleanOrNull != null) { "$stepLabel.canUndo must be a bool" }
+        }
+        assertion["canRedo"]?.let {
+            assertTrue(it.jsonPrimitive.booleanOrNull != null) { "$stepLabel.canRedo must be a bool" }
+        }
+        assertion["xchangeCrossed"]?.let {
+            assertTrue(it.jsonPrimitive.intOrNull != null) { "$stepLabel.xchangeCrossed must be an int" }
+        }
+        assertion["xchangeMarks"]?.let { marksElement ->
+            val arr = marksElement as? JsonArray
+                ?: fail<Nothing>("$stepLabel.xchangeMarks must be an array")
+            arr.forEach {
+                assertTrue(it.jsonPrimitive.intOrNull != null) { "$stepLabel.xchangeMarks entries must be ints" }
+            }
+        }
     }
 
     private fun validateDoStep(step: JsonObject, stepLabel: String) {
