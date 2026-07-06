@@ -1,0 +1,58 @@
+{
+  "game": "qwixx",
+  "variant": "connected",
+  "config": { "scoringCap": 12 },
+  "name": "undo-redo",
+  "description": "Undo is strictly LIFO and exact - a deliberate chain cross and its forced partner co-mark are ONE action, so a single undo reverses both together; redo re-applies through markColor, which re-derives the same partner deterministically; any fresh move clears the redo stack.",
+  "steps": [
+    { "do": "undo", "expect": false, "note": "empty history refuses undo" },
+    { "assert": { "canUndo": false, "canRedo": false } },
+
+    { "do": "markColor", "color": "red", "index": 0, "expect": true, "note": "red 2, not a chain space" },
+    { "do": "markColor", "color": "red", "index": 9, "expect": true, "note": "red[9] (red 11), chained to yellow[9] (yellow 11) - auto-crosses yellow 11 too" },
+    { "assert": {
+        "crosses": { "red": 2, "yellow": 1 },
+        "points": { "red": 3, "yellow": 1 },
+        "canUndo": true,
+        "canRedo": false
+    } },
+
+    { "do": "undo", "expect": true, "note": "undoes red[9] AND the forced yellow[9] co-mark together, as one atomic step" },
+    { "assert": {
+        "crosses": { "red": 1, "yellow": 0 },
+        "points": { "red": 1, "yellow": 0 },
+        "canUndo": true,
+        "canRedo": true
+    } },
+
+    { "do": "redo", "expect": true, "note": "redo re-applies markColor(red,9) through the normal mutator, reproducing the identical auto co-mark on yellow[9]" },
+    { "assert": {
+        "crosses": { "red": 2, "yellow": 1 },
+        "points": { "red": 3, "yellow": 1 },
+        "totalScore": 4,
+        "canUndo": true,
+        "canRedo": false
+    } },
+
+    { "do": "undo", "expect": true, "note": "set up the redo-clearing case" },
+    { "assert": { "canRedo": true, "crosses": { "yellow": 0 } } },
+
+    { "do": "markColor", "color": "green", "index": 0, "expect": true, "note": "a fresh move (green 12, not a chain space) clears the redo stack" },
+    { "assert": { "canRedo": false, "crosses": { "green": 1, "yellow": 0 } } },
+
+    { "do": "redo", "expect": false, "note": "nothing to redo - refused, state unchanged" },
+    { "assert": {
+        "crosses": { "red": 1, "yellow": 0, "green": 1 },
+        "totalScore": 2
+    } },
+
+    { "do": "undo", "expect": true, "note": "LIFO: removes the green mark, not an older red one" },
+    { "assert": { "crosses": { "red": 1, "green": 0 }, "totalScore": 1 } },
+
+    { "do": "penalty", "expect": true, "note": "penalties join the same history and clear redo" },
+    { "assert": { "penalties": 1, "totalScore": -4, "canRedo": false } },
+
+    { "do": "undo", "expect": true, "note": "undoing a penalty restores the 5 points" },
+    { "assert": { "penalties": 0, "penaltyPoints": 0, "totalScore": 1, "canRedo": true } }
+  ]
+}

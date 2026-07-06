@@ -1,0 +1,25 @@
+{
+  "game": "qwixx",
+  "variant": "connected",
+  "config": { "scoringCap": 12 },
+  "name": "penalties",
+  "description": "Each penalty costs 5 points, the 4th ends the game, and a 5th is refused. Identical to classic Qwixx - chains play no part in penalties.",
+  "steps": [
+    { "do": "penalty", "expect": true },
+    { "assert": { "penalties": 1, "penaltyPoints": 5, "totalScore": -5, "isGameOver": false } },
+    { "do": "penalty", "expect": true },
+    { "do": "penalty", "expect": true },
+    { "assert": { "penalties": 3, "penaltyPoints": 15, "totalScore": -15, "isGameOver": false } },
+    { "do": "penalty", "expect": true, "note": "4th penalty ends the game" },
+    { "assert": { "penalties": 4, "penaltyPoints": 20, "totalScore": -20, "isGameOver": true } },
+    { "do": "penalty", "expect": false, "note": "5th penalty refused - game already over" },
+    { "do": "markColor", "color": "red", "index": 4, "expect": false, "note": "game over: even a chain-space mark is refused, and no auto co-mark happens" },
+    { "assert": {
+        "penalties": 4,
+        "penaltyPoints": 20,
+        "totalScore": -20,
+        "isGameOver": true,
+        "crosses": { "red": 0, "yellow": 0 }
+    } }
+  ]
+}
