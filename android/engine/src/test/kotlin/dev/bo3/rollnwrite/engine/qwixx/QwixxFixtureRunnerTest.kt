@@ -51,10 +51,19 @@ class QwixxFixtureRunnerTest {
         return dir
     }
 
+    /**
+     * Only the BASE Qwixx directories: each variant has its own vocabulary
+     * and its own runner (see spec/fixtures/<id>/README.md) — this runner
+     * must not replay those against the base engine.
+     */
+    private val baseQwixxDirs = listOf("qwixx-big-points", "qwixx-classic")
+
     private fun fixtureFiles(dir: File): List<File> {
-        val files = dir.walkTopDown().filter { it.isFile && it.extension == "json" }.toList()
+        val files = baseQwixxDirs
+            .map { dir.resolve(it) }
+            .flatMap { sub -> sub.walkTopDown().filter { it.isFile && it.extension == "json" }.toList() }
         assertTrue(files.isNotEmpty()) {
-            "fixtures.dir '${dir.absolutePath}' contains no *.json fixtures"
+            "fixtures.dir '${dir.absolutePath}' contains no *.json fixtures in $baseQwixxDirs"
         }
         return files.sortedBy { it.path }
     }
