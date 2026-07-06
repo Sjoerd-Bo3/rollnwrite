@@ -1,4 +1,89 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">RollnWrite</string>
+
+    <!-- Catalogue -->
+    <string name="catalogue_title">RollnWrite</string>
+    <string name="qwixx_big_points_title">Qwixx Big Points</string>
+    <string name="qwixx_big_points_subtitle">Bonus rows · up to 120 per colour</string>
+
+    <!-- Colour names (accessibility labels, concede dialog) -->
+    <string name="colour_red">Red</string>
+    <string name="colour_yellow">Yellow</string>
+    <string name="colour_green">Green</string>
+    <string name="colour_blue">Blue</string>
+
+    <!-- Board header -->
+    <string name="back">Back</string>
+    <string name="undo">Undo</string>
+    <string name="redo">Redo</string>
+    <string name="new_game">New game</string>
+    <string name="finish_game">Finish game</string>
+    <string name="rules">Rules</string>
+    <string name="single_player">Single player</string>
+    <string name="two_players">Two players</string>
+
+    <!-- Board content -->
+    <string name="total">Total</string>
+    <string name="penalties">Penalties</string>
+    <string name="penalty_n">Penalty %1$d</string>
+    <string name="lock_content_description">%1$s lock</string>
+    <string name="tile_state_crossed">crossed</string>
+    <string name="tile_state_available">available</string>
+    <string name="tile_state_forfeited">forfeited</string>
+    <string name="tile_state_blocked">blocked</string>
+    <string name="bonus_content_description">Bonus %1$s</string>
+
+    <!-- Dialogs -->
+    <string name="start_new_game_question">Start a new game?</string>
+    <string name="start_new_game_message">This clears the current scorecard.</string>
+    <string name="finish_game_question">Finish the game?</string>
+    <string name="finish_game_message">End the game now and show the final score.</string>
+    <string name="close_colour_question">Close this colour?</string>
+    <string name="close_colour_action">Close %1$s — no points</string>
+    <string name="close_colour_message">Use this when another player locked %1$s. The row closes but you score no lock bonus.</string>
+    <string name="cancel">Cancel</string>
+    <string name="close">Close</string>
+
+    <!-- Game over -->
+    <string name="game_over_title">Game over</string>
+    <string name="new_best">New best!</string>
+    <string name="best_n">Best: %1$d</string>
+    <string name="view_board">View board</string>
+
+    <!-- Rules dialog -->
+    <string name="rules_title_big_points">Qwixx — Big Points</string>
+    <string name="rules_subtitle_big_points">Official rules for the Big Points variant</string>
+
+    <string name="rules_heading_goal">Goal</string>
+    <string name="rules_body_goal">Cross out as many numbers as you can in the four colour rows to score points. In Big Points the two extra bonus rows let a single colour reach up to 120 points.</string>
+
+    <string name="rules_heading_card">The card</string>
+    <string name="rules_body_card_1">Red and yellow rows run 2 → 12 (left to right). Green and blue rows run 12 → 2.</string>
+    <string name="rules_body_card_2">Between red and yellow sits the red/yellow bonus row; between green and blue sits the green/blue bonus row. Each has the same numbers as its neighbours.</string>
+
+    <string name="rules_heading_crossing">Crossing out numbers</string>
+    <string name="rules_body_crossing_1">Within every row you must cross out from left to right. You may skip numbers, but skipped numbers can never be crossed later.</string>
+    <string name="rules_body_crossing_2">On a turn the white dice total may be crossed in any one row; the active player may also add a white die to a colour die and cross that colour.</string>
+
+    <string name="rules_heading_bonus">Bonus rows</string>
+    <string name="rules_body_bonus_1">A bonus space may only be crossed once an adjacent same-number colour space (either colour) has already been crossed.</string>
+    <string name="rules_body_bonus_2">The general rule applies to the bonus rows too: cross them from left to right — previously skipped bonus spaces may not be crossed later.</string>
+    <string name="rules_body_bonus_3">Each crossed bonus space counts for BOTH adjacent colour rows when scoring, but bonus crosses do NOT count toward the 5 crosses required to lock a row.</string>
+    <string name="rules_body_bonus_4">Bonus spaces next to an already-locked colour row can still be crossed (activated via the other colour) and still count for both rows.</string>
+    <string name="rules_body_bonus_5">Crossing only a bonus space on your turn does not count as a failed throw — no penalty.</string>
+
+    <string name="rules_heading_locking">Locking a row</string>
+    <string name="rules_body_locking_1">To cross the right-most number (12 for red/yellow, 2 for green/blue) you must already have at least 5 crosses in that row.</string>
+    <string name="rules_body_locking_2">Crossing it locks the row and adds the lock as one extra cross.</string>
+
+    <string name="rules_heading_penalties">Penalties &amp; game end</string>
+    <string name="rules_body_penalties_1">If on your turn you cross nothing, take a penalty (−5 points). Four penalties end the game.</string>
+    <string name="rules_body_penalties_2">The game also ends the moment two rows are locked.</string>
+
+    <string name="rules_heading_scoring">Scoring</string>
+    <string name="rules_body_scoring_1">Per colour, count its crosses (its own numbers + lock + adjacent bonus crosses, max 15) and score 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105, 120.</string>
+    <string name="rules_body_scoring_2">Total = red + yellow + green + blue − (5 × penalties).</string>
+
+    <string name="rules_source_big_points">Qwixx Big Points by Nürnberger-Spielkarten-Verlag (NSV); official scorecard &amp; variant rules.</string>
 </resources>
