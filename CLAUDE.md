@@ -208,7 +208,10 @@ an iOS build.
 
 Release path: Google Play internal track for iteration; production requires
 completing the closed test track first (12 testers, 14 days minimum — use a
-fresh personal Play account, this requirement is per-app).
+fresh personal Play account, this requirement is per-app). Shipping is
+workflow "8. Android Release" (manual for now — signed AAB uploaded as a
+workflow artifact, plus an automatic internal-track upload once
+`PLAY_SERVICE_ACCOUNT_JSON` is set) — canonical doc `docs/PLAY.md`.
 
 Both platforms have a golden-fixture runner that replays `spec/fixtures/`
 against the real engine: Android's is `android/engine/src/test/kotlin/dev/bo3/
@@ -220,6 +223,35 @@ QwixxFixtureTests.swift` (target `RollnWriteTests`, run via the shared
 
 Mirror the iOS scorecard layout requirements (fullscreen edge-to-edge, tap-
 to-undo, two-player mirror, etc.) rather than reinventing them for Android.
+
+### Visual parity loop (iOS is ground truth)
+
+Every Android board/UI change must be screenshot-compared against the SAME
+screen on iOS before the PR merges — iOS shipped first and is the reference;
+Android matches it, not the other way round. Capture iOS locally: `xcodebuild
+build -project RollnWrite.xcodeproj -scheme RollnWrite -destination
+'generic/platform=iOS Simulator'`, then `xcrun simctl install`/`launch
+-smokeTestGame <id>` and `simctl io screenshot`; landscape-locked boards render
+rotated in the portrait framebuffer — `sips --rotate 270` to upright (see
+`simulator_smoke.yml`). Capture Android locally: `cd android && ./gradlew
+:app:assembleDebug`, `adb install`, `adb shell am force-stop
+dev.bo3.rollnwrite`, `adb shell am start -n
+dev.bo3.rollnwrite/.MainActivity --es smokeTestGame <id>`, `adb exec-out
+screencap -p > shot.png`. The force-stop matters: `am start` against an
+already-running task just brings it to the foreground without delivering a
+new intent extra (MainActivity reads `smokeTestGame` only in `onCreate`), so
+re-running with a different id but no force-stop silently shows the stale
+screen — mirror `android_smoke.yml`, which force-stops before every launch.
+Downscale before Reading either platform's shot —
+the 32 MB limit is already documented above. CI equivalents producing
+comparable artifact sets: workflow "6. Simulator Smoke Test" (iOS) and
+"9. Android Smoke Test" (`android_smoke.yml`, Android) — both manual-only,
+both grouped by game id. Divergences resolve toward iOS unless the owner
+rules otherwise (photograph-the-real-pad precedent still wins over either
+app when they disagree with the physical sheet).
+
+Known feature gap: the dice-roller header strip (issue #30) is not yet on
+Android — don't flag it as a parity bug, it's tracked separately.
 
 ## Game notes
 

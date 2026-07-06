@@ -1,0 +1,132 @@
+name: 8. Android Release
+
+# Build a signed release .aab (Android App Bundle) on a GitHub-hosted Linux
+# runner and, once the Play Console app record exists, upload it straight to
+# the internal testing track — the Android mirror of "2. TestFlight".
+#
+# MANUAL ONLY for now (workflow_dispatch), unlike TestFlight's push-on-main.
+# Reason: Play Console REQUIRES the very first bundle for a new app to be
+# uploaded by hand through the web UI (an app record has to exist, with its
+# store listing + content rating + data-safety declarations filled in,
+# before the Publisher API will accept anything for it) — see docs/PLAY.md
+# step (d). Until that one-time manual upload happens there is nothing for
+# the API upload step to talk to, so auto-running this on every push to main
+# would just fail. Once the app record exists and PLAY_SERVICE_ACCOUNT_JSON
+# is set, flip the `on:` block to mirror testflight.yml's
+# `push: branches: [main]` (path-filtered to android/**) and this becomes
+# fully automatic, same cadence as iOS.
+#
+# One-time setup (all browser-based) is in docs/PLAY.md. Required repository
+# secrets (Settings → Secrets and variables → Actions):
+#   PLAY_KEYSTORE_B64        – base64 of the upload keystore (.jks)
+#   PLAY_KEYSTORE_PASSWORD   – store+key password (one password, see docs/PLAY.md)
+#   PLAY_SERVICE_ACCOUNT_JSON – Google Cloud service-account key JSON with Play
+#                               Android Publisher access (added later; the
+#                               upload-to-Play step is skipped until then)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_code:
+        description: >
+          Play Console versionCode (must strictly increase per upload). Leave
+          blank to auto-derive from the run number — see the default math below.
+        required: false
+        default: ""
+
+# A newer manual run supersedes an in-flight one, so cancel the older run.
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    name: Build & upload signed AAB
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle (caching)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Decode upload keystore
+        # PLAY_KEYSTORE_B64 is the .jks re-encoded as base64 text (secrets are
+        # text-only, so the binary keystore has to travel as base64). Decoded
+        # to the runner's temp dir, never checked out into the repo workspace,
+        # and gone when the VM is destroyed after the job.
+        run: |
+          echo "${{ secrets.PLAY_KEYSTORE_B64 }}" | base64 -d > "$RUNNER_TEMP/upload-keystore.jks"
+
+      - name: Compute versionCode
+        # Default = github.run_number + 1000. The +1000 offset exists so a
+        # manual override (workflow_dispatch input) and the auto default can
+        # never collide with versionCodes used during earlier manual/local
+        # testing (real devices may already have a locally-built higher
+        # versionCode installed from manual `bundleRelease` testing). Note:
+        # github.run_number never resets for this workflow file (it only
+        # starts at 1 if the workflow file is renamed/moved) and does NOT
+        # change on "Re-run jobs" — only run_attempt does — so re-running a
+        # failed upload reproduces the same versionCode; start a fresh run
+        # via workflow_dispatch instead (see docs/PLAY.md troubleshooting).
+        # Bump the offset if it's ever at risk of overlapping a shipped code.
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version_code }}" ]; then
+            echo "code=${{ github.event.inputs.version_code }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=$(( ${{ github.run_number }} + 1000 ))" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Require signing secrets
+        # Fail fast on missing signing material. Without this guard, an unset
+        # PLAY_KEYSTORE_PASSWORD (or both secrets) still lets the decode step
+        # above succeed (it just writes an empty/garbage file), the gradle
+        # hasReleaseSigning gate — correct for local builds — silently
+        # disables signing, the job goes green, and an UNSIGNED .aab gets
+        # uploaded as the artifact (Play Console then rejects it, or the API
+        # upload step fails opaquely).
+        env:
+          B64: ${{ secrets.PLAY_KEYSTORE_B64 }}
+          PW: ${{ secrets.PLAY_KEYSTORE_PASSWORD }}
+        run: |
+          [ -n "$B64" ] || { echo "::error::PLAY_KEYSTORE_B64 secret not set"; exit 1; }
+          [ -n "$PW" ] || { echo "::error::PLAY_KEYSTORE_PASSWORD secret not set"; exit 1; }
+
+      - name: Build signed release bundle
+        working-directory: android
+        run: ./gradlew :app:bundleRelease --stacktrace
+        env:
+          PLAY_KEYSTORE_FILE: ${{ runner.temp }}/upload-keystore.jks
+          PLAY_KEYSTORE_PASSWORD: ${{ secrets.PLAY_KEYSTORE_PASSWORD }}
+          PLAY_VERSION_CODE: ${{ steps.version.outputs.code }}
+
+      - name: Upload signed AAB as workflow artifact
+        # ALWAYS runs (not gated on PLAY_SERVICE_ACCOUNT_JSON): before the
+        # service account exists this artifact IS the release path — download
+        # it here and upload by hand in Play Console (docs/PLAY.md step d).
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+
+      - name: Upload to Play Console (internal track)
+        # The secrets context is available in step-level `if:` (it's only
+        # unavailable at job-level `if:`), so this can reference it directly.
+        # Skips cleanly (no failure) until PLAY_SERVICE_ACCOUNT_JSON is added
+        # — see docs/PLAY.md step (c).
+        if: secrets.PLAY_SERVICE_ACCOUNT_JSON != ''
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1.1.5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: dev.bo3.rollnwrite
+          releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
+          track: internal
+          status: completed

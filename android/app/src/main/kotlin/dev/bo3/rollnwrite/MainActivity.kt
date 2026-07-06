@@ -32,9 +32,22 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MaterialTheme {
-                RootScreen()
+                RootScreen(smokeTestGame = smokeTestGameId())
             }
         }
+    }
+
+    /**
+     * Android twin of iOS's `-smokeTestGame <id>` launch argument (see
+     * `RollnWrite/App/RootView.swift`): the "9. Android Smoke Test" workflow
+     * drives this via `am start --es smokeTestGame <id>` so a headless runner
+     * can screenshot a board directly, without UI-scripting the catalogue tap.
+     * `BuildConfig.DEBUG` keeps it out of release/Play builds, matching the
+     * iOS `#if DEBUG` gate.
+     */
+    private fun smokeTestGameId(): String? {
+        if (!BuildConfig.DEBUG) return null
+        return intent?.getStringExtra("smokeTestGame")
     }
 }
 
@@ -50,13 +63,28 @@ private enum class Screen {
     QwixxBigPoints,
 }
 
+/**
+ * Maps a smoke-test game id to its `Screen`. A `when` over a small set of
+ * known ids — the same OCP seam as iOS's `GameRegistry.playable.first {
+ * $0.id == id }` lookup: adding a game means extending this `when`, not
+ * touching the caller. Unknown/missing ids fall through to the catalogue.
+ */
+private fun screenForSmokeTestGame(id: String?): Screen? = when (id) {
+    "qwixx-big-points" -> Screen.QwixxBigPoints
+    else -> null
+}
+
 @Composable
-private fun RootScreen() {
+private fun RootScreen(smokeTestGame: String? = null) {
     // rememberSaveable (not remember): the scorecard's orientation lock is a
     // configuration change and, absent `android:configChanges` on the
     // activity, or on any other recreation (process death), plain `remember`
-    // would reset navigation back to the catalogue mid-game.
-    var screen by rememberSaveable { mutableStateOf(Screen.Catalogue) }
+    // would reset navigation back to the catalogue mid-game. The smoke-test
+    // destination (if any) only seeds the initial value — it must not
+    // re-trigger navigation on every recomposition/config change.
+    var screen by rememberSaveable {
+        mutableStateOf(screenForSmokeTestGame(smokeTestGame) ?: Screen.Catalogue)
+    }
 
     BackHandler(enabled = screen != Screen.Catalogue) {
         screen = Screen.Catalogue

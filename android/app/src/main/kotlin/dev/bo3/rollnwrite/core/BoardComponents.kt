@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material3.Icon
@@ -80,11 +79,21 @@ fun NumberTile(
         forfeited -> stringResource(R.string.tile_state_forfeited)
         else -> stringResource(R.string.tile_state_blocked)
     }
+    // A forfeited (skipped-forever) cell wears a translucent wash of the row's
+    // tint over the tile — mirrors iOS's `NumberTile`, where the whole button
+    // (light base included) dims to 0.4 opacity over the colour band beneath
+    // it, so a forfeited tile reads as a coloured wash, not just a faded number.
+    val forfeitedWashAlpha = 0.4f
     Box(
         modifier = Modifier
             .size(w, h)
             .clip(RoundedCornerShape((s * 0.18f).dp))
             .background(Color.White.copy(alpha = 0.95f))
+            .then(
+                if (forfeited && !marked) {
+                    Modifier.background(tint.copy(alpha = forfeitedWashAlpha))
+                } else Modifier
+            )
             .then(
                 if (undoable) {
                     Modifier.border(
@@ -122,11 +131,13 @@ fun NumberTile(
             }
         }
         if (marked) {
+            // Matches iOS's `s * 0.74` weight/size for the crossed-out mark
+            // (bolder and larger relative to the tile than the plain number).
             Text(
                 text = "✕",
                 color = tint.copy(alpha = alpha),
                 fontWeight = FontWeight.Black,
-                fontSize = (s * 0.58f).sp,
+                fontSize = (s * 0.74f).sp,
             )
         }
     }
@@ -378,17 +389,27 @@ fun BoardControlButton(
     }
 }
 
-/** A right-pointing direction chevron at a band's leading edge. */
+/**
+ * A right-pointing direction chevron at a band's leading edge: a SOLID
+ * play-style triangle in a darker shade of the band colour, matching iOS's
+ * `arrowtriangle.right.fill` (`BandChevron` in BoardComponents.swift) rather
+ * than a thin arrow glyph.
+ */
 @Composable
 fun BandChevron(w: Dp, h: Dp) {
     val s = min(w.value, h.value)
+    val triangleColor = Color.Black.copy(alpha = 0.5f)
     Box(modifier = Modifier.size(w, h), contentAlignment = Alignment.Center) {
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-            contentDescription = null,
-            tint = Color.Black.copy(alpha = 0.5f),
-            modifier = Modifier.size((s * 0.5f).dp),
-        )
+        val glyphSize = s * 0.5f
+        Canvas(modifier = Modifier.size(glyphSize.dp)) {
+            val path = Path().apply {
+                moveTo(0f, 0f)
+                lineTo(size.width, size.height / 2f)
+                lineTo(0f, size.height)
+                close()
+            }
+            drawPath(path, color = triangleColor)
+        }
     }
 }
 
