@@ -1,0 +1,32 @@
+{
+  "game": "qwixx",
+  "variant": "big-points",
+  "config": { "scoringCap": 15, "hasBonusRows": true },
+  "name": "scoring-basics",
+  "description": "Plain marks across several rows score the triangular sequence per colour and sum into totalScore.",
+  "steps": [
+    { "do": "markColor", "color": "red", "index": 0, "expect": true },
+    { "do": "markColor", "color": "red", "index": 2, "expect": true },
+    { "do": "markColor", "color": "red", "index": 5, "expect": true },
+    { "assert": {
+        "crosses": { "red": 3 },
+        "points": { "red": 6 },
+        "totalScore": 6,
+        "canUndo": true
+    } },
+    { "do": "markColor", "color": "yellow", "index": 1, "expect": true },
+    { "do": "markColor", "color": "green", "index": 0, "expect": true },
+    { "do": "markColor", "color": "green", "index": 1, "expect": true },
+    { "do": "markColor", "color": "green", "index": 2, "expect": true },
+    { "do": "markColor", "color": "green", "index": 3, "expect": true },
+    { "assert": {
+        "crosses": { "red": 3, "yellow": 1, "green": 4, "blue": 0 },
+        "points": { "red": 6, "yellow": 1, "green": 10, "blue": 0 },
+        "penalties": 0,
+        "penaltyPoints": 0,
+        "totalScore": 17,
+        "isGameOver": false,
+        "lockedRowCount": 0
+    } }
+  ]
+}

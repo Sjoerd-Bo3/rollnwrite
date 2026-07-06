@@ -1,0 +1,30 @@
+{
+  "game": "qwixx",
+  "variant": "big-points",
+  "config": { "scoringCap": 15, "hasBonusRows": true },
+  "name": "bonus-rows",
+  "description": "A bonus cell activates only after an adjacent colour marks that column, counts for BOTH adjacent colours, obeys its own left-to-right forfeit, and one pair's bonuses never touch the other pair.",
+  "steps": [
+    { "do": "markBonus", "row": "redYellow", "index": 3, "expect": false, "note": "no adjacent colour mark at column 3 yet" },
+    { "do": "markColor", "color": "red", "index": 3, "expect": true },
+    { "do": "markBonus", "row": "redYellow", "index": 3, "expect": true, "note": "red mark at 3 activates the bonus cell" },
+    { "assert": {
+        "crosses": { "red": 2, "yellow": 1, "green": 0, "blue": 0 },
+        "points": { "red": 3, "yellow": 1, "green": 0, "blue": 0 },
+        "totalScore": 4
+    } },
+    { "do": "markColor", "color": "yellow", "index": 6, "expect": true },
+    { "do": "markBonus", "row": "redYellow", "index": 6, "expect": true, "note": "either adjacent colour activates - yellow works too" },
+    { "do": "markColor", "color": "red", "index": 5, "expect": true, "note": "colour row rightward, independent of bonus row" },
+    { "do": "markBonus", "row": "redYellow", "index": 5, "expect": false, "note": "bonus row already reached 6 - lower columns forfeited" },
+    { "do": "markBonus", "row": "greenBlue", "index": 3, "expect": false, "note": "green/blue have no mark at 3 - red/yellow marks do not activate this pair" },
+    { "do": "markColor", "color": "green", "index": 2, "expect": true },
+    { "do": "markBonus", "row": "greenBlue", "index": 2, "expect": true },
+    { "assert": {
+        "crosses": { "red": 4, "yellow": 3, "green": 2, "blue": 1 },
+        "points": { "red": 10, "yellow": 6, "green": 3, "blue": 1 },
+        "totalScore": 20,
+        "isGameOver": false
+    } }
+  ]
+}

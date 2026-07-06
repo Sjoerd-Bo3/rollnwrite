@@ -1,0 +1,62 @@
+{
+  "game": "qwixx",
+  "variant": "big-points",
+  "config": { "scoringCap": 15, "hasBonusRows": true },
+  "name": "concede-finish",
+  "description": "Concede locks a row with no lock bonus, conceded rows count toward the two-lock game end, finish ends the game immediately, and both are exactly undoable.",
+  "steps": [
+    { "do": "markColor", "color": "red", "index": 0, "expect": true },
+    { "do": "markColor", "color": "red", "index": 1, "expect": true },
+    { "do": "concede", "color": "red", "expect": true, "note": "another player locked red - close it for free" },
+    { "assert": {
+        "rowLocked": { "red": true },
+        "lockedRowCount": 1,
+        "crosses": { "red": 2 },
+        "points": { "red": 3 },
+        "totalScore": 3,
+        "isGameOver": false
+    } },
+    { "do": "concede", "color": "red", "expect": false, "note": "cannot concede an already-locked row" },
+    { "do": "markColor", "color": "red", "index": 5, "expect": false, "note": "conceded row refuses marks" },
+    { "do": "undo", "expect": true, "note": "undo the concede - row reopens" },
+    { "assert": {
+        "rowLocked": { "red": false },
+        "lockedRowCount": 0,
+        "crosses": { "red": 2 },
+        "isGameOver": false,
+        "canRedo": true
+    } },
+    { "do": "concede", "color": "red", "expect": true, "note": "fresh move clears the redo stack" },
+    { "assert": { "canRedo": false } },
+    { "do": "concede", "color": "yellow", "expect": true, "note": "second locked row - conceded rows count toward game end" },
+    { "assert": {
+        "lockedRowCount": 2,
+        "isGameOver": true,
+        "crosses": { "yellow": 0 },
+        "points": { "yellow": 0 },
+        "totalScore": 3
+    } },
+    { "do": "undo", "expect": true, "note": "undo the yellow concede - play resumes" },
+    { "assert": {
+        "lockedRowCount": 1,
+        "isGameOver": false
+    } },
+    { "do": "finish", "expect": true, "note": "manual finish ends the game immediately" },
+    { "assert": {
+        "isGameOver": true,
+        "lockedRowCount": 1,
+        "totalScore": 3
+    } },
+    { "do": "markColor", "color": "green", "index": 0, "expect": false },
+    { "do": "undo", "expect": true, "note": "undo the finish - play resumes" },
+    { "assert": {
+        "isGameOver": false,
+        "canRedo": true
+    } },
+    { "do": "redo", "expect": true, "note": "redo re-applies the finish" },
+    { "assert": {
+        "isGameOver": true,
+        "totalScore": 3
+    } }
+  ]
+}

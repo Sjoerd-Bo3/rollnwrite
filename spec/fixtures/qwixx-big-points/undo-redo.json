@@ -1,0 +1,81 @@
+{
+  "game": "qwixx",
+  "variant": "big-points",
+  "config": { "scoringCap": 15, "hasBonusRows": true },
+  "name": "undo-redo",
+  "description": "Undo is strictly LIFO and exact (including un-locking a just-locked row), redo re-applies through the normal mutators, and any fresh move clears the redo stack.",
+  "steps": [
+    { "do": "undo", "expect": false, "note": "empty history refuses undo" },
+    { "assert": { "canUndo": false, "canRedo": false } },
+    { "do": "markColor", "color": "red", "index": 0, "expect": true },
+    { "do": "markColor", "color": "red", "index": 1, "expect": true },
+    { "do": "markColor", "color": "red", "index": 2, "expect": true },
+    { "do": "markColor", "color": "red", "index": 3, "expect": true },
+    { "do": "markColor", "color": "red", "index": 4, "expect": true },
+    { "do": "markColor", "color": "red", "index": 10, "expect": true, "note": "locks red" },
+    { "assert": {
+        "rowLocked": { "red": true },
+        "lockedRowCount": 1,
+        "crosses": { "red": 7 },
+        "points": { "red": 28 },
+        "canUndo": true,
+        "canRedo": false
+    } },
+    { "do": "undo", "expect": true, "note": "undo un-locks the just-locked row" },
+    { "assert": {
+        "rowLocked": { "red": false },
+        "lockedRowCount": 0,
+        "crosses": { "red": 5 },
+        "points": { "red": 15 },
+        "canUndo": true,
+        "canRedo": true
+    } },
+    { "do": "redo", "expect": true, "note": "redo re-applies the lock exactly" },
+    { "assert": {
+        "rowLocked": { "red": true },
+        "lockedRowCount": 1,
+        "crosses": { "red": 7 },
+        "points": { "red": 28 },
+        "totalScore": 28,
+        "canUndo": true,
+        "canRedo": false
+    } },
+    { "do": "undo", "expect": true, "note": "un-lock again to set up the redo-clearing case" },
+    { "assert": { "canRedo": true } },
+    { "do": "markColor", "color": "yellow", "index": 0, "expect": true, "note": "a fresh move clears the redo stack" },
+    { "assert": { "canRedo": false } },
+    { "do": "redo", "expect": false, "note": "nothing to redo - refused, state unchanged" },
+    { "assert": {
+        "crosses": { "red": 5, "yellow": 1 },
+        "points": { "red": 15, "yellow": 1 },
+        "totalScore": 16,
+        "rowLocked": { "red": false }
+    } },
+    { "do": "undo", "expect": true, "note": "LIFO: removes the yellow mark, not an older red one" },
+    { "assert": {
+        "crosses": { "red": 5, "yellow": 0 },
+        "totalScore": 15
+    } },
+    { "do": "undo", "expect": true, "note": "removes red index 4" },
+    { "assert": {
+        "crosses": { "red": 4 },
+        "points": { "red": 10 },
+        "totalScore": 10,
+        "canUndo": true,
+        "canRedo": true
+    } },
+    { "do": "penalty", "expect": true, "note": "penalties join the same history and clear redo" },
+    { "assert": {
+        "penalties": 1,
+        "totalScore": 5,
+        "canRedo": false
+    } },
+    { "do": "undo", "expect": true, "note": "undoing a penalty restores the 5 points" },
+    { "assert": {
+        "penalties": 0,
+        "penaltyPoints": 0,
+        "totalScore": 10,
+        "canRedo": true
+    } }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "game": "qwixx",
+  "variant": "classic",
+  "config": { "scoringCap": 12, "hasBonusRows": false },
+  "name": "basic",
+  "description": "Classic Qwixx: bonus marking is always refused, and a completely filled row (11 marks + lock bonus = 12 crosses, the row maximum) scores exactly the cap value 78.",
+  "steps": [
+    { "do": "markColor", "color": "red", "index": 0, "expect": true },
+    { "do": "markBonus", "row": "redYellow", "index": 0, "expect": false, "note": "refused despite the adjacent red mark - classic has no bonus rows" },
+    { "do": "markBonus", "row": "greenBlue", "index": 0, "expect": false },
+    { "do": "markColor", "color": "red", "index": 1, "expect": true },
+    { "do": "markColor", "color": "red", "index": 2, "expect": true },
+    { "do": "markColor", "color": "red", "index": 3, "expect": true },
+    { "do": "markColor", "color": "red", "index": 4, "expect": true },
+    { "do": "markColor", "color": "red", "index": 5, "expect": true },
+    { "do": "markColor", "color": "red", "index": 6, "expect": true },
+    { "do": "markColor", "color": "red", "index": 7, "expect": true },
+    { "do": "markColor", "color": "red", "index": 8, "expect": true },
+    { "do": "markColor", "color": "red", "index": 9, "expect": true },
+    { "do": "markColor", "color": "red", "index": 10, "expect": true, "note": "11 marks + lock bonus = 12 crosses, exactly the cap" },
+    { "assert": {
+        "rowLocked": { "red": true },
+        "lockedRowCount": 1,
+        "crosses": { "red": 12, "yellow": 0, "green": 0, "blue": 0 },
+        "points": { "red": 78, "yellow": 0, "green": 0, "blue": 0 },
+        "totalScore": 78,
+        "isGameOver": false
+    } },
+    { "do": "markBonus", "row": "redYellow", "index": 5, "expect": false, "note": "still refused with the whole red row marked" },
+    { "do": "penalty", "expect": true },
+    { "do": "penalty", "expect": true },
+    { "assert": {
+        "penalties": 2,
+        "penaltyPoints": 10,
+        "totalScore": 68,
+        "isGameOver": false
+    } }
+  ]
+}
