@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Catalogue -->
+    <string name="qwixx_connect15_title">Qwixx Connect15</string>
+    <string name="qwixx_connect15_subtitle">Klassische Reihen · Verbindungsfelder → 15</string>
+
+    <!-- Board content -->
+    <string name="connect15_connection_content_description">%1$s Verbindungsfeld %2$d</string>
+
+    <!-- Rules dialog -->
+    <string name="connect15_rules_title">Qwixx — Connect 15</string>
+    <string name="connect15_rules_subtitle">Offizielle Regeln für die Connect-15-Jubiläumsvariante</string>
+    <string name="connect15_rules_body_goal">Spiele klassisches Qwixx, aber jede Farbreihe hat jetzt drei zusätzliche Verbindungsfelder. Wenn du sie füllst, kann eine Reihe 15 Kreuze erreichen, im Wert von 120 Punkten — daher „Connect 15“.</string>
+    <string name="connect15_rules_body_card_2">Jede Reihe hat drei kleine Verbindungsfelder zwischen bestimmten Zahlen: Rot zwischen 3–4, 6–7 und 10–11; Gelb zwischen 5–6, 7–8 und 9–10; Grün zwischen 10–9, 6–5 und 4–3; Blau zwischen 11–10, 8–7 und 5–4. Sie tragen keine Zahl.</string>
+    <string name="connect15_rules_body_crossing_1">Zahlen und Verbindungsfelder bilden zusammen eine Reihenfolge von links nach rechts pro Reihe: Jedes neue Kreuz muss rechts von allem bereits Angekreuzten in dieser Reihe liegen. Übersprungene Felder — Zahlen wie Verbindungsfelder — können nie wieder angekreuzt werden.</string>
+    <string name="connect15_rules_body_crossing_1b">Eine Zahl rechts von einem leeren Verbindungsfeld anzukreuzen lässt dieses Feld also verfallen.</string>
+    <string name="connect15_rules_heading_connections">Verbindungsfelder</string>
+    <string name="connect15_rules_body_connections_1">Immer wenn die Würfel eine 1 und eine 5 zeigen (in beliebiger Farbe), darf jeder Spieler ein Verbindungsfeld einer seiner Reihen ankreuzen.</string>
+    <string name="connect15_rules_body_connections_2">Welche Reihe: ein Farbwürfel + ein weißer Würfel mit 1 und 5 → die Reihe dieser Farbe; zwei Farbwürfel → eine der beiden Farben; zwei weiße Würfel → eine beliebige Reihe.</string>
+    <string name="connect15_rules_body_connections_3">Das angekreuzte Feld muss rechts vom am weitesten rechts liegenden Kreuz dieser Reihe liegen; das Ankreuzen lässt jede leere Zahl und jedes Feld links davon verfallen. Eine Reihe zu schließen (Schloss oder Aufgeben) schließt auch die verbleibenden Verbindungsfelder.</string>
+    <string name="connect15_rules_body_locking_1">Um die am weitesten rechts liegende Zahl anzukreuzen (12 bei Rot/Gelb, 2 bei Grün/Blau), musst du bereits mindestens 5 Zahlen in dieser Reihe angekreuzt haben — Verbindungsfelder zählen nicht zu diesen fünf.</string>
+    <string name="connect15_rules_body_scoring_1">Zähle pro Farbe die Kreuze — die Zahlen, das Schloss und jedes angekreuzte Verbindungsfeld (max. 15) — und werte 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105, 120.</string>
+    <string name="connect15_rules_body_scoring_2">Gesamt = Rot + Gelb + Grün + Blau − (5 × Strafpunkte).</string>
+    <string name="connect15_rules_source">Qwixx 15 (Connect-15-Variante) von White Goblin Games / Nürnberger-Spielkarten-Verlag (NSV); offizieller Spielblock.</string>
+</resources>

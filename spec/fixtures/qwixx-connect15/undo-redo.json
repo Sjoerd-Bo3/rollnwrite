@@ -1,0 +1,26 @@
+{
+  "game": "qwixx-connect15",
+  "variant": "connect15",
+  "config": {},
+  "name": "undo-redo",
+  "description": "Undo/redo is strictly LIFO and applies to connection-field marks exactly like colour marks; a fresh forward move after an undo clears the redo stack.",
+  "steps": [
+    {"do": "markColor", "color": "blue", "index": 0, "expect": true},
+    {"do": "markColor", "color": "blue", "index": 1, "expect": true},
+    {"do": "markConnection", "color": "blue", "field": 0, "expect": true},
+    {"assert": {"crosses": {"blue": 3}, "points": {"blue": 6}, "canUndo": true, "canRedo": false}},
+    {"note": "undo reverses the connection mark first (LIFO)", "do": "undo", "expect": true},
+    {"assert": {"crosses": {"blue": 2}, "canUndo": true, "canRedo": true}},
+    {"do": "undo", "expect": true},
+    {"assert": {"crosses": {"blue": 1}, "canUndo": true, "canRedo": true}},
+    {"do": "redo", "expect": true},
+    {"assert": {"crosses": {"blue": 2}, "canRedo": true}},
+    {"do": "redo", "expect": true},
+    {"assert": {"crosses": {"blue": 3}, "points": {"blue": 6}, "canUndo": true, "canRedo": false}},
+    {"note": "undoing the connection mark again to set up the redo-stack-invalidation check", "do": "undo", "expect": true},
+    {"assert": {"crosses": {"blue": 2}, "canRedo": true}},
+    {"note": "a fresh forward move after undo invalidates the redo stack", "do": "markColor", "color": "blue", "index": 2, "expect": true},
+    {"assert": {"crosses": {"blue": 3}, "canRedo": false}},
+    {"do": "redo", "expect": false}
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "game": "qwixx-connect15",
+  "variant": "connect15",
+  "config": {},
+  "name": "locking",
+  "description": "Locking the right-most number requires at least 5 crossed numbers specifically (connection fields never count), and locking closes the row to further colour marks and connection fields alike.",
+  "steps": [
+    {"do": "markColor", "color": "yellow", "index": 0, "expect": true},
+    {"do": "markColor", "color": "yellow", "index": 1, "expect": true},
+    {"do": "markColor", "color": "yellow", "index": 2, "expect": true},
+    {"do": "markColor", "color": "yellow", "index": 3, "expect": true},
+    {"assert": {"crosses": {"yellow": 4}, "rowLocked": {"yellow": false}}},
+    {"note": "position check passes (pos 20 > pos 6) but only 4 numbers are marked — locking still refused", "do": "markColor", "color": "yellow", "index": 10, "expect": false},
+    {"do": "markColor", "color": "yellow", "index": 4, "expect": true},
+    {"assert": {"crosses": {"yellow": 5}}},
+    {"note": "now exactly 5 numbers are marked — locking is legal", "do": "markColor", "color": "yellow", "index": 10, "expect": true},
+    {"assert": {
+      "crosses": {"yellow": 7},
+      "points": {"yellow": 28},
+      "rowLocked": {"yellow": true},
+      "lockedRowCount": 1
+    }},
+    {"note": "a locked row refuses further colour marks", "do": "markColor", "color": "yellow", "index": 5, "expect": false},
+    {"note": "a locked row refuses connection fields too, even ones never reached", "do": "markConnection", "color": "yellow", "field": 2, "expect": false},
+    {"do": "markColor", "color": "green", "index": 0, "expect": true},
+    {"do": "markColor", "color": "green", "index": 1, "expect": true},
+    {"do": "markColor", "color": "green", "index": 2, "expect": true},
+    {"do": "markColor", "color": "green", "index": 3, "expect": true},
+    {"do": "markColor", "color": "green", "index": 4, "expect": true},
+    {"do": "markColor", "color": "green", "index": 10, "expect": true},
+    {"assert": {"lockedRowCount": 2, "isGameOver": true}},
+    {"note": "the game is over the instant 2 rows are locked — no further marks anywhere", "do": "markColor", "color": "blue", "index": 0, "expect": false},
+    {"do": "markConnection", "color": "red", "field": 0, "expect": false},
+    {"do": "penalty", "expect": false}
+  ]
+}

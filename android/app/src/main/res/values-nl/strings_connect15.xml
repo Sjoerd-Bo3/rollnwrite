@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Catalogue -->
+    <string name="qwixx_connect15_title">Qwixx Connect15</string>
+    <string name="qwixx_connect15_subtitle">Klassieke rijen · verbindingsvakjes → 15</string>
+
+    <!-- Board content -->
+    <string name="connect15_connection_content_description">%1$s verbindingsvakje %2$d</string>
+
+    <!-- Rules dialog -->
+    <string name="connect15_rules_title">Qwixx — Connect 15</string>
+    <string name="connect15_rules_subtitle">Officiële regels voor de Connect 15-jubileumvariant</string>
+    <string name="connect15_rules_body_goal">Speel klassiek Qwixx, maar elke kleurrij heeft nu drie extra verbindingsvakjes. Door ze te vullen kan een rij 15 kruisjes bereiken, goed voor 120 punten — vandaar “Connect 15”.</string>
+    <string name="connect15_rules_body_card_2">Elke rij heeft drie kleine verbindingsvakjes tussen specifieke getallen: rood tussen 3–4, 6–7 en 10–11; geel tussen 5–6, 7–8 en 9–10; groen tussen 10–9, 6–5 en 4–3; blauw tussen 11–10, 8–7 en 5–4. Ze hebben geen getal.</string>
+    <string name="connect15_rules_body_crossing_1">Getallen en verbindingsvakjes vormen samen één volgorde van links naar rechts per rij: elk nieuw kruisje moet rechts liggen van alles wat al is aangekruist in die rij. Overgeslagen vakjes — getallen én verbindingsvakjes — kunnen nooit meer worden aangekruist.</string>
+    <string name="connect15_rules_body_crossing_1b">Een getal aankruisen rechts van een leeg verbindingsvakje laat dat vakje dus vervallen.</string>
+    <string name="connect15_rules_heading_connections">Verbindingsvakjes</string>
+    <string name="connect15_rules_body_connections_1">Telkens wanneer de dobbelstenen een 1 en een 5 tonen (in om het even welke kleur), mag elke speler een verbindingsvakje van één van zijn rijen aankruisen.</string>
+    <string name="connect15_rules_body_connections_2">Welke rij: een kleurendobbelsteen + een witte dobbelsteen met 1 en 5 → de rij van die kleur; twee kleurendobbelstenen → één van beide kleuren; twee witte dobbelstenen → een willekeurige rij.</string>
+    <string name="connect15_rules_body_connections_3">Het aangekruiste vakje moet rechts liggen van het meest rechtse kruisje in die rij; het aankruisen ervan laat elk leeg getal en vakje links ervan vervallen. Een rij sluiten (op slot of opgeven) sluit ook de resterende verbindingsvakjes.</string>
+    <string name="connect15_rules_body_locking_1">Om het meest rechtse getal aan te kruisen (12 voor rood/geel, 2 voor groen/blauw) moet je al minstens 5 getallen in die rij hebben aangekruist — verbindingsvakjes tellen niet mee voor die vijf.</string>
+    <string name="connect15_rules_body_scoring_1">Tel per kleur de kruisjes — de getallen, het slot en elk aangekruist verbindingsvakje (max. 15) — en scoor 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105, 120.</string>
+    <string name="connect15_rules_body_scoring_2">Totaal = rood + geel + groen + blauw − (5 × strafpunten).</string>
+    <string name="connect15_rules_source">Qwixx 15 (Connect 15-variant) door White Goblin Games / Nürnberger-Spielkarten-Verlag (NSV); officieel scoreformulier.</string>
+</resources>

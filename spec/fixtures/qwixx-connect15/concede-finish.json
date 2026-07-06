@@ -1,0 +1,29 @@
+{
+  "game": "qwixx-connect15",
+  "variant": "connect15",
+  "config": {},
+  "name": "concede-finish",
+  "description": "Conceding a row closes it (and its remaining connection fields) with no lock bonus; two locked rows or a manual finish both end the game.",
+  "steps": [
+    {"do": "markColor", "color": "green", "index": 0, "expect": true},
+    {"do": "markColor", "color": "green", "index": 1, "expect": true},
+    {"do": "markConnection", "color": "green", "field": 0, "expect": true},
+    {"assert": {"crosses": {"green": 3}, "points": {"green": 6}, "rowLocked": {"green": false}}},
+    {"note": "conceding is allowed on any unlocked row while the game is live", "do": "concede", "color": "green", "expect": true},
+    {"assert": {
+      "crosses": {"green": 3},
+      "points": {"green": 6},
+      "rowLocked": {"green": true},
+      "lockedRowCount": 1,
+      "isGameOver": false
+    }},
+    {"note": "a conceded row closes its remaining connection fields, never reached or not", "do": "markConnection", "color": "green", "field": 1, "expect": false},
+    {"do": "markColor", "color": "green", "index": 2, "expect": false},
+    {"do": "markColor", "color": "blue", "index": 0, "expect": true},
+    {"note": "conceding a second row ends the game (two locked rows)", "do": "concede", "color": "blue", "expect": true},
+    {"assert": {"lockedRowCount": 2, "isGameOver": true}},
+    {"do": "markColor", "color": "red", "index": 0, "expect": false},
+    {"do": "concede", "color": "yellow", "expect": false},
+    {"do": "finish", "expect": false}
+  ]
+}

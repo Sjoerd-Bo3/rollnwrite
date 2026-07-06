@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.GridOn
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.outlined.Casino
@@ -12,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import dev.bo3.rollnwrite.R
+import dev.bo3.rollnwrite.connect15.Connect15ScorecardScreen
 import dev.bo3.rollnwrite.lucky15.Lucky15ScorecardScreen
 import dev.bo3.rollnwrite.qwixx.QwixxRulesVariant
 import dev.bo3.rollnwrite.qwixx.QwixxScorecardScreen
@@ -131,6 +133,16 @@ object GameRegistry {
             icon = Icons.Filled.Shuffle,
             family = "Qwixx",
             makeScreen = { onBack -> MixxScorecardScreen(onBack = onBack) },
+        ),
+        GameDefinition(
+            id = "qwixx-connect15",
+            title = { stringResource(R.string.qwixx_connect15_title) },
+            subtitle = { stringResource(R.string.qwixx_connect15_subtitle) },
+            // Mirrors iOS QwixxConnect15Game's orange accent and link icon.
+            accent = Color(red = 0.93f, green = 0.45f, blue = 0.13f),
+            icon = Icons.Filled.Link,
+            family = "Qwixx",
+            makeScreen = { onBack -> Connect15ScorecardScreen(onBack = onBack) },
         ),
     )
 

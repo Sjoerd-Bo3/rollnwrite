@@ -1,0 +1,32 @@
+{
+  "game": "qwixx-connect15",
+  "variant": "connect15",
+  "config": {},
+  "name": "scoring-basics",
+  "description": "Crossing every number and connection field left-to-right reaches the full 15-cross, 120-point ceiling; connection fields never count toward the 5-number lock requirement.",
+  "steps": [
+    {"do": "markColor", "color": "red", "index": 0, "expect": true},
+    {"do": "markColor", "color": "red", "index": 1, "expect": true},
+    {"do": "markConnection", "color": "red", "field": 0, "expect": true},
+    {"do": "markColor", "color": "red", "index": 2, "expect": true},
+    {"do": "markColor", "color": "red", "index": 3, "expect": true},
+    {"do": "markColor", "color": "red", "index": 4, "expect": true},
+    {"do": "markConnection", "color": "red", "field": 1, "expect": true},
+    {"do": "markColor", "color": "red", "index": 5, "expect": true},
+    {"assert": {"crosses": {"red": 8}, "points": {"red": 36}}},
+    {"do": "markColor", "color": "red", "index": 6, "expect": true},
+    {"do": "markColor", "color": "red", "index": 7, "expect": true},
+    {"do": "markColor", "color": "red", "index": 8, "expect": true},
+    {"note": "only 9 numbers marked so far (0-8) — fewer than needed for the lock, but the lock check only cares about count >=5", "do": "markConnection", "color": "red", "field": 2, "expect": true},
+    {"do": "markColor", "color": "red", "index": 9, "expect": true},
+    {"assert": {"crosses": {"red": 13}, "rowLocked": {"red": false}}},
+    {"note": "10 numbers marked (>=5) so the lock is legal even though 3 connection fields were also crossed", "do": "markColor", "color": "red", "index": 10, "expect": true},
+    {"assert": {
+      "crosses": {"red": 15},
+      "points": {"red": 120},
+      "rowLocked": {"red": true},
+      "lockedRowCount": 1,
+      "totalScore": 120
+    }}
+  ]
+}

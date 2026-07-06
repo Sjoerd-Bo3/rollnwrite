@@ -1,0 +1,15 @@
+{
+  "game": "qwixx-connect15",
+  "variant": "connect15",
+  "config": {},
+  "name": "connection-fields",
+  "description": "A connection field is legal once its doubled position exceeds the row's highest mark, adds one cross, and cannot be re-marked once crossed.",
+  "steps": [
+    {"do": "markColor", "color": "red", "index": 0, "expect": true},
+    {"do": "markColor", "color": "red", "index": 1, "expect": true},
+    {"note": "red field0 sits after column 1 (doubled pos 3); current max pos is 2 (number index 1) so it is legal", "do": "markConnection", "color": "red", "field": 0, "expect": true},
+    {"assert": {"crosses": {"red": 3}, "points": {"red": 6}}},
+    {"note": "already-marked connection field cannot be re-marked", "do": "markConnection", "color": "red", "field": 0, "expect": false},
+    {"assert": {"crosses": {"red": 3}, "points": {"red": 6}}}
+  ]
+}
