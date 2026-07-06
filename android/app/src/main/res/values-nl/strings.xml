@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RollnWrite</string>
+
+    <!-- Catalogue -->
+    <string name="catalogue_title">RollnWrite</string>
+    <string name="qwixx_big_points_title">Qwixx Big Points</string>
+    <string name="qwixx_big_points_subtitle">Bonusrijen · tot 120 per kleur</string>
+
+    <!-- Colour names (accessibility labels, concede dialog) -->
+    <string name="colour_red">Rood</string>
+    <string name="colour_yellow">Geel</string>
+    <string name="colour_green">Groen</string>
+    <string name="colour_blue">Blauw</string>
+
+    <!-- Board header -->
+    <string name="back">Terug</string>
+    <string name="undo">Ongedaan maken</string>
+    <string name="redo">Opnieuw</string>
+    <string name="new_game">Nieuw spel</string>
+    <string name="finish_game">Spel beëindigen</string>
+    <string name="rules">Regels</string>
+    <string name="single_player">Eén speler</string>
+    <string name="two_players">Twee spelers</string>
+
+    <!-- Board content -->
+    <string name="total">Totaal</string>
+    <string name="penalties">Strafpunten</string>
+    <string name="penalty_n">Strafpunt %1$d</string>
+    <string name="lock_content_description">%1$s slot</string>
+    <string name="tile_state_crossed">weggestreept</string>
+    <string name="tile_state_available">beschikbaar</string>
+    <string name="tile_state_forfeited">vervallen</string>
+    <string name="tile_state_blocked">geblokkeerd</string>
+    <string name="bonus_content_description">Bonus %1$s</string>
+
+    <!-- Dialogs -->
+    <string name="start_new_game_question">Nieuw spel beginnen?</string>
+    <string name="start_new_game_message">Hiermee wordt de huidige scorekaart gewist.</string>
+    <string name="finish_game_question">Spel beëindigen?</string>
+    <string name="finish_game_message">Beëindig het spel nu en toon de eindscore.</string>
+    <string name="close_colour_question">Deze kleur sluiten?</string>
+    <string name="close_colour_action">%1$s sluiten — geen punten</string>
+    <string name="close_colour_message">Gebruik dit wanneer een andere speler %1$s heeft vergrendeld. De rij sluit, maar je scoort geen slotbonus.</string>
+    <string name="cancel">Annuleren</string>
+    <string name="close">Sluiten</string>
+
+    <!-- Game over -->
+    <string name="game_over_title">Spel afgelopen</string>
+    <string name="new_best">Nieuw record!</string>
+    <string name="best_n">Record: %1$d</string>
+    <string name="view_board">Bekijk bord</string>
+
+    <!-- Rules dialog -->
+    <string name="rules_title_big_points">Qwixx — Big Points</string>
+    <string name="rules_subtitle_big_points">Officiële regels voor de Big Points-variant</string>
+
+    <string name="rules_heading_goal">Doel</string>
+    <string name="rules_body_goal">Streep zoveel mogelijk getallen weg in de vier kleurenrijen om punten te scoren. In Big Points laten de twee extra bonusrijen één kleur tot 120 punten reiken.</string>
+
+    <string name="rules_heading_card">De kaart</string>
+    <string name="rules_body_card_1">De rode en gele rij lopen 2 → 12 (van links naar rechts). De groene en blauwe rij lopen 12 → 2.</string>
+    <string name="rules_body_card_2">Tussen rood en geel ligt de rood/gele bonusrij; tussen groen en blauw de groen/blauwe bonusrij. Elke heeft dezelfde getallen als haar buren.</string>
+
+    <string name="rules_heading_crossing">Getallen wegstrepen</string>
+    <string name="rules_body_crossing_1">In elke rij streep je van links naar rechts weg. Je mag getallen overslaan, maar overgeslagen getallen kunnen later nooit meer worden weggestreept.</string>
+    <string name="rules_body_crossing_2">Tijdens een beurt mag de som van de witte dobbelstenen in één rij worden weggestreept; de actieve speler mag ook een witte dobbelsteen bij een kleurdobbelsteen optellen en die kleur wegstrepen.</string>
+
+    <string name="rules_heading_bonus">Bonusrijen</string>
+    <string name="rules_body_bonus_1">Een bonusvak mag alleen worden weggestreept nadat een aangrenzend vak met hetzelfde getal (in beide kleuren) al is weggestreept.</string>
+    <string name="rules_body_bonus_2">De algemene regel geldt ook voor de bonusrijen: streep van links naar rechts weg — eerder overgeslagen bonusvakken mogen later niet meer worden weggestreept.</string>
+    <string name="rules_body_bonus_3">Elk weggestreept bonusvak telt bij het scoren voor BEIDE aangrenzende kleurenrijen, maar bonuskruisjes tellen NIET mee voor de 5 kruisjes die nodig zijn om een rij te vergrendelen.</string>
+    <string name="rules_body_bonus_4">Bonusvakken naast een al vergrendelde kleurenrij kunnen nog steeds worden weggestreept (geactiveerd via de andere kleur) en tellen dan nog steeds voor beide rijen.</string>
+    <string name="rules_body_bonus_5">Als je in je beurt alleen een bonusvak wegstreept, telt dat niet als mislukte worp — geen strafpunt.</string>
+
+    <string name="rules_heading_locking">Een rij vergrendelen</string>
+    <string name="rules_body_locking_1">Om het meest rechtse getal weg te strepen (12 voor rood/geel, 2 voor groen/blauw) moet je al minstens 5 kruisjes in die rij hebben.</string>
+    <string name="rules_body_locking_2">Wegstrepen vergrendelt de rij en telt het slot als één extra kruisje.</string>
+
+    <string name="rules_heading_penalties">Strafpunten &amp; einde spel</string>
+    <string name="rules_body_penalties_1">Als je tijdens je beurt niets wegstreept, neem je een strafpunt (−5 punten). Vier strafpunten beëindigen het spel.</string>
+    <string name="rules_body_penalties_2">Het spel eindigt ook op het moment dat twee rijen vergrendeld zijn.</string>
+
+    <string name="rules_heading_scoring">Puntentelling</string>
+    <string name="rules_body_scoring_1">Tel per kleur de kruisjes (eigen getallen + slot + aangrenzende bonuskruisjes, max. 15) en scoor 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105, 120.</string>
+    <string name="rules_body_scoring_2">Totaal = rood + geel + groen + blauw − (5 × strafpunten).</string>
+
+    <string name="rules_source_big_points">Qwixx Big Points van Nürnberger-Spielkarten-Verlag (NSV); officiële scorekaart &amp; variantregels.</string>
+</resources>

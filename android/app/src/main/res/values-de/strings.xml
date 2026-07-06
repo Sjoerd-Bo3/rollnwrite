@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RollnWrite</string>
+
+    <!-- Catalogue -->
+    <string name="catalogue_title">RollnWrite</string>
+    <string name="qwixx_big_points_title">Qwixx Big Points</string>
+    <string name="qwixx_big_points_subtitle">Bonusreihen · bis zu 120 pro Farbe</string>
+
+    <!-- Colour names (accessibility labels, concede dialog) -->
+    <string name="colour_red">Rot</string>
+    <string name="colour_yellow">Gelb</string>
+    <string name="colour_green">Grün</string>
+    <string name="colour_blue">Blau</string>
+
+    <!-- Board header -->
+    <string name="back">Zurück</string>
+    <string name="undo">Rückgängig</string>
+    <string name="redo">Wiederholen</string>
+    <string name="new_game">Neues Spiel</string>
+    <string name="finish_game">Spiel beenden</string>
+    <string name="rules">Regeln</string>
+    <string name="single_player">Ein Spieler</string>
+    <string name="two_players">Zwei Spieler</string>
+
+    <!-- Board content -->
+    <string name="total">Gesamt</string>
+    <string name="penalties">Strafen</string>
+    <string name="penalty_n">Strafe %1$d</string>
+    <string name="lock_content_description">%1$s Schloss</string>
+    <string name="tile_state_crossed">angekreuzt</string>
+    <string name="tile_state_available">verfügbar</string>
+    <string name="tile_state_forfeited">verfallen</string>
+    <string name="tile_state_blocked">gesperrt</string>
+    <string name="bonus_content_description">Bonus %1$s</string>
+
+    <!-- Dialogs -->
+    <string name="start_new_game_question">Neues Spiel starten?</string>
+    <string name="start_new_game_message">Dadurch wird der aktuelle Spielzettel gelöscht.</string>
+    <string name="finish_game_question">Spiel beenden?</string>
+    <string name="finish_game_message">Beende das Spiel jetzt und zeige die Endpunktzahl.</string>
+    <string name="close_colour_question">Diese Farbe schließen?</string>
+    <string name="close_colour_action">%1$s schließen — keine Punkte</string>
+    <string name="close_colour_message">Nutze dies, wenn ein anderer Spieler %1$s geschlossen hat. Die Reihe schließt, aber du erhältst keinen Schlossbonus.</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="close">Schließen</string>
+
+    <!-- Game over -->
+    <string name="game_over_title">Spielende</string>
+    <string name="new_best">Neuer Rekord!</string>
+    <string name="best_n">Rekord: %1$d</string>
+    <string name="view_board">Spielbrett ansehen</string>
+
+    <!-- Rules dialog -->
+    <string name="rules_title_big_points">Qwixx — Big Points</string>
+    <string name="rules_subtitle_big_points">Offizielle Regeln für die Big-Points-Variante</string>
+
+    <string name="rules_heading_goal">Ziel</string>
+    <string name="rules_body_goal">Streiche in den vier Farbreihen so viele Zahlen wie möglich, um Punkte zu erzielen. Bei Big Points können die zwei zusätzlichen Bonusreihen eine Farbe bis auf 120 Punkte bringen.</string>
+
+    <string name="rules_heading_card">Der Zettel</string>
+    <string name="rules_body_card_1">Die rote und gelbe Reihe laufen 2 → 12 (von links nach rechts). Die grüne und blaue Reihe laufen 12 → 2.</string>
+    <string name="rules_body_card_2">Zwischen Rot und Gelb liegt die rot/gelbe Bonusreihe; zwischen Grün und Blau die grün/blaue Bonusreihe. Beide haben dieselben Zahlen wie ihre Nachbarn.</string>
+
+    <string name="rules_heading_crossing">Zahlen ankreuzen</string>
+    <string name="rules_body_crossing_1">In jeder Reihe musst du von links nach rechts ankreuzen. Du darfst Zahlen überspringen, übersprungene Zahlen können aber später nie mehr angekreuzt werden.</string>
+    <string name="rules_body_crossing_2">In einem Zug darf die Summe der weißen Würfel in einer Reihe angekreuzt werden; der aktive Spieler darf zudem einen weißen Würfel zu einem Farbwürfel addieren und diese Farbe ankreuzen.</string>
+
+    <string name="rules_heading_bonus">Bonusreihen</string>
+    <string name="rules_body_bonus_1">Ein Bonusfeld darf erst angekreuzt werden, wenn ein benachbartes Farbfeld mit derselben Zahl (in einer der beiden Farben) bereits angekreuzt wurde.</string>
+    <string name="rules_body_bonus_2">Die allgemeine Regel gilt auch für die Bonusreihen: von links nach rechts ankreuzen — zuvor übersprungene Bonusfelder dürfen später nicht mehr angekreuzt werden.</string>
+    <string name="rules_body_bonus_3">Jedes angekreuzte Bonusfeld zählt bei der Wertung für BEIDE benachbarten Farbreihen, Bonuskreuze zählen jedoch NICHT zu den 5 Kreuzen, die zum Schließen einer Reihe nötig sind.</string>
+    <string name="rules_body_bonus_4">Bonusfelder neben einer bereits geschlossenen Farbreihe können weiterhin angekreuzt werden (über die andere Farbe aktiviert) und zählen dann weiterhin für beide Reihen.</string>
+    <string name="rules_body_bonus_5">Wenn du in deinem Zug nur ein Bonusfeld ankreuzt, gilt das nicht als Fehlwurf — keine Strafe.</string>
+
+    <string name="rules_heading_locking">Eine Reihe schließen</string>
+    <string name="rules_body_locking_1">Um die äußerste rechte Zahl anzukreuzen (12 bei Rot/Gelb, 2 bei Grün/Blau), musst du bereits mindestens 5 Kreuze in dieser Reihe haben.</string>
+    <string name="rules_body_locking_2">Das Ankreuzen schließt die Reihe und zählt das Schloss als zusätzliches Kreuz.</string>
+
+    <string name="rules_heading_penalties">Strafen &amp; Spielende</string>
+    <string name="rules_body_penalties_1">Kreuzt du in deinem Zug nichts an, nimmst du eine Strafe (−5 Punkte). Vier Strafen beenden das Spiel.</string>
+    <string name="rules_body_penalties_2">Das Spiel endet auch, sobald zwei Reihen geschlossen sind.</string>
+
+    <string name="rules_heading_scoring">Wertung</string>
+    <string name="rules_body_scoring_1">Zähle je Farbe ihre Kreuze (eigene Zahlen + Schloss + benachbarte Bonuskreuze, max. 15) und werte 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105, 120.</string>
+    <string name="rules_body_scoring_2">Gesamt = Rot + Gelb + Grün + Blau − (5 × Strafen).</string>
+
+    <string name="rules_source_big_points">Qwixx Big Points von Nürnberger-Spielkarten-Verlag (NSV); offizieller Spielzettel &amp; Variantenregeln.</string>
+</resources>
