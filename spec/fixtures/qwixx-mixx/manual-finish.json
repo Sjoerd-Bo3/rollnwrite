@@ -1,0 +1,24 @@
+{
+  "game": "qwixx-mixx",
+  "variant": "variantA",
+  "config": { "board": "variantA", "scoringCap": 12 },
+  "name": "manual-finish",
+  "description": "Manually finishing ends the game outright with zero locked rows and zero penalties (e.g. another player crossed the final lock at the table), and is itself undoable/redoable like any other action.",
+  "steps": [
+    { "do": "mark", "row": 0, "index": 0, "expect": true },
+    { "do": "finish", "expect": true, "note": "manual finish is legal any time the game is live" },
+    { "assert": {
+        "isGameOver": true,
+        "lockedRowCount": 0,
+        "penalties": 0,
+        "totalScore": 1,
+        "canUndo": true
+    } },
+    { "do": "mark", "row": 1, "index": 0, "expect": false, "note": "game over: further marks refused" },
+    { "do": "finish", "expect": false, "note": "already finished" },
+    { "do": "undo", "expect": true, "note": "undoes the finish" },
+    { "assert": { "isGameOver": false, "canRedo": true } },
+    { "do": "mark", "row": 1, "index": 0, "expect": true, "note": "game live again after undoing finish; a fresh move clears the redo stack" },
+    { "assert": { "canRedo": false } }
+  ]
+}

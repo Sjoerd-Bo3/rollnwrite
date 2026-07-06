@@ -64,9 +64,18 @@ import java.io.File
  * key against observable engine state.
  *
  * This test only validates fixture *shape* (it does not run an engine —
- * :engine has no Qwixx engine yet). It fails loudly, naming the file and
- * step index, so malformed fixtures are caught before any engine consumes
- * them.
+ * that's `QwixxFixtureRunnerTest`/`MixxFixtureRunnerTest` etc). It fails
+ * loudly, naming the file and step index, so malformed fixtures are caught
+ * before any engine consumes them.
+ *
+ * `game: "qwixx"` fixtures (`spec/fixtures/qwixx-big-points`,
+ * `spec/fixtures/qwixx-classic`) validate against the vocabulary documented
+ * above. `game: "qwixx-mixx"` fixtures (`spec/fixtures/qwixx-mixx`) validate
+ * against the row-by-index vocabulary documented in
+ * `spec/fixtures/qwixx-mixx/README.md` (`mark`/`penalty`/`concede`/`finish`/
+ * `undo`/`redo`, row keys `0`..`3` instead of colour names, no bonus rows).
+ * A future game's fixtures extend this `when` the same way, never touching
+ * the existing branches.
  */
 class FixtureFormatTest {
 
@@ -78,6 +87,8 @@ class FixtureFormatTest {
         "big-points" to (15 to true),
         "classic" to (12 to false),
     )
+    private val mixxRows = setOf("0", "1", "2", "3")
+    private val mixxBoards = setOf("variantA", "variantB")
 
     private fun fixturesDir(): File {
         val path = System.getProperty("fixtures.dir")
@@ -129,8 +140,14 @@ class FixtureFormatTest {
         }
 
         val game = root.stringField("game", label)
-        require(game, "game", "qwixx", label)
+        when (game) {
+            "qwixx" -> validateQwixxFixture(root, label)
+            "qwixx-mixx" -> validateMixxFixture(root, label)
+            else -> fail<Unit>("$label: unknown 'game' value '$game' (expected 'qwixx' or 'qwixx-mixx')")
+        }
+    }
 
+    private fun validateQwixxFixture(root: JsonObject, label: String) {
         val variant = root.stringField("variant", label)
         val variantBounds = variantConfigs[variant]
             ?: fail<Nothing>("$label: variant '$variant' must be one of ${variantConfigs.keys}")
@@ -150,10 +167,7 @@ class FixtureFormatTest {
         root.stringField("name", label)
         root.stringField("description", label)
 
-        val steps = root["steps"]?.let { it as? JsonArray }
-            ?: fail<Nothing>("$label: missing 'steps' array")
-        assertTrue(steps.isNotEmpty()) { "$label: 'steps' must not be empty" }
-
+        val steps = stepsArray(root, label)
         var hasAssert = false
         steps.forEachIndexed { index, stepElement ->
             val step = stepElement.jsonObject
@@ -169,6 +183,45 @@ class FixtureFormatTest {
         }
 
         assertTrue(hasAssert) { "$label: must contain at least one 'assert' step" }
+    }
+
+    private fun validateMixxFixture(root: JsonObject, label: String) {
+        val variant = root.stringField("variant", label)
+        assertTrue(variant in mixxBoards) { "$label: variant '$variant' must be one of $mixxBoards" }
+
+        val config = root["config"]?.jsonObject
+            ?: fail<Nothing>("$label: missing 'config' object")
+        val board = config.stringField("board", label)
+        assertTrue(board == variant) { "$label: config.board='$board' must equal variant='$variant'" }
+        val scoringCap = config.intField("scoringCap", label)
+        assertTrue(scoringCap == 12) { "$label: config.scoringCap=$scoringCap, Mixx always plays cap 12" }
+
+        root.stringField("name", label)
+        root.stringField("description", label)
+
+        val steps = stepsArray(root, label)
+        var hasAssert = false
+        steps.forEachIndexed { index, stepElement ->
+            val step = stepElement.jsonObject
+            val stepLabel = "$label: step[$index]"
+            when {
+                "do" in step -> validateMixxDoStep(step, stepLabel)
+                "assert" in step -> {
+                    hasAssert = true
+                    validateMixxAssertStep(step, stepLabel)
+                }
+                else -> fail<Unit>("$stepLabel: must contain exactly one of 'do' or 'assert', found keys ${step.keys}")
+            }
+        }
+
+        assertTrue(hasAssert) { "$label: must contain at least one 'assert' step" }
+    }
+
+    private fun stepsArray(root: JsonObject, label: String): JsonArray {
+        val steps = root["steps"]?.let { it as? JsonArray }
+            ?: fail<Nothing>("$label: missing 'steps' array")
+        assertTrue(steps.isNotEmpty()) { "$label: 'steps' must not be empty" }
+        return steps
     }
 
     private fun validateDoStep(step: JsonObject, stepLabel: String) {
@@ -263,6 +316,87 @@ class FixtureFormatTest {
         }
     }
 
+    // --- Mixx vocabulary: rows addressed by index (0..3), no bonus rows.
+    // See spec/fixtures/qwixx-mixx/README.md for the normative description.
+
+    private fun validateMixxDoStep(step: JsonObject, stepLabel: String) {
+        val action = step.stringField("do", stepLabel)
+        if ("expect" !in step) {
+            fail<Unit>("$stepLabel: 'do':\"$action\" is missing required 'expect' boolean")
+        }
+        step.boolField("expect", stepLabel)
+
+        val knownKeys = setOf("do", "expect", "row", "index", "note")
+        val extra = step.keys - knownKeys
+        assertTrue(extra.isEmpty()) { "$stepLabel: unexpected keys $extra on 'do' step" }
+        if ("note" in step) step.stringField("note", stepLabel)
+
+        when (action) {
+            "mark" -> {
+                val row = step.intField("row", stepLabel)
+                assertTrue(row in 0..3) { "$stepLabel: mark row $row out of range 0..3" }
+                val index = step.intField("index", stepLabel)
+                assertTrue(index in 0..10) { "$stepLabel: mark index $index out of range 0..10" }
+            }
+            "concede" -> {
+                val row = step.intField("row", stepLabel)
+                assertTrue(row in 0..3) { "$stepLabel: concede row $row out of range 0..3" }
+            }
+            "penalty", "finish", "undo", "redo" -> {
+                assertTrue(step.keys - setOf("note") == setOf("do", "expect")) {
+                    "$stepLabel: '$action' takes no fields besides 'do'/'expect', found ${step.keys}"
+                }
+            }
+            else -> fail<Unit>(
+                "$stepLabel: unknown 'do' action '$action' " +
+                    "(expected one of mark, penalty, concede, finish, undo, redo)",
+            )
+        }
+    }
+
+    private fun validateMixxAssertStep(step: JsonObject, stepLabel: String) {
+        val assertion = step["assert"]?.jsonObject
+            ?: fail<Nothing>("$stepLabel: 'assert' must be an object")
+        assertTrue(step.keys - setOf("note") == setOf("assert")) {
+            "$stepLabel: 'assert' step must not have sibling keys, found ${step.keys}"
+        }
+        if ("note" in step) step.stringField("note", stepLabel)
+        assertTrue(assertion.isNotEmpty()) { "$stepLabel: 'assert' object must not be empty" }
+
+        val knownKeys = setOf(
+            "points", "crosses", "penalties", "penaltyPoints", "totalScore",
+            "isGameOver", "lockedRowCount", "rowLocked", "canUndo", "canRedo",
+        )
+        val extra = assertion.keys - knownKeys
+        assertTrue(extra.isEmpty()) { "$stepLabel: unknown assert keys $extra" }
+
+        assertion["points"]?.let { validatePerColorMap(it, "$stepLabel.points", mixxRows) }
+        assertion["crosses"]?.let { validatePerColorMap(it, "$stepLabel.crosses", mixxRows) }
+        assertion["rowLocked"]?.let { validatePerColorBoolMap(it, "$stepLabel.rowLocked", mixxRows) }
+
+        assertion["penalties"]?.let {
+            assertTrue(it.jsonPrimitive.intOrNull != null) { "$stepLabel.penalties must be an int" }
+        }
+        assertion["penaltyPoints"]?.let {
+            assertTrue(it.jsonPrimitive.intOrNull != null) { "$stepLabel.penaltyPoints must be an int" }
+        }
+        assertion["totalScore"]?.let {
+            assertTrue(it.jsonPrimitive.intOrNull != null) { "$stepLabel.totalScore must be an int" }
+        }
+        assertion["lockedRowCount"]?.let {
+            assertTrue(it.jsonPrimitive.intOrNull != null) { "$stepLabel.lockedRowCount must be an int" }
+        }
+        assertion["isGameOver"]?.let {
+            assertTrue(it.jsonPrimitive.booleanOrNull != null) { "$stepLabel.isGameOver must be a bool" }
+        }
+        assertion["canUndo"]?.let {
+            assertTrue(it.jsonPrimitive.booleanOrNull != null) { "$stepLabel.canUndo must be a bool" }
+        }
+        assertion["canRedo"]?.let {
+            assertTrue(it.jsonPrimitive.booleanOrNull != null) { "$stepLabel.canRedo must be a bool" }
+        }
+    }
+
     private fun validatePerColorMap(element: JsonElement, label: String, keySet: Set<String>) {
         val obj = element.jsonObject
         val unknown = obj.keys - keySet
@@ -301,7 +435,4 @@ class FixtureFormatTest {
         return prim.booleanOrNull ?: fail("$label: field '$key' is not a bool (value=$prim)")
     }
 
-    private fun require(actual: String, fieldName: String, expected: String, label: String) {
-        assertTrue(actual == expected) { "$label: $fieldName='$actual', expected '$expected'" }
-    }
 }

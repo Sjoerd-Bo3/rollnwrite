@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Qwixx Mixx ("gemixxt") strings, kept in a per-variant file (never
+  strings.xml) so parallel variant ports never merge-conflict on the shared
+  resource file. Mirrors the English copy in
+  `RollnWrite/Games/QwixxMixx/QwixxMixxGame.swift`'s `RulesDocument`.
+-->
+<resources>
+    <!-- Catalogue -->
+    <string name="qwixx_mixx_title">Qwixx Mixx</string>
+    <string name="qwixx_mixx_subtitle">Mixed-up rows · two boards (A &amp; B)</string>
+
+    <!-- Board header: A/B board segmented toggle -->
+    <string name="mixx_board_a_short">A</string>
+    <string name="mixx_board_b_short">B</string>
+    <string name="mixx_board_a_full">Variant A</string>
+    <string name="mixx_board_b_full">Variant B</string>
+
+    <!-- Dialogs -->
+    <string name="mixx_start_new_game_message">This clears the current board\'s scorecard.</string>
+
+    <!-- Rules dialog -->
+    <string name="mixx_rules_title">Qwixx — gemixxt (Mixx)</string>
+    <string name="mixx_rules_subtitle">Official rules for the two Mixx boards (Variant A &amp; Variant B)</string>
+
+    <string name="mixx_rules_body_goal">Qwixx gemixxt keeps every rule of classic Qwixx exactly the same — only the rows are mixed up. The set ships two boards; switch between them with the A / B toggle at the top of the card.</string>
+
+    <string name="mixx_rules_heading_variant_a">Variant A — colour segments</string>
+    <string name="mixx_rules_body_variant_a_1">The four rows still run 2 → 12 (top two) and 12 → 2 (bottom two), exactly like the original.</string>
+    <string name="mixx_rules_body_variant_a_2">But each row is split into small segments and every number cell belongs to one of the four die colours. To cross a cell you use a die of that cell\'s colour (or the two white dice), as in normal Qwixx.</string>
+    <string name="mixx_rules_body_variant_a_3">Each row\'s lock (its band colour) marks which coloured die is removed from play when the row is closed: closing the red-locked row takes the red die out, and so on. After a colour die is gone you can still cross that colour\'s cells in the other rows with the two white dice (but never in a closed row).</string>
+
+    <string name="mixx_rules_heading_variant_b">Variant B — scrambled numbers</string>
+    <string name="mixx_rules_body_variant_b_1">There is one row per die colour (red, yellow, green, blue), but the eleven numbers within each row are no longer ordered — they are scattered wildly.</string>
+    <string name="mixx_rules_body_variant_b_2">You still cross strictly left → right, and to cross a number you must roll it with that row\'s coloured die (or the white dice). E.g. to cross an 11 in the red row you need an 11 in red.</string>
+    <string name="mixx_rules_body_variant_b_3">As in Variant A, closing a row removes that colour\'s die from play.</string>
+
+    <string name="mixx_rules_body_crossing_1">Within every row you must cross out from left to right. You may skip cells, but skipped cells can never be crossed later.</string>
+    <string name="mixx_rules_body_crossing_2">On a turn the white dice total may be crossed in any one row; the active player may also add a white die to a colour die and cross a matching cell.</string>
+
+    <string name="mixx_rules_body_locking_1">To cross the right-most cell you must already have at least 5 crosses in that row.</string>
+    <string name="mixx_rules_body_locking_2">Crossing it locks the row and counts as one extra cross — and removes the corresponding coloured die from the game for everyone.</string>
+
+    <string name="mixx_rules_body_scoring_1">Scoring is identical to classic Qwixx. Per row, count its crosses (its own numbers + the lock, max 12) and score 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78.</string>
+    <string name="mixx_rules_body_scoring_2">Total = row 1 + row 2 + row 3 + row 4 − (5 × penalties).</string>
+
+    <string name="mixx_rules_source">Qwixx gemixxt by Nürnberger-Spielkarten-Verlag (NSV, art. 4033) / White Goblin Games; official score sheet &amp; rules.</string>
+</resources>

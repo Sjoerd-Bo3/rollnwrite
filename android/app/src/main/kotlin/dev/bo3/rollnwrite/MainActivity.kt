@@ -7,10 +7,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -24,6 +27,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import dev.bo3.rollnwrite.catalogue.GameEntry
+import dev.bo3.rollnwrite.catalogue.GameRegistry
+import dev.bo3.rollnwrite.mixx.MixxScorecardScreen
 import dev.bo3.rollnwrite.qwixx.QwixxScorecardScreen
 
 class MainActivity : ComponentActivity() {
@@ -61,16 +67,18 @@ class MainActivity : ComponentActivity() {
 private enum class Screen {
     Catalogue,
     QwixxBigPoints,
+    QwixxMixx,
 }
 
 /**
- * Maps a smoke-test game id to its `Screen`. A `when` over a small set of
- * known ids — the same OCP seam as iOS's `GameRegistry.playable.first {
- * $0.id == id }` lookup: adding a game means extending this `when`, not
- * touching the caller. Unknown/missing ids fall through to the catalogue.
+ * Maps a `GameEntry.id` to its `Screen`. A `when` over a small set of known
+ * ids — the same OCP seam as iOS's `GameRegistry.playable.first { $0.id ==
+ * id }` lookup: adding a game means extending this `when` (and adding one
+ * `GameRegistry` entry), not touching the catalogue rendering.
  */
-private fun screenForSmokeTestGame(id: String?): Screen? = when (id) {
+private fun screenForGameId(id: String?): Screen? = when (id) {
     "qwixx-big-points" -> Screen.QwixxBigPoints
+    "qwixx-mixx" -> Screen.QwixxMixx
     else -> null
 }
 
@@ -83,7 +91,7 @@ private fun RootScreen(smokeTestGame: String? = null) {
     // destination (if any) only seeds the initial value — it must not
     // re-trigger navigation on every recomposition/config change.
     var screen by rememberSaveable {
-        mutableStateOf(screenForSmokeTestGame(smokeTestGame) ?: Screen.Catalogue)
+        mutableStateOf(screenForGameId(smokeTestGame) ?: Screen.Catalogue)
     }
 
     BackHandler(enabled = screen != Screen.Catalogue) {
@@ -91,13 +99,16 @@ private fun RootScreen(smokeTestGame: String? = null) {
     }
 
     when (screen) {
-        Screen.Catalogue -> CatalogueScreen(onOpenQwixxBigPoints = { screen = Screen.QwixxBigPoints })
+        Screen.Catalogue -> CatalogueScreen(onOpenGame = { id ->
+            screenForGameId(id)?.let { screen = it }
+        })
         Screen.QwixxBigPoints -> QwixxScorecardScreen(onBack = { screen = Screen.Catalogue })
+        Screen.QwixxMixx -> MixxScorecardScreen(onBack = { screen = Screen.Catalogue })
     }
 }
 
 @Composable
-private fun CatalogueScreen(onOpenQwixxBigPoints: () -> Unit) {
+private fun CatalogueScreen(onOpenGame: (String) -> Unit) {
     Scaffold { innerPadding ->
         Surface(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             Column(
@@ -109,26 +120,36 @@ private fun CatalogueScreen(onOpenQwixxBigPoints: () -> Unit) {
                     text = stringResource(R.string.catalogue_title),
                     style = MaterialTheme.typography.headlineLarge,
                 )
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    onClick = onOpenQwixxBigPoints,
-                ) {
-                    Column(
-                        modifier = Modifier.padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.qwixx_big_points_title),
-                            style = MaterialTheme.typography.titleMedium,
-                        )
-                        Text(
-                            text = stringResource(R.string.qwixx_big_points_subtitle),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    }
+                GameRegistry.games.forEach { entry ->
+                    GameCard(entry = entry, onClick = { onOpenGame(entry.id) })
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GameCard(entry: GameEntry, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp),
+        onClick = onClick,
+    ) {
+        Row(
+            modifier = Modifier.padding(20.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = entry.icon,
+                contentDescription = null,
+                tint = entry.accent,
+                modifier = Modifier.size(32.dp),
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(text = entry.title(), style = MaterialTheme.typography.titleMedium)
+                Text(text = entry.subtitle(), style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
