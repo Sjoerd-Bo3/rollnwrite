@@ -13,10 +13,11 @@ name: 9. Android Smoke Test
 # `smokeTestGame` intent string extra (see
 # android/app/src/main/kotlin/dev/bo3/rollnwrite/MainActivity.kt) and opens
 # that game's scorecard directly, so no UI scripting is needed — the exact
-# same trick as iOS's `-smokeTestGame <id>` launch argument. Today there is
-# only one playable game (`qwixx-big-points`); the `when` in MainActivity that
-# maps ids to screens is the OCP seam where new games get added, one line at a
-# time, same spirit as iOS deriving its id list from the sources.
+# same trick as iOS's `-smokeTestGame <id>` launch argument. The id list this
+# workflow screenshots mirrors GameRegistry.games in
+# android/app/src/main/kotlin/dev/bo3/rollnwrite/catalogue/GameRegistry.kt,
+# the OCP seam where new games get added, one entry at a time, same spirit as
+# iOS deriving its id list from the sources.
 
 on:
   workflow_dispatch:
@@ -98,9 +99,10 @@ jobs:
             sleep 8
             adb exec-out screencap -p > shots/00-catalogue.png
 
-            # The one playable game so far, id matching MainActivity's
-            # smoke-test `when`. Extend this list as MainActivity's `when`
-            # grows new ids (OCP, mirroring iOS's grep-derived id list).
+            # The id list mirrors GameRegistry.games in
+            # android/app/src/main/kotlin/dev/bo3/rollnwrite/catalogue/GameRegistry.kt.
+            # Extend this list as GameRegistry.games grows new entries (OCP,
+            # mirroring iOS's grep-derived id list).
             #
             # This whole loop MUST stay on one physical line: the emulator
             # action (reactivecircus/android-emulator-runner) does not run
@@ -108,7 +110,7 @@ jobs:
             # execs EACH line as its own separate `sh -c` process, so shell
             # state (loop variables, `for`/`do`/`done` blocks) cannot span
             # lines. A multi-line `for` here would break the shell parser.
-            for id in qwixx-big-points; do adb shell am force-stop "$PACKAGE"; adb shell am start -n "$ACTIVITY" --es smokeTestGame "$id"; sleep 6; adb exec-out screencap -p > "shots/${id}.png"; done
+            for id in qwixx-big-points qwixx-classic; do adb shell am force-stop "$PACKAGE"; adb shell am start -n "$ACTIVITY" --es smokeTestGame "$id"; sleep 6; adb exec-out screencap -p > "shots/${id}.png"; done
 
             adb shell am broadcast -a com.android.systemui.demo -e command exit
             adb shell am force-stop "$PACKAGE"

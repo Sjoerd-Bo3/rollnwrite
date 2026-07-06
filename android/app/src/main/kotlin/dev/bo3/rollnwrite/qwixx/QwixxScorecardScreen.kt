@@ -39,6 +39,67 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.bo3.rollnwrite.R
+import dev.bo3.rollnwrite.engine.TriangularScoring
+
+/** Which official rules text to show — the two Qwixx flavours differ only in copy, never in engine code. */
+enum class QwixxRulesVariant { BIG_POINTS, CLASSIC }
+
+/**
+ * Builds the player 1 / player 2 view models for Qwixx Big Points (cap 15,
+ * bonus rows on) under their own persistence keys.
+ */
+@Composable
+fun qwixxBigPointsViewModels(): Pair<QwixxViewModel, QwixxViewModel> {
+    val context = LocalContext.current
+    val p1: QwixxViewModel = viewModel(
+        key = "qwixx-big-points-p1",
+        factory = qwixxViewModelFactory(
+            context = context,
+            persistenceKey = QwixxViewModel.KEY_BIG_POINTS_PLAYER_ONE,
+            scoring = TriangularScoring(cap = 15),
+            hasBonusRows = true,
+        ),
+    )
+    val p2: QwixxViewModel = viewModel(
+        key = "qwixx-big-points-p2",
+        factory = qwixxViewModelFactory(
+            context = context,
+            persistenceKey = QwixxViewModel.KEY_BIG_POINTS_PLAYER_TWO,
+            scoring = TriangularScoring(cap = 15),
+            hasBonusRows = true,
+        ),
+    )
+    return p1 to p2
+}
+
+/**
+ * Builds the player 1 / player 2 view models for classic Qwixx (cap 12, no
+ * bonus rows) under their own persistence keys — mirrors iOS
+ * `QwixxClassicGame`'s construction (same engine, different configuration).
+ */
+@Composable
+fun qwixxClassicViewModels(): Pair<QwixxViewModel, QwixxViewModel> {
+    val context = LocalContext.current
+    val p1: QwixxViewModel = viewModel(
+        key = "qwixx-classic-p1",
+        factory = qwixxViewModelFactory(
+            context = context,
+            persistenceKey = QwixxViewModel.KEY_CLASSIC_PLAYER_ONE,
+            scoring = TriangularScoring(cap = 12),
+            hasBonusRows = false,
+        ),
+    )
+    val p2: QwixxViewModel = viewModel(
+        key = "qwixx-classic-p2",
+        factory = qwixxViewModelFactory(
+            context = context,
+            persistenceKey = QwixxViewModel.KEY_CLASSIC_PLAYER_TWO,
+            scoring = TriangularScoring(cap = 12),
+            hasBonusRows = false,
+        ),
+    )
+    return p1 to p2
+}
 
 /**
  * Hosts one Qwixx board: compact in-board header (back, title, undo/redo,
@@ -46,9 +107,20 @@ import dev.bo3.rollnwrite.R
  * the optional mirrored two-player layout. Mirrors
  * `RollnWrite/Games/Qwixx/QwixxScorecardView.swift` /
  * `RollnWrite/Core/ScorecardScaffold.swift`.
+ *
+ * Takes its view models and title from the caller (the [dev.bo3.rollnwrite.catalogue.GameRegistry]
+ * entry) rather than constructing them itself, so this single screen serves
+ * every Qwixx variant (Big Points, classic, future ones) with no per-game
+ * branching inside the screen.
  */
 @Composable
-fun QwixxScorecardScreen(onBack: () -> Unit) {
+fun QwixxScorecardScreen(
+    title: String,
+    playerOne: QwixxViewModel,
+    playerTwo: QwixxViewModel,
+    rulesVariant: QwixxRulesVariant,
+    onBack: () -> Unit,
+) {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
     // rememberSaveable: defence in depth for any activity recreation beyond
@@ -75,19 +147,10 @@ fun QwixxScorecardScreen(onBack: () -> Unit) {
         }
     }
 
-    val playerOneViewModel: QwixxViewModel = viewModel(
-        key = "qwixx-big-points-p1",
-        factory = qwixxViewModelFactory(context, QwixxViewModel.DEFAULT_KEY_PLAYER_ONE),
-    )
-    val playerTwoViewModel: QwixxViewModel = viewModel(
-        key = "qwixx-big-points-p2",
-        factory = qwixxViewModelFactory(context, QwixxViewModel.DEFAULT_KEY_PLAYER_TWO),
-    )
-
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             ScorecardHeader(
-                title = stringResource(R.string.qwixx_big_points_title),
+                title = title,
                 twoPlayer = twoPlayer,
                 onBack = onBack,
                 onToggleTwoPlayer = { twoPlayer = !twoPlayer },
@@ -95,16 +158,16 @@ fun QwixxScorecardScreen(onBack: () -> Unit) {
             )
             Box(modifier = Modifier.weight(1f).fillMaxSize()) {
                 if (twoPlayer) {
-                    TwoPlayerBoards(playerOneViewModel, playerTwoViewModel)
+                    TwoPlayerBoards(playerOne, playerTwo)
                 } else {
-                    QwixxBoardView(playerOneViewModel)
+                    QwixxBoardView(playerOne)
                 }
             }
         }
     }
 
     if (showRules) {
-        QwixxRulesDialog(onDismiss = { showRules = false })
+        QwixxRulesDialog(variant = rulesVariant, onDismiss = { showRules = false })
     }
 }
 

@@ -3,9 +3,18 @@
     <string name="app_name">RollnWrite</string>
 
     <!-- Catalogue -->
-    <string name="catalogue_title">RollnWrite</string>
+    <string name="catalogue_title">Roll\'n Write</string>
     <string name="qwixx_big_points_title">Qwixx Big Points</string>
     <string name="qwixx_big_points_subtitle">Bonusrijen · tot 120 per kleur</string>
+    <string name="qwixx_classic_title">Qwixx</string>
+    <string name="qwixx_classic_subtitle">Het origineel · max. 12</string>
+    <string name="settings">Instellingen</string>
+    <string name="settings_app_section">Over</string>
+    <string name="settings_version">Versie %1$s</string>
+    <string name="settings_send_feedback">Feedback versturen</string>
+    <string name="settings_send_feedback_subtitle">Meld een bug of vraag een functie aan per e-mail</string>
+    <string name="settings_feedback_subject">RollnWrite feedback</string>
+    <string name="settings_feedback_body">Beschrijf hier je bug report of functieverzoek.</string>
 
     <!-- Colour names (accessibility labels, concede dialog) -->
     <string name="colour_red">Rood</string>
@@ -86,4 +95,15 @@
     <string name="rules_body_scoring_2">Totaal = rood + geel + groen + blauw − (5 × strafpunten).</string>
 
     <string name="rules_source_big_points">Qwixx Big Points van Nürnberger-Spielkarten-Verlag (NSV); officiële scorekaart &amp; variantregels.</string>
+
+    <!-- Rules dialog — classic Qwixx -->
+    <string name="rules_title_classic">Qwixx</string>
+    <string name="rules_subtitle_classic">Officiële regels voor het originele spel</string>
+
+    <string name="rules_body_goal_classic">Streep zoveel mogelijk getallen weg in de vier kleurenrijen om punten te scoren. Hoe meer kruisjes in een kleur, hoe meer die kleur waard is.</string>
+    <string name="rules_body_card_classic_2">Er zijn geen bonusrijen — alleen de vier kleurenrijen.</string>
+
+    <string name="rules_body_scoring_classic_1">Tel per kleur de kruisjes (eigen getallen + slot, max. 12) en scoor 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78.</string>
+
+    <string name="rules_source_classic">Qwixx van Steffen Benndorf, Nürnberger-Spielkarten-Verlag (NSV).</string>
 </resources>
