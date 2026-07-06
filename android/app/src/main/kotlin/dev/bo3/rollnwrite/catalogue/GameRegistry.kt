@@ -2,6 +2,7 @@ package dev.bo3.rollnwrite.catalogue
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Casino
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.outlined.Casino
 import androidx.compose.runtime.Composable
@@ -14,6 +15,7 @@ import dev.bo3.rollnwrite.qwixx.QwixxRulesVariant
 import dev.bo3.rollnwrite.qwixx.QwixxScorecardScreen
 import dev.bo3.rollnwrite.qwixx.qwixxBigPointsViewModels
 import dev.bo3.rollnwrite.qwixx.qwixxClassicViewModels
+import dev.bo3.rollnwrite.qwixxdouble.DoubleScorecardScreen
 import dev.bo3.rollnwrite.xchange.XChangeScorecardScreen
 
 /**
@@ -95,6 +97,16 @@ object GameRegistry {
             icon = Icons.Filled.SwapHoriz,
             family = "Qwixx",
             makeScreen = { onBack -> XChangeScorecardScreen(onBack = onBack) },
+        ),
+        GameDefinition(
+            id = "qwixx-double",
+            title = { stringResource(R.string.qwixx_double_title) },
+            subtitle = { stringResource(R.string.qwixx_double_subtitle) },
+            // Mirrors iOS QwixxDoubleGame's red accent and boxed-x icon.
+            accent = Color(red = 0.86f, green = 0.18f, blue = 0.18f),
+            icon = Icons.Filled.Close,
+            family = "Qwixx",
+            makeScreen = { onBack -> DoubleScorecardScreen(onBack = onBack) },
         ),
     )
 

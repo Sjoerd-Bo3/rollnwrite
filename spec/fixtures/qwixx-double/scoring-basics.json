@@ -1,0 +1,34 @@
+{
+  "game": "qwixx-double",
+  "variant": "double-a",
+  "config": { "scoringCap": 16 },
+  "name": "scoring-basics",
+  "description": "Plain first crosses (no doubles, no lock) score via crossCount = marks.count, triangular(cap 16); left-to-right is enforced exactly like base Qwixx.",
+  "steps": [
+    { "assert": {
+        "points": { "red": 0, "yellow": 0, "green": 0, "blue": 0 },
+        "crosses": { "red": 0, "yellow": 0, "green": 0, "blue": 0 },
+        "totalScore": 0,
+        "isGameOver": false,
+        "canUndo": false,
+        "canRedo": false
+    } },
+    { "do": "markColor", "color": "red", "index": 0, "expect": true, "note": "red prints 2 at index 0" },
+    { "assert": { "crosses": { "red": 1 }, "points": { "red": 1 }, "totalScore": 1 } },
+    { "do": "markColor", "color": "red", "index": 0, "expect": false, "note": "already marked" },
+    { "do": "markColor", "color": "red", "index": 3, "expect": true },
+    { "assert": { "crosses": { "red": 2 }, "points": { "red": 3 }, "totalScore": 3 } },
+    { "do": "markColor", "color": "red", "index": 2, "expect": false, "note": "left of maxMarkedIndex 3 - forfeited forever" },
+    { "do": "markColor", "color": "red", "index": 4, "expect": true },
+    { "assert": { "crosses": { "red": 3 }, "points": { "red": 6 }, "totalScore": 6 } },
+    { "do": "markColor", "color": "green", "index": 0, "expect": true, "note": "green prints 12 at index 0 (descending)" },
+    { "do": "markColor", "color": "green", "index": 1, "expect": true },
+    { "assert": {
+        "crosses": { "red": 3, "green": 2 },
+        "points": { "red": 6, "green": 3 },
+        "totalScore": 9,
+        "canUndo": true,
+        "canRedo": false
+    } }
+  ]
+}

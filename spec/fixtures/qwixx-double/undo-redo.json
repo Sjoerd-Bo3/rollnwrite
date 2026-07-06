@@ -1,0 +1,57 @@
+{
+  "game": "qwixx-double",
+  "variant": "double-a",
+  "config": { "scoringCap": 16 },
+  "name": "undo-redo",
+  "description": "Strictly LIFO undo/redo across interleaved markColor/doubleColor/penalty actions, exactly reversing crossCount-based lock eligibility, and a fresh forward move after an undo clears the redo stack.",
+  "steps": [
+    { "do": "markColor", "color": "red", "index": 0, "expect": true },
+    { "do": "doubleColor", "color": "red", "index": 0, "expect": true },
+    { "assert": { "crosses": { "red": 2 }, "points": { "red": 3 }, "canUndo": true, "canRedo": false } },
+
+    { "do": "undo", "expect": true, "note": "undoes the double first (LIFO) - mark must survive" },
+    { "assert": { "crosses": { "red": 1 }, "points": { "red": 1 } } },
+    { "do": "doubleColor", "color": "red", "index": 0, "expect": true, "note": "still the most-recent mark - re-doubling is legal again" },
+    { "assert": { "crosses": { "red": 2 } } },
+
+    { "do": "undo", "expect": true, "note": "undo the re-double" },
+    { "do": "undo", "expect": true, "note": "undo the original mark" },
+    { "assert": { "crosses": { "red": 0 }, "points": { "red": 0 }, "canUndo": false, "canRedo": true } },
+
+    { "do": "redo", "expect": true, "note": "re-apply the mark" },
+    { "do": "redo", "expect": true, "note": "re-apply the double" },
+    { "assert": { "crosses": { "red": 2 }, "points": { "red": 3 }, "canUndo": true, "canRedo": false } },
+
+    { "do": "markColor", "color": "red", "index": 1, "expect": true },
+    { "do": "doubleColor", "color": "red", "index": 1, "expect": true },
+    { "do": "markColor", "color": "red", "index": 2, "expect": true },
+    { "do": "doubleColor", "color": "red", "index": 2, "expect": true },
+    { "do": "markColor", "color": "red", "index": 3, "expect": true },
+    { "assert": { "crosses": { "red": 7 } }, "note": "3 doubled pairs (0,1,2) + solo mark 3 = 4 marks + 3 doubles = 7" },
+    { "do": "markColor", "color": "red", "index": 10, "expect": true, "note": "7 crosses meets the lock threshold" },
+    { "assert": { "rowLocked": { "red": true }, "crosses": { "red": 9 }, "points": { "red": 45 } } },
+
+    { "do": "undo", "expect": true, "note": "undo the lock mark itself" },
+    { "assert": {
+        "rowLocked": { "red": false },
+        "crosses": { "red": 7 },
+        "points": { "red": 28 }
+    }, "note": "un-locking exactly reverses didLock and drops the lock's own +1 bonus" },
+    { "do": "markColor", "color": "red", "index": 10, "expect": true, "note": "redo-equivalent forward re-mark: still legal, still locks" },
+    { "assert": { "rowLocked": { "red": true }, "crosses": { "red": 9 } } },
+
+    { "do": "penalty", "expect": true },
+    { "do": "penalty", "expect": true },
+    { "assert": { "penalties": 2, "penaltyPoints": 10, "canUndo": true } },
+    { "do": "undo", "expect": true, "note": "undo the second penalty" },
+    { "assert": { "penalties": 1, "penaltyPoints": 5, "canRedo": true } },
+
+    { "do": "markColor", "color": "yellow", "index": 0, "expect": true, "note": "a FRESH forward move after an undo clears the redo stack" },
+    { "assert": { "canRedo": false } },
+    { "do": "redo", "expect": false, "note": "redo stack was cleared by the fresh move above" },
+
+    { "do": "undo", "expect": true, "note": "undo the fresh yellow mark" },
+    { "do": "undo", "expect": true, "note": "undo the surviving penalty" },
+    { "assert": { "penalties": 0, "penaltyPoints": 0, "canRedo": true } }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "game": "qwixx-double",
+  "variant": "double-a",
+  "config": { "scoringCap": 16 },
+  "name": "double-cross",
+  "description": "Only the single most-recently-marked space may be doubled, at most once; marking a new number to the right permanently forfeits the previous space's doubling eligibility.",
+  "steps": [
+    { "do": "markColor", "color": "red", "index": 0, "expect": true },
+    { "do": "doubleColor", "color": "red", "index": 0, "expect": true, "note": "index 0 is maxMarkedIndex - eligible" },
+    { "assert": { "crosses": { "red": 2 }, "points": { "red": 3 }, "totalScore": 3 } },
+    { "do": "doubleColor", "color": "red", "index": 0, "expect": false, "note": "already doubled once" },
+    { "do": "doubleColor", "color": "yellow", "index": 0, "expect": false, "note": "index 0 not even marked in yellow" },
+    { "do": "markColor", "color": "red", "index": 3, "expect": true, "note": "moves the frontier to index 3" },
+    { "do": "doubleColor", "color": "red", "index": 0, "expect": false, "note": "no longer the most-recent mark - forfeited forever" },
+    { "do": "doubleColor", "color": "red", "index": 3, "expect": true, "note": "the new most-recent mark is eligible" },
+    { "assert": {
+        "crosses": { "red": 4 },
+        "points": { "red": 10 },
+        "totalScore": 10
+    } },
+    { "do": "markColor", "color": "green", "index": 0, "expect": true },
+    { "do": "markColor", "color": "green", "index": 1, "expect": true },
+    { "do": "doubleColor", "color": "green", "index": 0, "expect": false, "note": "index 0 was superseded by index 1 as maxMarkedIndex" },
+    { "do": "doubleColor", "color": "green", "index": 1, "expect": true },
+    { "assert": {
+        "crosses": { "green": 3 },
+        "points": { "green": 6 },
+        "totalScore": 16
+    } }
+  ]
+}

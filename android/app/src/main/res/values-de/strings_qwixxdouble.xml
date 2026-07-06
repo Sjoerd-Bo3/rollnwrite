@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Catalogue -->
+    <string name="qwixx_double_title">Qwixx Double</string>
+    <string name="qwixx_double_subtitle">Klassische Reihen · verdopple das zuletzt angekreuzte Feld</string>
+
+    <!-- Board content -->
+    <string name="double_second_cross_content_description">%1$s %2$s zweites Kreuz</string>
+
+    <!-- Rules dialog -->
+    <string name="rules_title_double">Qwixx — Double (Variante A)</string>
+    <string name="rules_subtitle_double">Offizielle Regeln für die Qwixx-Double-Variante \"doppelte Kreuze\"</string>
+
+    <string name="rules_body_goal_double">Spiele klassisches Qwixx, aber das Feld, das du zuletzt in einer Farbreihe angekreuzt hast, darf ein zweites Mal angekreuzt werden — für viel mehr Punkte.</string>
+
+    <string name="rules_body_card_1_double">Die rote und gelbe Reihe laufen 2 → 12 (von links nach rechts). Die grüne und blaue Reihe laufen 12 → 2.</string>
+    <string name="rules_body_card_2_double">Unter jeder Zahl ist Platz für ein zweites Kreuz.</string>
+
+    <string name="rules_body_crossing_1_double">In jeder Reihe musst du von links nach rechts ankreuzen. Du darfst Zahlen überspringen, übersprungene Zahlen können aber später nie mehr angekreuzt werden.</string>
+    <string name="rules_body_crossing_2_double">In einem Zug darf die Summe der weißen Würfel in einer Reihe angekreuzt werden; der aktive Spieler darf zudem einen weißen Würfel zu einem Farbwürfel addieren und diese Farbe ankreuzen.</string>
+
+    <string name="rules_heading_double_crosses">Doppelte Kreuze</string>
+    <string name="rules_body_double_crosses_1">Das Feld, das du zuletzt in einer Farbreihe angekreuzt hast, darf erneut angekreuzt werden, sobald die passende Zahl fällt — egal ob du der aktive Spieler bist oder nicht. Das erste Kreuz kommt in das nummerierte Feld, das zweite darunter.</string>
+    <string name="rules_body_double_crosses_2">Nur dein aktuellstes Feld ist berechtigt: Sobald du eine neue Zahl weiter rechts ankreuzt, kann das vorherige Feld nicht mehr verdoppelt werden.</string>
+
+    <string name="rules_body_locking_1_double">Um die am weitesten rechts stehende Zahl anzukreuzen (12 für Rot/Gelb, 2 für Grün/Blau), musst du bereits mindestens 7 Kreuze in dieser Reihe haben (statt 5 im regulären Spiel).</string>
+    <string name="rules_body_locking_2_double">Das Ankreuzen schließt die Reihe und zählt das Schloss als ein zusätzliches Kreuz.</string>
+
+    <string name="rules_body_penalties_1_double">Wenn du in deinem Zug nichts ankreuzt, nimmst du eine Strafe (−5 Punkte). Vier Strafen beenden das Spiel.</string>
+    <string name="rules_body_penalties_2_double">Das Spiel endet auch, sobald zwei Reihen geschlossen sind.</string>
+
+    <string name="rules_body_scoring_1_double">Zähle pro Farbe alle Kreuze (erste Kreuze + zweite Kreuze + das Schloss). Es sind bis zu 22 Kreuze möglich, aber du erhältst maximal 16 Kreuze pro Reihe angerechnet.</string>
+    <string name="rules_body_scoring_2_double">Punkte nach der Tabelle: 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105, 120, 136 für 1 … 16 Kreuze (satte 136 Punkte pro Reihe).</string>
+    <string name="rules_body_scoring_3_double">Gesamt = Rot + Gelb + Grün + Blau − (5 × Strafen).</string>
+
+    <string name="rules_source_double">Qwixx Double von Nürnberger-Spielkarten-Verlag (NSV) / White Goblin Games; offizielle \"How to play Qwixx Double\"-Regeln (Variante A).</string>
+</resources>
