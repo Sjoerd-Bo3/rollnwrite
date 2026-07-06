@@ -6,16 +6,35 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		AB00000000000000000000C5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AB00000000000000000000A1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AB00000000000000000000A5;
+			remoteInfo = RollnWrite;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		AB00000000000000000000A6 /* RollnWrite.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RollnWrite.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AB00000000000000000000C1 /* RollnWriteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RollnWriteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		AB00000000000000000000A4 /* RollnWrite */ = {isa = PBXFileSystemSynchronizedRootGroup; path = RollnWrite; sourceTree = "<group>"; };
+		AB00000000000000000000C2 /* RollnWriteTests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = RollnWriteTests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		AB00000000000000000000A8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AB00000000000000000000C7 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -29,6 +48,7 @@
 			isa = PBXGroup;
 			children = (
 				AB00000000000000000000A4 /* RollnWrite */,
+				AB00000000000000000000C2 /* RollnWriteTests */,
 				AB00000000000000000000A3 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -37,6 +57,7 @@
 			isa = PBXGroup;
 			children = (
 				AB00000000000000000000A6 /* RollnWrite.app */,
+				AB00000000000000000000C1 /* RollnWriteTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -64,6 +85,27 @@
 			productReference = AB00000000000000000000A6 /* RollnWrite.app */;
 			productType = "com.apple.product-type.application";
 		};
+		AB00000000000000000000C3 /* RollnWriteTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AB00000000000000000000D3 /* Build configuration list for PBXNativeTarget "RollnWriteTests" */;
+			buildPhases = (
+				AB00000000000000000000C6 /* Sources */,
+				AB00000000000000000000C7 /* Frameworks */,
+				AB00000000000000000000C8 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AB00000000000000000000C4 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				AB00000000000000000000C2 /* RollnWriteTests */,
+			);
+			name = RollnWriteTests;
+			productName = RollnWriteTests;
+			productReference = AB00000000000000000000C1 /* RollnWriteTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -76,6 +118,10 @@
 				TargetAttributes = {
 					AB00000000000000000000A5 = {
 						CreatedOnToolsVersion = 16.0;
+					};
+					AB00000000000000000000C3 = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = AB00000000000000000000A5;
 					};
 				};
 			};
@@ -97,12 +143,20 @@
 			projectRoot = "";
 			targets = (
 				AB00000000000000000000A5 /* RollnWrite */,
+				AB00000000000000000000C3 /* RollnWriteTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		AB00000000000000000000A9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AB00000000000000000000C8 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -119,7 +173,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AB00000000000000000000C6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AB00000000000000000000C4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AB00000000000000000000A5 /* RollnWrite */;
+			targetProxy = AB00000000000000000000C5 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		AB00000000000000000000B3 /* Debug */ = {
@@ -305,6 +374,44 @@
 			};
 			name = Release;
 		};
+		AB00000000000000000000D1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 794HF2GP3T;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bo3.RollnWriteTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RollnWrite.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/RollnWrite";
+			};
+			name = Debug;
+		};
+		AB00000000000000000000D2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 794HF2GP3T;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.bo3.RollnWriteTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RollnWrite.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/RollnWrite";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -322,6 +429,15 @@
 			buildConfigurations = (
 				AB00000000000000000000B5 /* Debug */,
 				AB00000000000000000000B6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AB00000000000000000000D3 /* Build configuration list for PBXNativeTarget "RollnWriteTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AB00000000000000000000D1 /* Debug */,
+				AB00000000000000000000D2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

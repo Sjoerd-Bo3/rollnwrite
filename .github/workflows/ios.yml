@@ -1,16 +1,19 @@
 name: 3. iOS Build
 
-# Compile-only check on a macOS runner (no signing). MANUAL ONLY — to conserve
-# Actions minutes it no longer runs on every push/PR; trigger it from the
-# Actions tab when you want a standalone compile verification. (Pushing to main
-# already compiles via the TestFlight archive.)
+# Compile + unit-test check on a macOS runner (no signing). MANUAL ONLY — to
+# conserve Actions minutes it no longer runs on every push/PR; trigger it from
+# the Actions tab when you want a standalone compile/test verification.
+# (Pushing to main already compiles via the TestFlight archive.) Runs the
+# RollnWriteTests target, whose QwixxFixtureTests replays every fixture under
+# spec/fixtures/ against the real QwixxGame engine — this is also the iOS half
+# of the cross-platform fixture/parity check described in spec/README.md.
 
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    name: Build (iOS Simulator)
+    name: Test (iOS Simulator)
     runs-on: macos-15
     steps:
       - name: Checkout
@@ -24,12 +27,26 @@ jobs:
       - name: Xcode version
         run: xcodebuild -version
 
-      - name: Build for iOS Simulator
+      - name: Test on iOS Simulator
+        # Resolve a simulator at runtime instead of hardcoding a device name:
+        # 'OS=latest' resolves to the newest INSTALLED runtime, which may not
+        # be paired with a given device family on future Xcode images (e.g.
+        # iPhone 16 Pro Max only ships with an iOS 18 runtime once the image's
+        # latest runtime is iOS 26) — xcodebuild then exits 70 with "Unable to
+        # find a device matching the provided destination specifier".
         run: |
           set -o pipefail
-          xcodebuild clean build \
+          DEVICE_ID=$(xcrun simctl list devices available --json \
+            | jq -r '[.devices[][] | select(.isAvailable and (.name|startswith("iPhone")))][0].udid')
+          if [ -z "$DEVICE_ID" ] || [ "$DEVICE_ID" = "null" ]; then
+            echo "No available iPhone simulator found" >&2
+            xcrun simctl list devices available >&2
+            exit 1
+          fi
+          echo "Using simulator: $DEVICE_ID"
+          xcodebuild test \
             -project RollnWrite.xcodeproj \
             -scheme RollnWrite \
-            -destination 'generic/platform=iOS Simulator' \
+            -destination "platform=iOS Simulator,id=$DEVICE_ID" \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
