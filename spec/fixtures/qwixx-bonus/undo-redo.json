@@ -1,0 +1,91 @@
+{
+  "game": "qwixx",
+  "variant": "bonus",
+  "config": { "scoringCap": 12 },
+  "name": "undo-redo",
+  "description": "Undo is strictly LIFO and exact (including un-locking a just-locked row and un-earning/un-forfeiting its bar effects), redo re-applies through the normal mutators, and any fresh move clears the redo stack.",
+  "steps": [
+    { "do": "undo", "expect": false, "note": "empty history refuses undo" },
+    { "assert": { "canUndo": false, "canRedo": false } },
+    { "do": "markColor", "color": "red", "index": 0, "expect": true, "note": "value 2, not boxed" },
+    { "do": "markColor", "color": "red", "index": 1, "expect": true, "note": "value 3, boxed -> earns bar field 0" },
+    { "do": "markColor", "color": "red", "index": 2, "expect": true, "note": "value 4, not boxed" },
+    { "do": "markColor", "color": "red", "index": 3, "expect": true, "note": "value 5, not boxed" },
+    { "do": "markColor", "color": "red", "index": 4, "expect": true, "note": "value 6, boxed -> earns bar field 1 (next earnable after 0)" },
+    { "do": "markColor", "color": "red", "index": 10, "expect": true, "note": "locks red; forfeits red's remaining bar fields 5 and 8" },
+    { "assert": {
+        "rowLocked": { "red": true },
+        "lockedRowCount": 1,
+        "crosses": { "red": 7 },
+        "points": { "red": 28 },
+        "canUndo": true,
+        "canRedo": false,
+        "barEarned": [0, 1],
+        "barForfeited": [5, 8]
+    } },
+    { "do": "undo", "expect": true, "note": "undo un-locks the just-locked row and un-forfeits its bar fields" },
+    { "assert": {
+        "rowLocked": { "red": false },
+        "lockedRowCount": 0,
+        "crosses": { "red": 5 },
+        "points": { "red": 15 },
+        "canUndo": true,
+        "canRedo": true,
+        "barEarned": [0, 1],
+        "barForfeited": []
+    } },
+    { "do": "redo", "expect": true, "note": "redo re-applies the lock exactly, including the bar forfeiture" },
+    { "assert": {
+        "rowLocked": { "red": true },
+        "lockedRowCount": 1,
+        "crosses": { "red": 7 },
+        "points": { "red": 28 },
+        "totalScore": 28,
+        "canUndo": true,
+        "canRedo": false,
+        "barEarned": [0, 1],
+        "barForfeited": [5, 8]
+    } },
+    { "do": "undo", "expect": true, "note": "un-lock again to set up the redo-clearing case" },
+    { "assert": { "canRedo": true, "barForfeited": [] } },
+    { "do": "markColor", "color": "yellow", "index": 0, "expect": true, "note": "a fresh move clears the redo stack; value 2, not boxed" },
+    { "assert": { "canRedo": false } },
+    { "do": "redo", "expect": false, "note": "nothing to redo - refused, state unchanged" },
+    { "assert": {
+        "crosses": { "red": 5, "yellow": 1 },
+        "points": { "red": 15, "yellow": 1 },
+        "totalScore": 16,
+        "rowLocked": { "red": false },
+        "barEarned": [0, 1]
+    } },
+    { "do": "undo", "expect": true, "note": "LIFO: removes the yellow mark, not an older red one" },
+    { "assert": {
+        "crosses": { "red": 5, "yellow": 0 },
+        "totalScore": 15
+    } },
+    { "do": "undo", "expect": true, "note": "removes red index 4, un-earning bar field 1" },
+    { "assert": {
+        "crosses": { "red": 4 },
+        "points": { "red": 10 },
+        "totalScore": 10,
+        "canUndo": true,
+        "canRedo": true,
+        "barEarned": [0],
+        "barForfeited": []
+    } },
+    { "do": "penalty", "expect": true, "note": "penalties join the same history and clear redo" },
+    { "assert": {
+        "penalties": 1,
+        "totalScore": 5,
+        "canRedo": false
+    } },
+    { "do": "undo", "expect": true, "note": "undoing a penalty restores the 5 points" },
+    { "assert": {
+        "penalties": 0,
+        "penaltyPoints": 0,
+        "totalScore": 10,
+        "canRedo": true,
+        "barEarned": [0]
+    } }
+  ]
+}

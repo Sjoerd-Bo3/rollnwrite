@@ -3,6 +3,7 @@ package dev.bo3.rollnwrite.catalogue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.outlined.Casino
 import androidx.compose.runtime.Composable
@@ -15,6 +16,7 @@ import dev.bo3.rollnwrite.qwixx.QwixxRulesVariant
 import dev.bo3.rollnwrite.qwixx.QwixxScorecardScreen
 import dev.bo3.rollnwrite.qwixx.qwixxBigPointsViewModels
 import dev.bo3.rollnwrite.qwixx.qwixxClassicViewModels
+import dev.bo3.rollnwrite.bonus.BonusScorecardScreen
 import dev.bo3.rollnwrite.qwixxdouble.DoubleScorecardScreen
 import dev.bo3.rollnwrite.xchange.XChangeScorecardScreen
 
@@ -107,6 +109,16 @@ object GameRegistry {
             icon = Icons.Filled.Close,
             family = "Qwixx",
             makeScreen = { onBack -> DoubleScorecardScreen(onBack = onBack) },
+        ),
+        GameDefinition(
+            id = "qwixx-bonus",
+            title = { stringResource(R.string.qwixx_bonus_title) },
+            subtitle = { stringResource(R.string.qwixx_bonus_subtitle) },
+            // Matches QwixxBonusGame.swift's orange accent; boxed-grid icon.
+            accent = Color(red = 0.93f, green = 0.45f, blue = 0.13f),
+            icon = Icons.Filled.GridOn,
+            family = "Qwixx",
+            makeScreen = { onBack -> BonusScorecardScreen(onBack = onBack) },
         ),
     )
 

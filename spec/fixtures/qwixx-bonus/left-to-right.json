@@ -1,0 +1,141 @@
+{
+  "game": "qwixx",
+  "variant": "bonus",
+  "config": {
+    "scoringCap": 12
+  },
+  "name": "left-to-right",
+  "description": "Marks must move strictly rightward (identical to classic Qwixx); skipped cells forfeit forever; landing on a boxed index still earns the bar even when reached by skipping ahead.",
+  "steps": [
+    {
+      "do": "markColor",
+      "color": "red",
+      "index": 3,
+      "expect": true,
+      "note": "value 5, not boxed for red"
+    },
+    {
+      "do": "markColor",
+      "color": "red",
+      "index": 3,
+      "expect": false,
+      "note": "re-marking the same cell"
+    },
+    {
+      "do": "markColor",
+      "color": "red",
+      "index": 1,
+      "expect": false,
+      "note": "left of the existing mark"
+    },
+    {
+      "do": "markColor",
+      "color": "red",
+      "index": 0,
+      "expect": false
+    },
+    {
+      "assert": {
+        "barEarnedCount": 0
+      }
+    },
+    {
+      "do": "markColor",
+      "color": "red",
+      "index": 7,
+      "expect": true,
+      "note": "skips indices 4-6; value 9 IS boxed for red"
+    },
+    {
+      "assert": {
+        "crosses": {
+          "red": 2
+        },
+        "points": {
+          "red": 3
+        },
+        "barEarnedCount": 1,
+        "barEarned": [
+          0
+        ]
+      },
+      "note": "boxed cell earns bar field 0 even though reached by skipping ahead"
+    },
+    {
+      "do": "markColor",
+      "color": "red",
+      "index": 5,
+      "expect": false,
+      "note": "skipped cell stays forfeited"
+    },
+    {
+      "do": "markColor",
+      "color": "red",
+      "index": 6,
+      "expect": false
+    },
+    {
+      "do": "markColor",
+      "color": "red",
+      "index": 8,
+      "expect": true,
+      "note": "value 10, not boxed; moving rightward is still legal"
+    },
+    {
+      "assert": {
+        "crosses": {
+          "red": 3
+        },
+        "points": {
+          "red": 6
+        },
+        "barEarnedCount": 1
+      }
+    },
+    {
+      "do": "markColor",
+      "color": "green",
+      "index": 2,
+      "expect": true,
+      "note": "green descends 12..2 but indices are positions; value 10, not boxed"
+    },
+    {
+      "do": "markColor",
+      "color": "green",
+      "index": 0,
+      "expect": false,
+      "note": "index 0 (number 12) is LEFT of index 2 (number 10)"
+    },
+    {
+      "do": "markColor",
+      "color": "green",
+      "index": 1,
+      "expect": false
+    },
+    {
+      "do": "markColor",
+      "color": "green",
+      "index": 4,
+      "expect": true,
+      "note": "value 8, not boxed for green"
+    },
+    {
+      "assert": {
+        "crosses": {
+          "red": 3,
+          "green": 2
+        },
+        "points": {
+          "red": 6,
+          "green": 3
+        },
+        "totalScore": 9,
+        "isGameOver": false,
+        "barEarnedCount": 1,
+        "barEarned": [
+          0
+        ]
+      }
+    }
+  ]
+}
