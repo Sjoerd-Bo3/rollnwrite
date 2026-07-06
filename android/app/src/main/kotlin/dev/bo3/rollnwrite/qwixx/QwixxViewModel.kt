@@ -196,10 +196,16 @@ class QwixxViewModel(
         private const val PREFS_NAME = "rollnwrite"
 
         /** Mirrors the iOS persistence key (`QwixxGame.swift`'s default). */
-        const val DEFAULT_KEY_PLAYER_ONE = "rollnwrite.qwixx.bigpoints.state"
+        const val KEY_BIG_POINTS_PLAYER_ONE = "rollnwrite.qwixx.bigpoints.state"
 
-        /** Player 2's independent board (two-player mirrored mode). */
-        const val DEFAULT_KEY_PLAYER_TWO = "$DEFAULT_KEY_PLAYER_ONE.p2"
+        /** Player 2's independent board (two-player mirrored mode) — mirrors iOS's "rollnwrite.qwixx.bigpoints.p2.state". */
+        const val KEY_BIG_POINTS_PLAYER_TWO = "rollnwrite.qwixx.bigpoints.p2.state"
+
+        /** Mirrors the iOS classic-Qwixx persistence key (`QwixxClassicScorecardView`'s construction). */
+        const val KEY_CLASSIC_PLAYER_ONE = "rollnwrite.qwixx.classic.state"
+
+        /** Player 2's independent classic board (two-player mirrored mode) — mirrors iOS's ".p2.state" sibling. */
+        const val KEY_CLASSIC_PLAYER_TWO = "rollnwrite.qwixx.classic.p2.state"
 
         private val json = Json {
             ignoreUnknownKeys = true

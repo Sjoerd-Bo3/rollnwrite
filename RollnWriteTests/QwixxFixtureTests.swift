@@ -121,16 +121,23 @@ final class QwixxFixtureTests: XCTestCase {
             .appendingPathComponent("spec/fixtures")
     }
 
-    private static func allFixtureFiles() -> [URL] {
-        guard let enumerator = FileManager.default.enumerator(
-            at: fixturesRoot,
-            includingPropertiesForKeys: [.isRegularFileKey],
-            options: [.skipsHiddenFiles]
-        ) else { return [] }
+    /// Only the BASE Qwixx directories: each Qwixx variant defines its own
+    /// action vocabulary with its own runner file — this runner must not
+    /// try to replay those.
+    private static let baseQwixxDirs = ["qwixx-big-points", "qwixx-classic"]
 
-        return enumerator.compactMap { $0 as? URL }
-            .filter { $0.pathExtension == "json" }
-            .sorted { $0.path < $1.path }
+    private static func allFixtureFiles() -> [URL] {
+        baseQwixxDirs.flatMap { sub -> [URL] in
+            let dir = fixturesRoot.appendingPathComponent(sub)
+            guard let enumerator = FileManager.default.enumerator(
+                at: dir,
+                includingPropertiesForKeys: [.isRegularFileKey],
+                options: [.skipsHiddenFiles]
+            ) else { return [] }
+            return enumerator.compactMap { $0 as? URL }
+                .filter { $0.pathExtension == "json" }
+        }
+        .sorted { $0.path < $1.path }
     }
 
     func testAllGoldenFixtures() throws {

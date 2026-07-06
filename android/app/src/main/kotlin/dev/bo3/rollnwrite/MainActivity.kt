@@ -5,26 +5,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import dev.bo3.rollnwrite.qwixx.QwixxScorecardScreen
+import dev.bo3.rollnwrite.catalogue.CatalogueScreen
+import dev.bo3.rollnwrite.catalogue.GameRegistry
+import dev.bo3.rollnwrite.catalogue.SettingsScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,26 +43,16 @@ class MainActivity : ComponentActivity() {
 
 /**
  * Simple state-based navigation (no navigation dependency): the catalogue
- * shows a card per game; tapping it swaps to that game's scorecard screen.
- * System back returns to the catalogue. Mirrors iOS `RootView`'s role as the
- * game catalogue, ahead of a `GameDefinition`/registry equivalent landing on
- * this platform.
+ * shows a row per [GameRegistry] entry; tapping it swaps to that game's
+ * scorecard screen. System back returns to the catalogue. Mirrors iOS
+ * `RootView`'s role as the game catalogue.
+ *
+ * Represented as a plain string rather than a sealed class so it survives
+ * `rememberSaveable` with no custom `Saver`: `"catalogue"`, `"settings"`, or
+ * a game id (looked up in [GameRegistry]).
  */
-private enum class Screen {
-    Catalogue,
-    QwixxBigPoints,
-}
-
-/**
- * Maps a smoke-test game id to its `Screen`. A `when` over a small set of
- * known ids — the same OCP seam as iOS's `GameRegistry.playable.first {
- * $0.id == id }` lookup: adding a game means extending this `when`, not
- * touching the caller. Unknown/missing ids fall through to the catalogue.
- */
-private fun screenForSmokeTestGame(id: String?): Screen? = when (id) {
-    "qwixx-big-points" -> Screen.QwixxBigPoints
-    else -> null
-}
+private const val SCREEN_CATALOGUE = "catalogue"
+private const val SCREEN_SETTINGS = "settings"
 
 @Composable
 private fun RootScreen(smokeTestGame: String? = null) {
@@ -82,53 +62,37 @@ private fun RootScreen(smokeTestGame: String? = null) {
     // would reset navigation back to the catalogue mid-game. The smoke-test
     // destination (if any) only seeds the initial value — it must not
     // re-trigger navigation on every recomposition/config change.
-    var screen by rememberSaveable {
-        mutableStateOf(screenForSmokeTestGame(smokeTestGame) ?: Screen.Catalogue)
+    var screen: String by rememberSaveable {
+        val initial = smokeTestGame?.takeIf { id -> GameRegistry.find(id) != null } ?: SCREEN_CATALOGUE
+        mutableStateOf(initial)
     }
 
-    BackHandler(enabled = screen != Screen.Catalogue) {
-        screen = Screen.Catalogue
+    BackHandler(enabled = screen != SCREEN_CATALOGUE) {
+        screen = SCREEN_CATALOGUE
     }
 
     when (screen) {
-        Screen.Catalogue -> CatalogueScreen(onOpenQwixxBigPoints = { screen = Screen.QwixxBigPoints })
-        Screen.QwixxBigPoints -> QwixxScorecardScreen(onBack = { screen = Screen.Catalogue })
-    }
-}
-
-@Composable
-private fun CatalogueScreen(onOpenQwixxBigPoints: () -> Unit) {
-    Scaffold { innerPadding ->
-        Surface(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-            Column(
-                modifier = Modifier.fillMaxSize().padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
-            ) {
-                Text(
-                    text = stringResource(R.string.catalogue_title),
-                    style = MaterialTheme.typography.headlineLarge,
+        SCREEN_CATALOGUE -> CatalogueScreen(
+            onOpenGame = { id -> screen = id },
+            onOpenSettings = { screen = SCREEN_SETTINGS },
+        )
+        SCREEN_SETTINGS -> SettingsScreen(onBack = { screen = SCREEN_CATALOGUE })
+        else -> {
+            val game = GameRegistry.find(screen)
+            if (game != null) {
+                game.makeScreen { screen = SCREEN_CATALOGUE }
+            } else {
+                // Unknown/stale id (e.g. a removed game restored from a saved
+                // instance state) — fall back to the catalogue rather than crash.
+                // Render the catalogue for this frame and defer the state
+                // write to a SideEffect so this stays a forward write (state
+                // written after composition, not read-then-written within
+                // it) — avoids a Compose "backward write" on the stale-id path.
+                SideEffect { screen = SCREEN_CATALOGUE }
+                CatalogueScreen(
+                    onOpenGame = { id -> screen = id },
+                    onOpenSettings = { screen = SCREEN_SETTINGS },
                 )
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    onClick = onOpenQwixxBigPoints,
-                ) {
-                    Column(
-                        modifier = Modifier.padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.qwixx_big_points_title),
-                            style = MaterialTheme.typography.titleMedium,
-                        )
-                        Text(
-                            text = stringResource(R.string.qwixx_big_points_subtitle),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    }
-                }
             }
         }
     }

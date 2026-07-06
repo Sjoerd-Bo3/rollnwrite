@@ -37,6 +37,8 @@ on:
       # match, so mixed app+test pushes still build.
       - "RollnWriteTests/**"
       - ".github/workflows/android.yml"
+      - ".github/workflows/android-release.yml"
+      - ".github/workflows/android_smoke.yml"
 
 # A newer push supersedes an in-flight upload, so cancel the older run.
 concurrency:

@@ -89,10 +89,19 @@ class FixtureFormatTest {
         return dir
     }
 
+    /**
+     * Only the BASE Qwixx directories: each Qwixx variant defines its own
+     * action vocabulary (documented in its `spec/fixtures/<id>/` directory)
+     * with its own format test — this test must not reject those.
+     */
+    private val baseQwixxDirs = listOf("qwixx-big-points", "qwixx-classic")
+
     private fun fixtureFiles(dir: File): List<File> {
-        val files = dir.walkTopDown().filter { it.isFile && it.extension == "json" }.toList()
+        val files = baseQwixxDirs
+            .map { dir.resolve(it) }
+            .flatMap { sub -> sub.walkTopDown().filter { it.isFile && it.extension == "json" }.toList() }
         assertTrue(files.isNotEmpty()) {
-            "fixtures.dir '${dir.absolutePath}' contains no *.json fixtures"
+            "fixtures.dir '${dir.absolutePath}' contains no *.json fixtures in $baseQwixxDirs"
         }
         return files.sortedBy { it.path }
     }
