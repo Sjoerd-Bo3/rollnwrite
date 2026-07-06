@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Per-variant strings for Qwixx Connect15 — kept OUT of the shared strings.xml
+  to avoid merge conflicts with parallel variant ports. Shared chrome
+  strings (back/undo/redo/rules/colour names/etc.) and rules sections that
+  are identical to classic Qwixx (goal/card/crossing/locking/penalties
+  headings) are reused from strings.xml — see Connect15RulesDialog.kt.
+-->
+<resources>
+    <!-- Catalogue -->
+    <string name="qwixx_connect15_title">Qwixx Connect15</string>
+    <string name="qwixx_connect15_subtitle">Classic rows · connection fields → 15</string>
+
+    <!-- Board content -->
+    <string name="connect15_connection_content_description">%1$s connection field %2$d</string>
+
+    <!-- Rules dialog -->
+    <string name="connect15_rules_title">Qwixx — Connect 15</string>
+    <string name="connect15_rules_subtitle">Official rules for the Connect 15 anniversary variant</string>
+    <string name="connect15_rules_body_goal">Play classic Qwixx, but every colour row now carries three extra connection fields. Filling them lets a row reach 15 crosses worth 120 points — hence “Connect 15”.</string>
+    <string name="connect15_rules_body_card_2">Each row carries three small connection squares sitting between specific numbers: red between 3–4, 6–7 and 10–11; yellow between 5–6, 7–8 and 9–10; green between 10–9, 6–5 and 4–3; blue between 11–10, 8–7 and 5–4. They carry no number.</string>
+    <string name="connect15_rules_body_crossing_1">Numbers and connection fields form one left-to-right sequence per row: every new cross must sit to the right of everything already crossed in that row. Skipped spaces — numbers and connection fields alike — can never be crossed later.</string>
+    <string name="connect15_rules_body_crossing_1b">So crossing a number to the right of an empty connection field forfeits that field.</string>
+    <string name="connect15_rules_heading_connections">Connection fields</string>
+    <string name="connect15_rules_body_connections_1">Whenever the dice show a 1 and a 5 (in any colour), every player may cross a connection field of one of their rows.</string>
+    <string name="connect15_rules_body_connections_2">Which row: a colour die + a white die showing 1 and 5 → that colour’s row; two colour dice → either of those two colours; two white dice → any row.</string>
+    <string name="connect15_rules_body_connections_3">The field crossed must lie to the right of the row’s right-most cross; crossing it forfeits every empty number and field to its left. Locking (or conceding) a row closes its remaining connection fields.</string>
+    <string name="connect15_rules_body_locking_1">To cross the right-most number (12 for red/yellow, 2 for green/blue) you must already have at least 5 crossed numbers in that row — connection fields don’t count toward the five.</string>
+    <string name="connect15_rules_body_scoring_1">Per colour, count its crosses — its numbers, the lock, and every crossed connection field (max 15) — and score 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105, 120.</string>
+    <string name="connect15_rules_body_scoring_2">Total = red + yellow + green + blue − (5 × penalties).</string>
+    <string name="connect15_rules_source">Qwixx 15 (Connect 15 variant) by White Goblin Games / Nürnberger-Spielkarten-Verlag (NSV); official scorecard.</string>
+</resources>
