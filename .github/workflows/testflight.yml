@@ -26,10 +26,16 @@ on:
       - "docs/**"
       - "LICENSE"
       - "android/**"
-      # spec/** is Android-only today. Once an iOS fixture runner exists,
-      # remove this entry (or add an iOS test job on spec/**) so fixture
-      # changes still get an iOS compile/test check.
+      # spec/** stays ignored here: the iOS fixture runner (RollnWriteTests /
+      # QwixxFixtureTests) exists now, but it runs via `xcodebuild test`
+      # locally and via manual workflow "3. iOS Build" — not here, since this
+      # workflow never runs tests (build+upload only). A fixture-only change
+      # still gets its iOS check through workflow 3.
       - "spec/**"
+      # Test-only changes cannot affect the shipped app (the test target has
+      # buildForArchiving=NO); paths-ignore only skips when ALL changed files
+      # match, so mixed app+test pushes still build.
+      - "RollnWriteTests/**"
       - ".github/workflows/android.yml"
 
 # A newer push supersedes an in-flight upload, so cancel the older run.
