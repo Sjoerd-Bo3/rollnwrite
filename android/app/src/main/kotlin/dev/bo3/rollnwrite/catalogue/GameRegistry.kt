@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.GridOn
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.outlined.Casino
@@ -18,6 +19,7 @@ import dev.bo3.rollnwrite.qwixx.QwixxScorecardScreen
 import dev.bo3.rollnwrite.qwixx.qwixxBigPointsViewModels
 import dev.bo3.rollnwrite.qwixx.qwixxClassicViewModels
 import dev.bo3.rollnwrite.bonus.BonusScorecardScreen
+import dev.bo3.rollnwrite.connected.ConnectedScorecardScreen
 import dev.bo3.rollnwrite.mixx.MixxScorecardScreen
 import dev.bo3.rollnwrite.qwixxdouble.DoubleScorecardScreen
 import dev.bo3.rollnwrite.xchange.XChangeScorecardScreen
@@ -91,6 +93,16 @@ object GameRegistry {
             icon = Icons.Filled.Casino,
             family = "Qwixx",
             makeScreen = { onBack -> Lucky15ScorecardScreen(onBack = onBack) },
+        ),
+        GameDefinition(
+            id = "qwixx-connected",
+            title = { stringResource(R.string.qwixx_connected_title) },
+            subtitle = { stringResource(R.string.qwixx_connected_subtitle) },
+            // Mirrors iOS QwixxConnectedGame's accent (Color(red: 0.20, green: 0.55, blue: 0.85)) and link icon.
+            accent = Color(red = 0.20f, green = 0.55f, blue = 0.85f),
+            icon = Icons.Filled.Link,
+            family = "Qwixx",
+            makeScreen = { onBack -> ConnectedScorecardScreen(onBack = onBack) },
         ),
         GameDefinition(
             id = "qwixx-xchange",
