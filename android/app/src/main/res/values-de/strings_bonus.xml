@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Catalogue -->
+    <string name="qwixx_bonus_title">Qwixx Bonus</string>
+    <string name="qwixx_bonus_subtitle">Klassische Reihen · Kastenzahlen füllen eine Bonusleiste</string>
+
+    <!-- Board content -->
+    <string name="bonus_bar_field_content_description">Bonusleiste %1$s</string>
+    <string name="bonus_bar_field_state_earned">angekreuzt</string>
+    <string name="bonus_bar_field_state_forfeited">verfallen</string>
+    <string name="bonus_bar_field_state_open">offen</string>
+
+    <!-- Rules dialog -->
+    <string name="rules_title_bonus">Qwixx — Bonus (Version A)</string>
+    <string name="rules_subtitle_bonus">Offizielle Regeln für die Qwixx-Bonus-Erweiterung, Version A</string>
+
+    <string name="rules_heading_bonus_goal">Ziel</string>
+    <string name="rules_body_bonus_goal">Spiele klassisches Qwixx, aber zwölf besondere Zahlen (in einem schwarzen Kasten gedruckt) füllen eine Bonusleiste, die dir kostenlose Extrakreuze verschafft.</string>
+
+    <string name="rules_heading_bonus_card">Der Zettel</string>
+    <string name="rules_body_bonus_card_1">Die rote und gelbe Reihe laufen 2 → 12 (von links nach rechts). Die grüne und blaue Reihe laufen 12 → 2.</string>
+    <string name="rules_body_bonus_card_2">Drei Zahlen in jeder Farbreihe stehen in einem schwarzen Kasten — zwölf Kastenzahlen insgesamt.</string>
+    <string name="rules_body_bonus_card_3">Unter den Reihen liegt die Bonusleiste: eine Kette aus zwölf farbigen Feldern, von links nach rechts.</string>
+
+    <string name="rules_heading_bonus_crossing">Zahlen ankreuzen</string>
+    <string name="rules_body_bonus_crossing_1">In jeder Reihe musst du von links nach rechts ankreuzen. Du darfst Zahlen überspringen, übersprungene Zahlen können aber später nie mehr angekreuzt werden.</string>
+    <string name="rules_body_bonus_crossing_2">In einem Zug darf die Summe der weißen Würfel in einer Reihe angekreuzt werden; der aktive Spieler darf zudem einen weißen Würfel zu einem Farbwürfel addieren und diese Farbe ankreuzen.</string>
+
+    <string name="rules_heading_bonus_bar">Kastenzahlen &amp; die Bonusleiste</string>
+    <string name="rules_body_bonus_bar_1">Immer wenn du eine Kastenzahl ankreuzt, kreuze sofort das am weitesten links liegende noch freie Feld der Bonusleiste an.</string>
+    <string name="rules_body_bonus_bar_2">Die Bonusleiste wird von links nach rechts angekreuzt, immer auf dem am weitesten links liegenden Feld, das weder angekreuzt noch verfallen ist — verfallene Felder werden einfach übersprungen.</string>
+    <string name="rules_body_bonus_bar_3">Das gerade angekreuzte Feld zeigt eine Farbe. Du machst sofort ein zusätzliches Kreuz in dieser Farbreihe — die nächste zulässige (am weitesten links liegende freie) Zahl darin.</string>
+    <string name="rules_body_bonus_bar_4">Fällt dieses kostenlose Extrakreuz auf eine weitere Kastenzahl, rückt die Bonusleiste erneut vor, sodass Ketten entstehen können. Du darfst ein Extrakreuz nicht ablehnen.</string>
+
+    <string name="rules_heading_bonus_forfeit">Abgeschlossene Farben lassen Leistenfelder verfallen</string>
+    <string name="rules_body_bonus_forfeit_1">Sobald eine Farbe im Spielverlauf abgeschlossen ist, streichen alle Spieler sofort die verbleibenden Felder dieser Farbe auf der Bonusleiste. Diese Felder zählen nicht mehr — sie sind verfallen und werden von da an einfach übersprungen.</string>
+    <string name="rules_body_bonus_forfeit_2">Das gilt unabhängig davon, ob du die Reihe selbst geschlossen hast oder ein anderer Spieler.</string>
+    <string name="rules_body_bonus_forfeit_3">Ein Feld in einer abgeschlossenen Reihe darf unter keinen Umständen mehr angekreuzt werden.</string>
+
+    <string name="rules_heading_bonus_locking">Eine Reihe schließen</string>
+    <string name="rules_body_bonus_locking_1">Um die äußerste rechte Zahl anzukreuzen (12 bei Rot/Gelb, 2 bei Grün/Blau), musst du bereits mindestens 5 Kreuze in dieser Reihe haben.</string>
+    <string name="rules_body_bonus_locking_2">Das Ankreuzen schließt die Reihe und zählt das Schloss als zusätzliches Kreuz.</string>
+
+    <string name="rules_heading_bonus_penalties">Strafen &amp; Spielende</string>
+    <string name="rules_body_bonus_penalties_1">Kreuzt du in deinem Zug nichts an, nimmst du eine Strafe (−5 Punkte). Vier Strafen beenden das Spiel.</string>
+    <string name="rules_body_bonus_penalties_2">Das Spiel endet auch, sobald zwei Reihen geschlossen sind.</string>
+
+    <string name="rules_heading_bonus_scoring">Wertung</string>
+    <string name="rules_body_bonus_scoring_1">Version A wertet genau wie klassisches Qwixx — die Bonusleiste bringt selbst keine Punkte, sie lässt dich nur schneller Reihen füllen.</string>
+    <string name="rules_body_bonus_scoring_2">Zähle je Farbe ihre Kreuze (eigene Zahlen + Schloss, max. 12) und werte 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78.</string>
+    <string name="rules_body_bonus_scoring_3">Gesamt = Rot + Gelb + Grün + Blau − (5 × Strafen).</string>
+
+    <string name="rules_source_bonus">Qwixx Bonus (Version A) von Nürnberger-Spielkarten-Verlag (NSV) / White Goblin Games; offizieller Spielzettel (Art. 4105).</string>
+</resources>

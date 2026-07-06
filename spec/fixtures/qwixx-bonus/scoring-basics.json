@@ -1,0 +1,118 @@
+{
+  "game": "qwixx",
+  "variant": "bonus",
+  "config": {
+    "scoringCap": 12
+  },
+  "name": "scoring-basics",
+  "description": "Crosses/points/totalScore behave exactly like classic Qwixx (triangular, cap 12) \u2014 the bonus bar awards no points of its own \u2014 and a boxed cross earns the bar's next field as a side effect.",
+  "steps": [
+    {
+      "assert": {
+        "points": {
+          "red": 0,
+          "yellow": 0,
+          "green": 0,
+          "blue": 0
+        },
+        "crosses": {
+          "red": 0,
+          "yellow": 0,
+          "green": 0,
+          "blue": 0
+        },
+        "totalScore": 0,
+        "barEarnedCount": 0,
+        "barEarned": []
+      }
+    },
+    {
+      "do": "markColor",
+      "color": "red",
+      "index": 0,
+      "expect": true,
+      "note": "value 2, not boxed"
+    },
+    {
+      "assert": {
+        "crosses": {
+          "red": 1
+        },
+        "points": {
+          "red": 1
+        },
+        "totalScore": 1,
+        "barEarnedCount": 0
+      }
+    },
+    {
+      "do": "markColor",
+      "color": "red",
+      "index": 1,
+      "expect": true,
+      "note": "value 3, boxed index 1 for red"
+    },
+    {
+      "assert": {
+        "crosses": {
+          "red": 2
+        },
+        "points": {
+          "red": 3
+        },
+        "totalScore": 3,
+        "barEarnedCount": 1,
+        "barEarned": [
+          0
+        ]
+      },
+      "note": "earns bar field 0 (red)"
+    },
+    {
+      "do": "markColor",
+      "color": "yellow",
+      "index": 0,
+      "expect": true,
+      "note": "value 2, not boxed"
+    },
+    {
+      "do": "markColor",
+      "color": "yellow",
+      "index": 1,
+      "expect": true,
+      "note": "value 3, not boxed for yellow"
+    },
+    {
+      "do": "markColor",
+      "color": "green",
+      "index": 0,
+      "expect": true,
+      "note": "value 12, not boxed"
+    },
+    {
+      "assert": {
+        "crosses": {
+          "red": 2,
+          "yellow": 2,
+          "green": 1,
+          "blue": 0
+        },
+        "points": {
+          "red": 3,
+          "yellow": 3,
+          "green": 1,
+          "blue": 0
+        },
+        "totalScore": 7,
+        "penalties": 0,
+        "penaltyPoints": 0,
+        "isGameOver": false,
+        "lockedRowCount": 0,
+        "barEarnedCount": 1,
+        "barEarned": [
+          0
+        ]
+      }
+    }
+  ]
+}

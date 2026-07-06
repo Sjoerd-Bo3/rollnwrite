@@ -36,9 +36,10 @@ import java.io.File
  *   "steps": [ ... ]
  * }
  * ```
- * `variant` is `"big-points"` (config: cap 15, bonus rows true) or
- * `"classic"` (config: cap 12, bonus rows false) — `config` MUST agree with
- * `variant`.
+ * `variant` is `"big-points"` (config: cap 15, bonus rows true), `"classic"`
+ * (config: cap 12, bonus rows false), or `"bonus"` (config: cap 12, NO
+ * `hasBonusRows` key — see `spec/README.md`'s "Qwixx Bonus (version A)
+ * fixture family") — `config` MUST agree with `variant`.
  *
  * A step is EITHER a "do" or an "assert":
  * ```json
@@ -53,8 +54,11 @@ import java.io.File
  *    "points":{"red":int,...}, "crosses":{"red":int,...}, "penalties":int,
  *    "penaltyPoints":int, "totalScore":int, "isGameOver":bool,
  *    "lockedRowCount":int, "rowLocked":{"red":bool,...},
- *    "canUndo":bool, "canRedo":bool }}
+ *    "canUndo":bool, "canRedo":bool,
+ *    "barEarned":[int,...], "barForfeited":[int,...], "barEarnedCount":int }}
  * ```
+ * The `bar*` assert keys are specific to the `"bonus"` variant (its bonus
+ * bar is derived, never marked directly — see `spec/README.md`).
  *
  * ## Runner semantics (normative, both platforms)
  *
@@ -74,10 +78,19 @@ class FixtureFormatTest {
 
     private val colors = setOf("red", "yellow", "green", "blue")
     private val bonusRows = setOf("redYellow", "greenBlue")
+
+    /** Variants with a `hasBonusRows` config key: cap plus that flag's expected value. */
     private val variantConfigs = mapOf(
         "big-points" to (15 to true),
         "classic" to (12 to false),
     )
+
+    /**
+     * The `"bonus"` variant (Qwixx Bonus, version A) has NO `hasBonusRows`
+     * key at all — it has no two-colour bonus rows, only the bar — so it is
+     * validated separately rather than folded into [variantConfigs].
+     */
+    private val bonusVariantScoringCap = 12
 
     private fun fixturesDir(): File {
         val path = System.getProperty("fixtures.dir")
@@ -132,19 +145,30 @@ class FixtureFormatTest {
         require(game, "game", "qwixx", label)
 
         val variant = root.stringField("variant", label)
-        val variantBounds = variantConfigs[variant]
-            ?: fail<Nothing>("$label: variant '$variant' must be one of ${variantConfigs.keys}")
-
         val config = root["config"]?.jsonObject
             ?: fail<Nothing>("$label: missing 'config' object")
-        val scoringCap = config.intField("scoringCap", label)
-        val hasBonusRows = config.boolField("hasBonusRows", label)
-        val (expectedCap, expectedBonus) = variantBounds
-        assertTrue(scoringCap == expectedCap) {
-            "$label: config.scoringCap=$scoringCap inconsistent with variant '$variant' (expected $expectedCap)"
-        }
-        assertTrue(hasBonusRows == expectedBonus) {
-            "$label: config.hasBonusRows=$hasBonusRows inconsistent with variant '$variant' (expected $expectedBonus)"
+
+        val isBonusVariant = variant == "bonus"
+        if (isBonusVariant) {
+            val scoringCap = config.intField("scoringCap", label)
+            assertTrue(scoringCap == bonusVariantScoringCap) {
+                "$label: config.scoringCap=$scoringCap inconsistent with variant 'bonus' (expected $bonusVariantScoringCap)"
+            }
+            assertTrue("hasBonusRows" !in config) {
+                "$label: variant 'bonus' has no two-colour bonus rows — config must NOT carry 'hasBonusRows'"
+            }
+        } else {
+            val variantBounds = variantConfigs[variant]
+                ?: fail<Nothing>("$label: variant '$variant' must be one of ${variantConfigs.keys + "bonus"}")
+            val scoringCap = config.intField("scoringCap", label)
+            val hasBonusRows = config.boolField("hasBonusRows", label)
+            val (expectedCap, expectedBonus) = variantBounds
+            assertTrue(scoringCap == expectedCap) {
+                "$label: config.scoringCap=$scoringCap inconsistent with variant '$variant' (expected $expectedCap)"
+            }
+            assertTrue(hasBonusRows == expectedBonus) {
+                "$label: config.hasBonusRows=$hasBonusRows inconsistent with variant '$variant' (expected $expectedBonus)"
+            }
         }
 
         root.stringField("name", label)
@@ -159,10 +183,10 @@ class FixtureFormatTest {
             val step = stepElement.jsonObject
             val stepLabel = "$label: step[$index]"
             when {
-                "do" in step -> validateDoStep(step, stepLabel)
+                "do" in step -> validateDoStep(step, stepLabel, allowMarkBonus = !isBonusVariant)
                 "assert" in step -> {
                     hasAssert = true
-                    validateAssertStep(step, stepLabel)
+                    validateAssertStep(step, stepLabel, allowBarKeys = isBonusVariant)
                 }
                 else -> fail<Unit>("$stepLabel: must contain exactly one of 'do' or 'assert', found keys ${step.keys}")
             }
@@ -171,7 +195,7 @@ class FixtureFormatTest {
         assertTrue(hasAssert) { "$label: must contain at least one 'assert' step" }
     }
 
-    private fun validateDoStep(step: JsonObject, stepLabel: String) {
+    private fun validateDoStep(step: JsonObject, stepLabel: String, allowMarkBonus: Boolean = true) {
         val action = step.stringField("do", stepLabel)
         if ("expect" !in step) {
             fail<Unit>("$stepLabel: 'do':\"$action\" is missing required 'expect' boolean")
@@ -193,6 +217,10 @@ class FixtureFormatTest {
                 assertTrue(index in 0..10) { "$stepLabel: markColor index $index out of range 0..10" }
             }
             "markBonus" -> {
+                assertTrue(allowMarkBonus) {
+                    "$stepLabel: 'markBonus' is not part of the 'bonus' variant's vocabulary — its bar is " +
+                        "derived, never marked directly (spec/README.md)"
+                }
                 val row = step.stringField("row", stepLabel)
                 assertTrue(row in bonusRows) { "$stepLabel: markBonus row '$row' not in $bonusRows" }
                 val index = step.intField("index", stepLabel)
@@ -219,7 +247,7 @@ class FixtureFormatTest {
         }
     }
 
-    private fun validateAssertStep(step: JsonObject, stepLabel: String) {
+    private fun validateAssertStep(step: JsonObject, stepLabel: String, allowBarKeys: Boolean = false) {
         val assertion = step["assert"]?.jsonObject
             ?: fail<Nothing>("$stepLabel: 'assert' must be an object")
         // "note" is the one permitted sibling (optional, ignored by runners).
@@ -232,7 +260,7 @@ class FixtureFormatTest {
         val knownKeys = setOf(
             "points", "crosses", "penalties", "penaltyPoints", "totalScore",
             "isGameOver", "lockedRowCount", "rowLocked", "canUndo", "canRedo",
-        )
+        ) + if (allowBarKeys) setOf("barEarned", "barForfeited", "barEarnedCount") else emptySet()
         val extra = assertion.keys - knownKeys
         assertTrue(extra.isEmpty()) { "$stepLabel: unknown assert keys $extra" }
 
@@ -260,6 +288,19 @@ class FixtureFormatTest {
         }
         assertion["canRedo"]?.let {
             assertTrue(it.jsonPrimitive.booleanOrNull != null) { "$stepLabel.canRedo must be a bool" }
+        }
+        assertion["barEarned"]?.let { validateIndexArray(it, "$stepLabel.barEarned") }
+        assertion["barForfeited"]?.let { validateIndexArray(it, "$stepLabel.barForfeited") }
+        assertion["barEarnedCount"]?.let {
+            assertTrue(it.jsonPrimitive.intOrNull != null) { "$stepLabel.barEarnedCount must be an int" }
+        }
+    }
+
+    private fun validateIndexArray(element: JsonElement, label: String) {
+        val arr = element as? JsonArray ?: fail<Nothing>("$label must be an array")
+        arr.forEachIndexed { i, e ->
+            val v = e.jsonPrimitive.intOrNull ?: fail("$label[$i] must be an int")
+            assertTrue(v in 0..11) { "$label[$i]=$v out of range 0..11 (12 bar fields)" }
         }
     }
 

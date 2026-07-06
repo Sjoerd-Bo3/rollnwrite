@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Per-variant strings for Qwixx Bonus (version A). Kept in its own file
+  (rather than the shared strings.xml) so parallel variant ports never
+  merge-conflict on a shared resource file — see CLAUDE.md.
+-->
+<resources>
+    <!-- Catalogue -->
+    <string name="qwixx_bonus_title">Qwixx Bonus</string>
+    <string name="qwixx_bonus_subtitle">Classic rows · boxed numbers feed a bonus bar</string>
+
+    <!-- Board content -->
+    <string name="bonus_bar_field_content_description">Bonus bar %1$s</string>
+    <string name="bonus_bar_field_state_earned">crossed</string>
+    <string name="bonus_bar_field_state_forfeited">forfeited</string>
+    <string name="bonus_bar_field_state_open">open</string>
+
+    <!-- Rules dialog -->
+    <string name="rules_title_bonus">Qwixx — Bonus (Version A)</string>
+    <string name="rules_subtitle_bonus">Official rules for the Qwixx Bonus expansion, version A</string>
+
+    <string name="rules_heading_bonus_goal">Goal</string>
+    <string name="rules_body_bonus_goal">Play classic Qwixx, but twelve special numbers (printed inside a black box) feed a bonus bar that hands you free extra crosses.</string>
+
+    <string name="rules_heading_bonus_card">The card</string>
+    <string name="rules_body_bonus_card_1">Red and yellow rows run 2 → 12 (left to right). Green and blue rows run 12 → 2.</string>
+    <string name="rules_body_bonus_card_2">Three numbers in every colour row are printed inside a black box — twelve boxed numbers in all.</string>
+    <string name="rules_body_bonus_card_3">Below the rows sits the bonus bar: a left-to-right chain of twelve coloured fields.</string>
+
+    <string name="rules_heading_bonus_crossing">Crossing out numbers</string>
+    <string name="rules_body_bonus_crossing_1">Within every row you must cross out from left to right. You may skip numbers, but skipped numbers can never be crossed later.</string>
+    <string name="rules_body_bonus_crossing_2">On a turn the white dice total may be crossed in any one row; the active player may also add a white die to a colour die and cross that colour.</string>
+
+    <string name="rules_heading_bonus_bar">Boxed numbers &amp; the bonus bar</string>
+    <string name="rules_body_bonus_bar_1">Whenever you cross out a black-boxed number, immediately cross off the left-most still-free field of the bonus bar.</string>
+    <string name="rules_body_bonus_bar_2">The bonus bar is crossed left to right, always onto the left-most field that is neither crossed nor forfeited — forfeited fields are simply skipped.</string>
+    <string name="rules_body_bonus_bar_3">The field you just crossed shows a colour. You immediately make one extra cross in that colour row — the next legal (left-most free) number in it.</string>
+    <string name="rules_body_bonus_bar_4">If that free extra cross lands on another boxed number, it advances the bonus bar again, so chains can form. You may not decline an extra cross.</string>
+
+    <string name="rules_heading_bonus_forfeit">Completed colours forfeit bar fields</string>
+    <string name="rules_body_bonus_forfeit_1">Once a colour has been completed during the game, all players immediately cross out that colour\'s remaining fields in the bonus bar. Those fields no longer count — they are forfeited and are simply skipped from then on.</string>
+    <string name="rules_body_bonus_forfeit_2">This applies whether you locked the row yourself or another player did.</string>
+    <string name="rules_body_bonus_forfeit_3">Under no circumstances can a box in a completed row be marked with a cross any more.</string>
+
+    <string name="rules_heading_bonus_locking">Locking a row</string>
+    <string name="rules_body_bonus_locking_1">To cross the right-most number (12 for red/yellow, 2 for green/blue) you must already have at least 5 crosses in that row.</string>
+    <string name="rules_body_bonus_locking_2">Crossing it locks the row and adds the lock as one extra cross.</string>
+
+    <string name="rules_heading_bonus_penalties">Penalties &amp; game end</string>
+    <string name="rules_body_bonus_penalties_1">If on your turn you cross nothing, take a penalty (−5 points). Four penalties end the game.</string>
+    <string name="rules_body_bonus_penalties_2">The game also ends the moment two rows are locked.</string>
+
+    <string name="rules_heading_bonus_scoring">Scoring</string>
+    <string name="rules_body_bonus_scoring_1">Version A scores exactly like classic Qwixx — the bonus bar awards no points itself; it only lets you fill rows faster.</string>
+    <string name="rules_body_bonus_scoring_2">Per colour, count its crosses (its own numbers + the lock, max 12) and score 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78.</string>
+    <string name="rules_body_bonus_scoring_3">Total = red + yellow + green + blue − (5 × penalties).</string>
+
+    <string name="rules_source_bonus">Qwixx Bonus (version A) by Nürnberger-Spielkarten-Verlag (NSV) / White Goblin Games; official scorecard (art. 4105).</string>
+</resources>
