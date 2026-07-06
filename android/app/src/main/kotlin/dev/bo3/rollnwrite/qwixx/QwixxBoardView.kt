@@ -332,7 +332,11 @@ private fun BottomBar(
             enabled = !viewModel.isGameOver,
             action = onRequestFinish,
         )
-        Spacer(modifier = Modifier.widthIn(min = w * 0.1f))
+        // Flexible spacer (mirrors iOS's `Spacer(minLength: w * 0.1)`): grows to
+        // push the penalty boxes + Total to the trailing edge, never shrinking
+        // below the minimum. `widthIn(min=)` alone doesn't grow — it only sets a
+        // floor — so the bar stayed packed to the leading edge without `weight`.
+        Spacer(modifier = Modifier.weight(1f).widthIn(min = w * 0.1f))
         repeat(QwixxState.MAX_PENALTIES) { i ->
             val isNext = i == viewModel.penalties && viewModel.canAddPenalty()
             val undoable = i == viewModel.penalties - 1 && viewModel.isLastPenalty()

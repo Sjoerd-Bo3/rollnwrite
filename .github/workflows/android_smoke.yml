@@ -1,0 +1,143 @@
+name: 9. Android Smoke Test
+
+# Boots an Android Emulator on a Linux runner, screenshots the catalogue and
+# the playable game board, and uploads the shots as an artifact — the Android
+# twin of "6. Simulator Smoke Test". MANUAL ONLY (workflow_dispatch), mirroring
+# that workflow's manual trigger, though for a different reason: iOS is manual
+# because macOS runners bill at 10× Actions minutes; this one is manual
+# because booting a Linux KVM emulator is comparatively slow and noisy to run
+# on every push, even though ubuntu-latest itself bills at the cheap 1× rate
+# (see "7. Android Build" for the per-PR workflow that DOES run automatically).
+#
+# How it drives the app: the Debug build of MainActivity understands a
+# `smokeTestGame` intent string extra (see
+# android/app/src/main/kotlin/dev/bo3/rollnwrite/MainActivity.kt) and opens
+# that game's scorecard directly, so no UI scripting is needed — the exact
+# same trick as iOS's `-smokeTestGame <id>` launch argument. Today there is
+# only one playable game (`qwixx-big-points`); the `when` in MainActivity that
+# maps ids to screens is the OCP seam where new games get added, one line at a
+# time, same spirit as iOS deriving its id list from the sources.
+
+on:
+  workflow_dispatch:
+    inputs:
+      api-level:
+        description: "Emulator system-image API level"
+        required: false
+        default: "34"
+
+env:
+  PACKAGE: dev.bo3.rollnwrite
+  ACTIVITY: dev.bo3.rollnwrite/.MainActivity
+
+jobs:
+  smoke:
+    name: Screenshot catalogue and board
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle (caching)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew :app:assembleDebug --stacktrace
+
+      - name: Enable KVM group perms
+        # GitHub-hosted Linux runners ship /dev/kvm but the runner user can't
+        # open it; without this rule the action's `disable-linux-hw-accel:
+        # auto` detects the inaccessible device and boots the emulator with
+        # CPU acceleration off (software emulation), so the job still passes
+        # but crawls and may hit the 45 min cap. The udev rule makes the node
+        # world-accessible (MODE 0666) — the documented fix from the action
+        # README and GitHub's changelog.
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Screenshot catalogue and board
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ inputs.api-level }}
+          arch: x86_64
+          target: default
+          profile: pixel_7
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot
+          disable-animations: true
+          script: |
+            mkdir -p shots
+
+            adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+
+            # Demo mode gives a clean, deterministic status bar (fixed time,
+            # full battery/signal) — the Android equivalent of iOS's
+            # `simctl status_bar override`. Requires allowing demo mode first;
+            # both commands are no-ops (harmlessly) on API levels that ignore
+            # them.
+            adb shell settings put global sysui_demo_allowed 1
+            adb shell am broadcast -a com.android.systemui.demo -e command enter
+            adb shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 0941
+            adb shell am broadcast -a com.android.systemui.demo -e command battery -e plugged false -e level 100
+            adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4
+            adb shell am broadcast -a com.android.systemui.demo -e command network -e mobile show -e level 4 -e datatype none
+
+            # Cold start: the catalogue itself first.
+            adb shell am start -n "$ACTIVITY"
+            sleep 8
+            adb exec-out screencap -p > shots/00-catalogue.png
+
+            # The one playable game so far, id matching MainActivity's
+            # smoke-test `when`. Extend this list as MainActivity's `when`
+            # grows new ids (OCP, mirroring iOS's grep-derived id list).
+            #
+            # This whole loop MUST stay on one physical line: the emulator
+            # action (reactivecircus/android-emulator-runner) does not run
+            # `script:` as one shell script — it splits it into lines and
+            # execs EACH line as its own separate `sh -c` process, so shell
+            # state (loop variables, `for`/`do`/`done` blocks) cannot span
+            # lines. A multi-line `for` here would break the shell parser.
+            for id in qwixx-big-points; do adb shell am force-stop "$PACKAGE"; adb shell am start -n "$ACTIVITY" --es smokeTestGame "$id"; sleep 6; adb exec-out screencap -p > "shots/${id}.png"; done
+
+            adb shell am broadcast -a com.android.systemui.demo -e command exit
+            adb shell am force-stop "$PACKAGE"
+
+      - name: Upright landscape-locked boards
+        run: |
+          # Qwixx pins phones to landscape (see MainActivity/QwixxScorecardScreen's
+          # orientation lock), and `screencap` follows the physical framebuffer
+          # rather than the app's logical orientation — same caveat as iOS's
+          # `simctl io screenshot` on a landscape-locked board. Unlike iOS,
+          # `adb exec-out screencap` already returns the frame right-side up
+          # for a landscape-locked activity on these emulator images (verified
+          # against a local run); this step is a deliberate no-op placeholder
+          # so a future divergence is easy to fix in one place, with the same
+          # comment iOS carries rather than a silent rotate that could double-
+          # flip a shot if emulator behaviour ever changes.
+          command -v convert >/dev/null 2>&1 && echo "ImageMagick available if rotation is ever needed" || true
+
+      - name: Job summary
+        run: |
+          {
+            echo "## Android smoke test — $(ls shots | wc -l | tr -d ' ') screenshots"
+            echo ""
+            for f in shots/*.png; do echo "- $(basename "$f")"; done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-screenshots-${{ github.run_number }}
+          path: shots/
+          retention-days: 30
