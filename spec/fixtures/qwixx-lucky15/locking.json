@@ -1,0 +1,43 @@
+{
+  "game": "qwixx-lucky15",
+  "variant": "lucky15",
+  "config": {},
+  "name": "locking",
+  "description": "The right-most number of a row requires >=5 prior marks to legally lock it; locking adds a +1 bonus cross; the game ends the instant a SECOND row is locked (mixing a self-lock and a concede), and every mutator (including markLucky) refuses once isGameOver.",
+  "steps": [
+    { "do": "markColor", "color": "blue", "index": 10, "expect": false, "note": "0 marks so far - far below the >=5 threshold" },
+    { "do": "markColor", "color": "blue", "index": 0, "expect": true },
+    { "do": "markColor", "color": "blue", "index": 1, "expect": true },
+    { "do": "markColor", "color": "blue", "index": 2, "expect": true },
+    { "do": "markColor", "color": "blue", "index": 3, "expect": true },
+    { "do": "markColor", "color": "blue", "index": 10, "expect": false, "note": "only 4 marks - still short of >=5" },
+    { "do": "markColor", "color": "blue", "index": 4, "expect": true },
+    { "assert": { "crosses": { "blue": 5 }, "rowLocked": { "blue": false } } },
+    { "do": "markColor", "color": "blue", "index": 10, "expect": true, "note": "exactly 5 marks now - lock is legal" },
+    { "assert": {
+        "crosses": { "blue": 7 },
+        "points": { "blue": 28 },
+        "rowLocked": { "blue": true },
+        "lockedRowCount": 1,
+        "isGameOver": false
+    } },
+
+    { "do": "markLucky", "expect": true, "note": "game still live after one locked row" },
+    { "assert": { "luckyCrossed": 1, "luckyPoints": 5 } },
+
+    { "do": "concede", "color": "yellow", "expect": true, "note": "second lock via concede (not a self-lock) also ends the game" },
+    { "assert": {
+        "rowLocked": { "yellow": true, "blue": true },
+        "lockedRowCount": 2,
+        "points": { "yellow": 0 },
+        "isGameOver": true
+    } },
+
+    { "do": "markColor", "color": "red", "index": 0, "expect": false, "note": "game over - colour marks refused" },
+    { "do": "markLucky", "expect": false, "note": "game over - Lucky 15 track refused too, even though it has room left" },
+    { "do": "penalty", "expect": false, "note": "game over - penalties refused" },
+    { "do": "concede", "color": "green", "expect": false, "note": "game over - concede refused" },
+    { "do": "finish", "expect": false, "note": "game already over - manual finish refused" },
+    { "assert": { "luckyCrossed": 1, "luckyPoints": 5, "isGameOver": true } }
+  ]
+}

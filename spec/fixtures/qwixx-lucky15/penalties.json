@@ -1,0 +1,34 @@
+{
+  "game": "qwixx-lucky15",
+  "variant": "lucky15",
+  "config": {},
+  "name": "penalties",
+  "description": "Penalties cost -5 each and are capped at 4; the 4th ends the game. penaltyPoints and totalScore reflect the running penalty count, and Lucky15 marks made before the 4th penalty still count once the game is over.",
+  "steps": [
+    { "do": "markLucky", "expect": true },
+    { "assert": { "luckyCrossed": 1, "luckyPoints": 5, "totalScore": 5 } },
+
+    { "do": "penalty", "expect": true },
+    { "assert": { "penalties": 1, "penaltyPoints": 5, "totalScore": 0, "isGameOver": false } },
+    { "do": "penalty", "expect": true },
+    { "do": "penalty", "expect": true },
+    { "assert": { "penalties": 3, "penaltyPoints": 15, "totalScore": -10, "isGameOver": false } },
+
+    { "do": "markColor", "color": "yellow", "index": 0, "expect": true },
+    { "assert": { "crosses": { "yellow": 1 }, "points": { "yellow": 1 }, "totalScore": -9 } },
+
+    { "do": "penalty", "expect": true, "note": "4th penalty ends the game" },
+    { "assert": {
+        "penalties": 4,
+        "penaltyPoints": 20,
+        "totalScore": -14,
+        "isGameOver": true,
+        "lockedRowCount": 0
+    } },
+
+    { "do": "penalty", "expect": false, "note": "already at the max of 4" },
+    { "do": "markLucky", "expect": false, "note": "game over from penalties - Lucky 15 track refused despite having room left" },
+    { "do": "markColor", "color": "red", "index": 0, "expect": false },
+    { "assert": { "penalties": 4, "luckyCrossed": 1, "totalScore": -14 } }
+  ]
+}

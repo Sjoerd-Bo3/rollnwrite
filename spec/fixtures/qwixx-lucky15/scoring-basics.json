@@ -1,0 +1,57 @@
+{
+  "game": "qwixx-lucky15",
+  "variant": "lucky15",
+  "config": {},
+  "name": "scoring-basics",
+  "description": "Plain colour marks score the classic (cap 12) triangular sequence, the Lucky 15 track scores its highest crossed field only, and totalScore sums all four colours plus the Lucky 15 bonus.",
+  "steps": [
+    { "do": "markColor", "color": "red", "index": 0, "expect": true },
+    { "do": "markColor", "color": "red", "index": 2, "expect": true },
+    { "do": "markColor", "color": "red", "index": 5, "expect": true },
+    { "assert": {
+        "crosses": { "red": 3 },
+        "points": { "red": 6 },
+        "luckyCrossed": 0,
+        "luckyPoints": 0,
+        "totalScore": 6,
+        "canUndo": true
+    } },
+    { "do": "markLucky", "expect": true },
+    { "assert": {
+        "luckyCrossed": 1,
+        "luckyPoints": 5,
+        "totalScore": 11
+    } },
+    { "do": "markLucky", "expect": true, "note": "bonus is the highest field's value (11), not the sum (5+11=16)" },
+    { "assert": {
+        "luckyCrossed": 2,
+        "luckyPoints": 11,
+        "totalScore": 17
+    } },
+    { "do": "markColor", "color": "yellow", "index": 1, "expect": true },
+    { "do": "markColor", "color": "green", "index": 0, "expect": true },
+    { "do": "markColor", "color": "green", "index": 1, "expect": true },
+    { "do": "markColor", "color": "green", "index": 2, "expect": true },
+    { "do": "markColor", "color": "green", "index": 3, "expect": true },
+    { "assert": {
+        "crosses": { "red": 3, "yellow": 1, "green": 4, "blue": 0 },
+        "points": { "red": 6, "yellow": 1, "green": 10, "blue": 0 },
+        "luckyCrossed": 2,
+        "luckyPoints": 11,
+        "penalties": 0,
+        "penaltyPoints": 0,
+        "totalScore": 28,
+        "isGameOver": false,
+        "lockedRowCount": 0
+    } },
+    { "do": "markLucky", "expect": true },
+    { "do": "markLucky", "expect": true },
+    { "assert": {
+        "luckyCrossed": 4,
+        "luckyPoints": 25,
+        "totalScore": 42
+    } },
+    { "do": "markLucky", "expect": false, "note": "track is full (4/4 fields crossed)" },
+    { "assert": { "luckyCrossed": 4, "luckyPoints": 25 } }
+  ]
+}

@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import dev.bo3.rollnwrite.R
+import dev.bo3.rollnwrite.lucky15.Lucky15ScorecardScreen
 import dev.bo3.rollnwrite.qwixx.QwixxRulesVariant
 import dev.bo3.rollnwrite.qwixx.QwixxScorecardScreen
 import dev.bo3.rollnwrite.qwixx.qwixxBigPointsViewModels
@@ -72,6 +73,16 @@ object GameRegistry {
                     onBack = onBack,
                 )
             },
+        ),
+        GameDefinition(
+            id = "qwixx-lucky15",
+            title = { stringResource(R.string.qwixx_lucky15_title) },
+            subtitle = { stringResource(R.string.qwixx_lucky15_subtitle) },
+            // Mirrors iOS `QwixxLucky15Game.accent` (Color(red: 0.93, green: 0.45, blue: 0.13)).
+            accent = Color(red = 0.93f, green = 0.45f, blue = 0.13f),
+            icon = Icons.Filled.Casino,
+            family = "Qwixx",
+            makeScreen = { onBack -> Lucky15ScorecardScreen(onBack = onBack) },
         ),
     )
 
