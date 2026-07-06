@@ -25,6 +25,12 @@ on:
       - "**.md"
       - "docs/**"
       - "LICENSE"
+      - "android/**"
+      # spec/** is Android-only today. Once an iOS fixture runner exists,
+      # remove this entry (or add an iOS test job on spec/**) so fixture
+      # changes still get an iOS compile/test check.
+      - "spec/**"
+      - ".github/workflows/android.yml"
 
 # A newer push supersedes an in-flight upload, so cancel the older run.
 concurrency:

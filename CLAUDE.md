@@ -44,6 +44,8 @@ RollnWrite/
 │     ├─ Clever2ScorecardView.swift Scorecard UI + dice-colour mapping
 │     └─ Clever2GameDefinition.swift GameDefinition + official rules text
 └─ Assets.xcassets
+android/                     Native Kotlin/Compose port (engine + app modules)
+spec/                        Cross-platform golden fixtures (the parity contract)
 ```
 
 ### SOLID, applied here
@@ -185,6 +187,31 @@ sheet, and optional 2-player mirror — exactly like `QwixxBoardView` /
 - **Working loop for changes:** see `.claude/skills/rollnwrite-dev-loop/` —
   how to verify Swift changes without a compiler, the PR/TestFlight cadence,
   and the screenshot-driven design iteration used throughout this project.
+
+## Android port
+
+Native Kotlin + Jetpack Compose, in this same repo under `android/` — not a
+separate project. `engine` is a pure-JVM module (no Android imports: keep
+rules/scoring portable and unit-testable off-device); `app` is the Compose UI.
+`applicationId` is `dev.bo3.rollnwrite`.
+
+`spec/fixtures/` holds golden fixtures both platforms' engines must pass —
+the parity contract between the Swift and Kotlin implementations. New rules
+or engines need fixtures added there first, before either platform codes
+against them.
+
+Compile check: `cd android && ./gradlew build`. CI is workflow "7. Android
+Build" — runs per-PR on Linux (1× minutes, unlike macOS's 10×), path-filtered
+to `android/**`, `spec/**`, and the workflow file itself. The TestFlight
+workflow ignores those same paths so Android/spec-only changes never trigger
+an iOS build.
+
+Release path: Google Play internal track for iteration; production requires
+completing the closed test track first (12 testers, 14 days minimum — use a
+fresh personal Play account, this requirement is per-app).
+
+Mirror the iOS scorecard layout requirements (fullscreen edge-to-edge, tap-
+to-undo, two-player mirror, etc.) rather than reinventing them for Android.
 
 ## Game notes
 

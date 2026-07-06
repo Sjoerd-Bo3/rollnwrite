@@ -1,0 +1,49 @@
+{
+  "game": "qwixx",
+  "variant": "big-points",
+  "config": { "scoringCap": 15, "hasBonusRows": true },
+  "name": "locking",
+  "description": "Index 10 needs 5 prior marks, adds the +1 lock scoring cross, locks the row against further marks; the second lock ends the game and every move type then refuses.",
+  "steps": [
+    { "do": "markColor", "color": "red", "index": 0, "expect": true },
+    { "do": "markColor", "color": "red", "index": 1, "expect": true },
+    { "do": "markColor", "color": "red", "index": 2, "expect": true },
+    { "do": "markColor", "color": "red", "index": 3, "expect": true },
+    { "do": "markColor", "color": "red", "index": 10, "expect": false, "note": "only 4 marks - lock needs at least 5" },
+    { "do": "markColor", "color": "red", "index": 4, "expect": true },
+    { "do": "markColor", "color": "red", "index": 10, "expect": true, "note": "5 marks now - locking is legal" },
+    { "assert": {
+        "rowLocked": { "red": true, "yellow": false, "green": false, "blue": false },
+        "lockedRowCount": 1,
+        "crosses": { "red": 7 },
+        "points": { "red": 28 },
+        "totalScore": 28,
+        "isGameOver": false
+    } },
+    { "do": "markColor", "color": "red", "index": 6, "expect": false, "note": "a locked row refuses further marks" },
+    { "do": "markColor", "color": "yellow", "index": 0, "expect": true },
+    { "do": "markColor", "color": "yellow", "index": 1, "expect": true },
+    { "do": "markColor", "color": "yellow", "index": 2, "expect": true },
+    { "do": "markColor", "color": "yellow", "index": 3, "expect": true },
+    { "do": "markColor", "color": "yellow", "index": 4, "expect": true },
+    { "do": "markColor", "color": "yellow", "index": 10, "expect": true, "note": "second lock ends the game" },
+    { "assert": {
+        "rowLocked": { "red": true, "yellow": true },
+        "lockedRowCount": 2,
+        "crosses": { "red": 7, "yellow": 7 },
+        "points": { "red": 28, "yellow": 28 },
+        "totalScore": 56,
+        "isGameOver": true
+    } },
+    { "do": "markColor", "color": "green", "index": 0, "expect": false, "note": "game over: every move type refuses" },
+    { "do": "markBonus", "row": "redYellow", "index": 0, "expect": false },
+    { "do": "penalty", "expect": false },
+    { "do": "concede", "color": "green", "expect": false },
+    { "do": "finish", "expect": false },
+    { "assert": {
+        "totalScore": 56,
+        "isGameOver": true,
+        "penalties": 0
+    } }
+  ]
+}

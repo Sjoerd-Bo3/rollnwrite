@@ -1,0 +1,31 @@
+{
+  "game": "qwixx",
+  "variant": "big-points",
+  "config": { "scoringCap": 15, "hasBonusRows": true },
+  "name": "left-to-right",
+  "description": "Marks must move strictly rightward: re-marking and marking left of an existing mark are illegal, skipped cells are forfeited forever, and the same index rule applies to descending rows.",
+  "steps": [
+    { "do": "markColor", "color": "red", "index": 3, "expect": true },
+    { "do": "markColor", "color": "red", "index": 3, "expect": false, "note": "re-marking the same cell" },
+    { "do": "markColor", "color": "red", "index": 1, "expect": false, "note": "left of the existing mark" },
+    { "do": "markColor", "color": "red", "index": 0, "expect": false },
+    { "do": "markColor", "color": "red", "index": 7, "expect": true, "note": "skips indices 4-6" },
+    { "do": "markColor", "color": "red", "index": 5, "expect": false, "note": "skipped cell stays forfeited" },
+    { "do": "markColor", "color": "red", "index": 6, "expect": false },
+    { "do": "markColor", "color": "red", "index": 8, "expect": true, "note": "moving rightward is still legal" },
+    { "assert": {
+        "crosses": { "red": 3 },
+        "points": { "red": 6 }
+    } },
+    { "do": "markColor", "color": "green", "index": 2, "expect": true, "note": "green descends 12..2 but indices are positions" },
+    { "do": "markColor", "color": "green", "index": 0, "expect": false, "note": "index 0 (number 12) is LEFT of index 2 (number 10)" },
+    { "do": "markColor", "color": "green", "index": 1, "expect": false },
+    { "do": "markColor", "color": "green", "index": 4, "expect": true },
+    { "assert": {
+        "crosses": { "red": 3, "green": 2 },
+        "points": { "red": 6, "green": 3 },
+        "totalScore": 9,
+        "isGameOver": false
+    } }
+  ]
+}
