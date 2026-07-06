@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Catalogue -->
+    <string name="qwixx_double_title">Qwixx Double</string>
+    <string name="qwixx_double_subtitle">Classic rows · double the most-recent cross</string>
+
+    <!-- Board content -->
+    <string name="double_second_cross_content_description">%1$s %2$s second cross</string>
+
+    <!-- Rules dialog -->
+    <string name="rules_title_double">Qwixx — Double (Variant A)</string>
+    <string name="rules_subtitle_double">Official rules for the Qwixx Double \"double crosses\" variant</string>
+
+    <string name="rules_body_goal_double">Play classic Qwixx, but the space you most recently crossed in each colour row can be crossed off a second time — for many more points.</string>
+
+    <string name="rules_body_card_1_double">Red and yellow rows run 2 → 12 (left to right). Green and blue rows run 12 → 2.</string>
+    <string name="rules_body_card_2_double">Below every number there is room to draw a second cross.</string>
+
+    <string name="rules_body_crossing_1_double">Within every row you must cross out from left to right. You may skip numbers, but skipped numbers can never be crossed later.</string>
+    <string name="rules_body_crossing_2_double">On a turn the white dice total may be crossed in any one row; the active player may also add a white die to a colour die and cross that colour.</string>
+
+    <string name="rules_heading_double_crosses">Double crosses</string>
+    <string name="rules_body_double_crosses_1">The space you most recently crossed off in a colour row can be crossed off again whenever the matching number comes up — whether you are the active player or not. The first cross is drawn in the numbered space, the second cross below it.</string>
+    <string name="rules_body_double_crosses_2">Only your single most-recent space is eligible: once you cross a new number further along the row, the previous space can no longer be doubled.</string>
+
+    <string name="rules_body_locking_1_double">Before you may cross the right-most number (12 for red/yellow, 2 for green/blue) you must already have at least 7 crosses in that row (as opposed to 5 in the regular game).</string>
+    <string name="rules_body_locking_2_double">Crossing it locks the row and adds the lock as one extra cross.</string>
+
+    <string name="rules_body_penalties_1_double">If on your turn you cross nothing, take a penalty (−5 points). Four penalties end the game.</string>
+    <string name="rules_body_penalties_2_double">The game also ends the moment two rows are locked.</string>
+
+    <string name="rules_body_scoring_1_double">Per colour, count all crosses (first crosses + second crosses + the lock). It is possible to draw up to 22 crosses, but you may only score a maximum of 16 crosses per row.</string>
+    <string name="rules_body_scoring_2_double">Score by the table: 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105, 120, 136 for 1 … 16 crosses (a whopping 136 points per row).</string>
+    <string name="rules_body_scoring_3_double">Total = red + yellow + green + blue − (5 × penalties).</string>
+
+    <string name="rules_source_double">Qwixx Double by Nürnberger-Spielkarten-Verlag (NSV) / White Goblin Games; official \"How to play Qwixx Double\" rules (Variant A), English translation by Jo Lefebure.</string>
+</resources>

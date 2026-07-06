@@ -1,0 +1,55 @@
+{
+  "game": "qwixx-double",
+  "variant": "double-a",
+  "config": { "scoringCap": 16 },
+  "name": "locking",
+  "description": "Locking needs crossCount >= 7 (not the base game's 5 marks), counting first crosses + doubles before the lock; a self-lock adds the +1 bonus cross; the second lock ends the game and every move type then refuses.",
+  "steps": [
+    { "do": "markColor", "color": "red", "index": 0, "expect": true },
+    { "do": "doubleColor", "color": "red", "index": 0, "expect": true },
+    { "do": "markColor", "color": "red", "index": 1, "expect": true },
+    { "do": "doubleColor", "color": "red", "index": 1, "expect": true },
+    { "do": "markColor", "color": "red", "index": 2, "expect": true },
+    { "do": "doubleColor", "color": "red", "index": 2, "expect": true },
+    { "assert": { "crosses": { "red": 6 }, "points": { "red": 21 } } },
+    { "do": "markColor", "color": "red", "index": 10, "expect": false, "note": "crossCount is only 6 - lock needs >=7" },
+    { "do": "markColor", "color": "red", "index": 3, "expect": true, "note": "crossCount now 7 (4 marks + 3 doubles)" },
+    { "do": "markColor", "color": "red", "index": 10, "expect": true, "note": "7 crosses now - locking is legal" },
+    { "assert": {
+        "rowLocked": { "red": true, "yellow": false, "green": false, "blue": false },
+        "lockedRowCount": 1,
+        "crosses": { "red": 9 },
+        "points": { "red": 45 },
+        "totalScore": 45,
+        "isGameOver": false
+    } },
+    { "do": "markColor", "color": "red", "index": 6, "expect": false, "note": "a locked row refuses further marks" },
+    { "do": "doubleColor", "color": "red", "index": 3, "expect": false, "note": "a locked row refuses further doubles too" },
+    { "do": "markColor", "color": "yellow", "index": 0, "expect": true },
+    { "do": "markColor", "color": "yellow", "index": 1, "expect": true },
+    { "do": "markColor", "color": "yellow", "index": 2, "expect": true },
+    { "do": "markColor", "color": "yellow", "index": 3, "expect": true },
+    { "do": "markColor", "color": "yellow", "index": 4, "expect": true },
+    { "do": "markColor", "color": "yellow", "index": 5, "expect": true },
+    { "do": "markColor", "color": "yellow", "index": 6, "expect": true, "note": "7 marks, no doubles - crossCount 7, meets threshold" },
+    { "do": "markColor", "color": "yellow", "index": 10, "expect": true, "note": "second lock ends the game" },
+    { "assert": {
+        "rowLocked": { "red": true, "yellow": true },
+        "lockedRowCount": 2,
+        "crosses": { "red": 9, "yellow": 9 },
+        "points": { "red": 45, "yellow": 45 },
+        "totalScore": 90,
+        "isGameOver": true
+    } },
+    { "do": "markColor", "color": "green", "index": 0, "expect": false, "note": "game over: every move type refuses" },
+    { "do": "doubleColor", "color": "green", "index": 0, "expect": false },
+    { "do": "penalty", "expect": false },
+    { "do": "concede", "color": "green", "expect": false },
+    { "do": "finish", "expect": false },
+    { "assert": {
+        "totalScore": 90,
+        "isGameOver": true,
+        "penalties": 0
+    } }
+  ]
+}

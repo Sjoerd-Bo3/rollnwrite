@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Catalogue -->
+    <string name="qwixx_double_title">Qwixx Double</string>
+    <string name="qwixx_double_subtitle">Klassieke rijen · verdubbel het meest recente kruisje</string>
+
+    <!-- Board content -->
+    <string name="double_second_cross_content_description">%1$s %2$s tweede kruisje</string>
+
+    <!-- Rules dialog -->
+    <string name="rules_title_double">Qwixx — Double (Variant A)</string>
+    <string name="rules_subtitle_double">Officiële regels voor de Qwixx Double \"dubbele kruisjes\"-variant</string>
+
+    <string name="rules_body_goal_double">Speel klassieke Qwixx, maar het vak dat je het laatst hebt weggestreept in elke kleurenrij mag een tweede keer worden weggestreept — voor veel meer punten.</string>
+
+    <string name="rules_body_card_1_double">De rode en gele rij lopen 2 → 12 (van links naar rechts). De groene en blauwe rij lopen 12 → 2.</string>
+    <string name="rules_body_card_2_double">Onder elk getal is ruimte om een tweede kruisje te tekenen.</string>
+
+    <string name="rules_body_crossing_1_double">In elke rij streep je van links naar rechts weg. Je mag getallen overslaan, maar overgeslagen getallen kunnen later nooit meer worden weggestreept.</string>
+    <string name="rules_body_crossing_2_double">Tijdens een beurt mag de som van de witte dobbelstenen in één rij worden weggestreept; de actieve speler mag ook een witte dobbelsteen bij een kleurdobbelsteen optellen en die kleur wegstrepen.</string>
+
+    <string name="rules_heading_double_crosses">Dubbele kruisjes</string>
+    <string name="rules_body_double_crosses_1">Het vak dat je het laatst hebt weggestreept in een kleurenrij mag opnieuw worden weggestreept zodra het bijbehorende getal valt — of je nu de actieve speler bent of niet. Het eerste kruisje komt in het genummerde vak, het tweede eronder.</string>
+    <string name="rules_body_double_crosses_2">Alleen jouw meest recente vak komt in aanmerking: zodra je een nieuw getal verderop in de rij wegstreept, kan het vorige vak niet meer worden verdubbeld.</string>
+
+    <string name="rules_body_locking_1_double">Om het meest rechtse getal weg te strepen (12 voor rood/geel, 2 voor groen/blauw) moet je al minstens 7 kruisjes in die rij hebben (in plaats van 5 in het gewone spel).</string>
+    <string name="rules_body_locking_2_double">Wegstrepen vergrendelt de rij en telt het slot als één extra kruisje.</string>
+
+    <string name="rules_body_penalties_1_double">Als je tijdens je beurt niets wegstreept, neem je een strafpunt (−5 punten). Vier strafpunten beëindigen het spel.</string>
+    <string name="rules_body_penalties_2_double">Het spel eindigt ook op het moment dat twee rijen vergrendeld zijn.</string>
+
+    <string name="rules_body_scoring_1_double">Tel per kleur alle kruisjes (eerste kruisjes + tweede kruisjes + het slot). Er kunnen tot 22 kruisjes worden getekend, maar je scoort maximaal 16 kruisjes per rij.</string>
+    <string name="rules_body_scoring_2_double">Scoor volgens de tabel: 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105, 120, 136 voor 1 … 16 kruisjes (maar liefst 136 punten per rij).</string>
+    <string name="rules_body_scoring_3_double">Totaal = rood + geel + groen + blauw − (5 × strafpunten).</string>
+
+    <string name="rules_source_double">Qwixx Double van Nürnberger-Spielkarten-Verlag (NSV) / White Goblin Games; officiële \"How to play Qwixx Double\"-regels (Variant A).</string>
+</resources>

@@ -56,6 +56,11 @@ import java.io.File
  *    "canUndo":bool, "canRedo":bool }}
  * ```
  *
+ * `"qwixx-double"` fixtures (`spec/fixtures/qwixx-double/README.md`) follow
+ * the same envelope with `variant: "double-a"`, `config: {"scoringCap":16}`
+ * (no `hasBonusRows` — Qwixx Double has no bonus rows), and swap `markBonus`
+ * for `doubleColor` (same `color`/`index`/`expect` shape).
+ *
  * ## Runner semantics (normative, both platforms)
  *
  * For a "do" step: first assert the engine's can-precondition equals
@@ -129,8 +134,14 @@ class FixtureFormatTest {
         }
 
         val game = root.stringField("game", label)
-        require(game, "game", "qwixx", label)
+        when (game) {
+            "qwixx" -> validateQwixxFixture(root, label)
+            "qwixx-double" -> validateQwixxDoubleFixture(root, label)
+            else -> fail<Unit>("$label: game='$game', expected 'qwixx' or 'qwixx-double'")
+        }
+    }
 
+    private fun validateQwixxFixture(root: JsonObject, label: String) {
         val variant = root.stringField("variant", label)
         val variantBounds = variantConfigs[variant]
             ?: fail<Nothing>("$label: variant '$variant' must be one of ${variantConfigs.keys}")
@@ -147,6 +158,29 @@ class FixtureFormatTest {
             "$label: config.hasBonusRows=$hasBonusRows inconsistent with variant '$variant' (expected $expectedBonus)"
         }
 
+        validateStepsAndCommonFields(root, label, allowedDoActions = qwixxDoActions)
+    }
+
+    /**
+     * Qwixx Double (`spec/fixtures/qwixx-double/README.md`): same envelope,
+     * `variant: "double-a"`, `config: {"scoringCap":16}` only (no bonus
+     * rows), and `doubleColor` replaces `markBonus` in the step vocabulary.
+     */
+    private fun validateQwixxDoubleFixture(root: JsonObject, label: String) {
+        val variant = root.stringField("variant", label)
+        assertTrue(variant == "double-a") { "$label: variant='$variant', expected 'double-a'" }
+
+        val config = root["config"]?.jsonObject
+            ?: fail<Nothing>("$label: missing 'config' object")
+        val scoringCap = config.intField("scoringCap", label)
+        assertTrue(scoringCap == 16) {
+            "$label: config.scoringCap=$scoringCap inconsistent with variant 'double-a' (expected 16)"
+        }
+
+        validateStepsAndCommonFields(root, label, allowedDoActions = qwixxDoubleDoActions)
+    }
+
+    private fun validateStepsAndCommonFields(root: JsonObject, label: String, allowedDoActions: Set<String>) {
         root.stringField("name", label)
         root.stringField("description", label)
 
@@ -159,7 +193,7 @@ class FixtureFormatTest {
             val step = stepElement.jsonObject
             val stepLabel = "$label: step[$index]"
             when {
-                "do" in step -> validateDoStep(step, stepLabel)
+                "do" in step -> validateDoStep(step, stepLabel, allowedDoActions)
                 "assert" in step -> {
                     hasAssert = true
                     validateAssertStep(step, stepLabel)
@@ -171,7 +205,10 @@ class FixtureFormatTest {
         assertTrue(hasAssert) { "$label: must contain at least one 'assert' step" }
     }
 
-    private fun validateDoStep(step: JsonObject, stepLabel: String) {
+    private val qwixxDoActions = setOf("markColor", "markBonus", "penalty", "concede", "finish", "undo", "redo")
+    private val qwixxDoubleDoActions = setOf("markColor", "doubleColor", "penalty", "concede", "finish", "undo", "redo")
+
+    private fun validateDoStep(step: JsonObject, stepLabel: String, allowedActions: Set<String>) {
         val action = step.stringField("do", stepLabel)
         if ("expect" !in step) {
             fail<Unit>("$stepLabel: 'do':\"$action\" is missing required 'expect' boolean")
@@ -185,12 +222,16 @@ class FixtureFormatTest {
         assertTrue(extra.isEmpty()) { "$stepLabel: unexpected keys $extra on 'do' step" }
         if ("note" in step) step.stringField("note", stepLabel)
 
+        assertTrue(action in allowedActions) {
+            "$stepLabel: unknown 'do' action '$action' (expected one of $allowedActions)"
+        }
+
         when (action) {
-            "markColor" -> {
+            "markColor", "doubleColor" -> {
                 val color = step.stringField("color", stepLabel)
-                assertTrue(color in colors) { "$stepLabel: markColor color '$color' not in $colors" }
+                assertTrue(color in colors) { "$stepLabel: $action color '$color' not in $colors" }
                 val index = step.intField("index", stepLabel)
-                assertTrue(index in 0..10) { "$stepLabel: markColor index $index out of range 0..10" }
+                assertTrue(index in 0..10) { "$stepLabel: $action index $index out of range 0..10" }
             }
             "markBonus" -> {
                 val row = step.stringField("row", stepLabel)
@@ -212,10 +253,6 @@ class FixtureFormatTest {
                     "$stepLabel: '$action' takes no fields besides 'do'/'expect', found ${step.keys}"
                 }
             }
-            else -> fail<Unit>(
-                "$stepLabel: unknown 'do' action '$action' " +
-                    "(expected one of markColor, markBonus, penalty, concede, finish, undo, redo)",
-            )
         }
     }
 
@@ -301,7 +338,4 @@ class FixtureFormatTest {
         return prim.booleanOrNull ?: fail("$label: field '$key' is not a bool (value=$prim)")
     }
 
-    private fun require(actual: String, fieldName: String, expected: String, label: String) {
-        assertTrue(actual == expected) { "$label: $fieldName='$actual', expected '$expected'" }
-    }
 }
