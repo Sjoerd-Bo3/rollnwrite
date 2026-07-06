@@ -37,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -328,7 +329,15 @@ private fun LuckyDiamondTile(
         modifier = Modifier
             .widthIn(min = w, max = w)
             .height(h)
-            .clickable(enabled = interactive) { onTap() },
+            .clickable(enabled = interactive) { onTap() }
+            // The dimming applies to the WHOLE tile — diamond fill, stroke and
+            // number alike — mirroring iOS's Button-level
+            // `.opacity(marked || legal ? 1 : 0.4)`. A not-yet-reachable
+            // diamond must fade into the coloured band, not stay a bright
+            // white diamond with only a faint number. (An `undoable` tile is
+            // always `marked`, hence always full alpha, so the undo ring is
+            // never dimmed either.)
+            .alpha(alpha),
         contentAlignment = Alignment.Center,
     ) {
         Canvas(modifier = Modifier.widthIn(min = w, max = w).height(h)) {
@@ -358,7 +367,7 @@ private fun LuckyDiamondTile(
         }
         Text(
             text = "$value",
-            color = tint.copy(alpha = alpha),
+            color = tint,
             fontWeight = FontWeight.Black,
             fontSize = (s * 0.32f).sp,
             maxLines = 1,
@@ -366,7 +375,7 @@ private fun LuckyDiamondTile(
         if (marked) {
             Text(
                 text = "✕",
-                color = tint.copy(alpha = alpha),
+                color = tint,
                 fontWeight = FontWeight.Black,
                 fontSize = (s * 0.5f).sp,
             )

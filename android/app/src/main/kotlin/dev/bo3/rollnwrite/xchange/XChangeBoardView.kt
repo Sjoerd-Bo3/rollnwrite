@@ -47,7 +47,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -341,12 +344,31 @@ private fun XChangeTile(
         }
         val dimmed = !marked && !legal
         val alpha = if (dimmed) 0.4f else 1f
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        // The stacked top/arrows/bottom content must fit inside the diamond's
+        // narrow vertical extent `d`, so numbers use a TIGHT line height (no
+        // platform font-padding leading) — otherwise Android's default text
+        // metrics push the bottom number past the diamond's lower point and
+        // it gets clipped by the band's rounded-rect mask. Mirrors iOS, where
+        // SwiftUI's tighter default text metrics never hit this ceiling.
+        val numberStyle = TextStyle(
+            fontWeight = FontWeight.Black,
+            fontSize = (d * 0.23f).sp,
+            lineHeight = (d * 0.23f).sp,
+            lineHeightStyle = LineHeightStyle(
+                alignment = LineHeightStyle.Alignment.Center,
+                trim = LineHeightStyle.Trim.Both,
+            ),
+            platformStyle = PlatformTextStyle(includeFontPadding = false),
+        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.size(width = d.dp, height = d.dp),
+        ) {
             Text(
                 text = "${pair.first}",
                 color = tint.copy(alpha = alpha),
-                fontWeight = FontWeight.Black,
-                fontSize = (d * 0.23f).sp,
+                style = numberStyle,
                 maxLines = 1,
             )
             Icon(
@@ -358,8 +380,7 @@ private fun XChangeTile(
             Text(
                 text = "${pair.second}",
                 color = tint.copy(alpha = alpha),
-                fontWeight = FontWeight.Black,
-                fontSize = (d * 0.23f).sp,
+                style = numberStyle,
                 maxLines = 1,
             )
         }
