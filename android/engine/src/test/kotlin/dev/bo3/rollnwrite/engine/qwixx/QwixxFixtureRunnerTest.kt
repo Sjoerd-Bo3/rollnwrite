@@ -74,13 +74,6 @@ class QwixxFixtureRunnerTest {
         val files = fixtureFiles(dir)
         return files
             .filter { it.readText().let { text -> """"game"\s*:\s*"qwixx"""".toRegex().containsMatchIn(text) } }
-            // Variants with their own dedicated fixture format/runner (e.g.
-            // X-Change's "xchange" — see XChangeFixtureRunnerTest and
-            // spec/fixtures/qwixx-xchange/README.md) carry a different
-            // `config` shape (no `hasBonusRows`) and are owned by that
-            // runner instead, so exclude them here to keep each runner's
-            // fixture set disjoint.
-            .filterNot { it.readText().let { text -> """"variant"\s*:\s*"xchange"""".toRegex().containsMatchIn(text) } }
             .map { file ->
                 DynamicTest.dynamicTest(file.relativeTo(dir).path) {
                     replayFixture(file)

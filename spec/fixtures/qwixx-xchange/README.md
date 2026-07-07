@@ -31,9 +31,9 @@ Same envelope as `spec/README.md`, with:
 }
 ```
 
-- `game` is `"qwixx"` (both runners' fixture loaders discover files by
-  regex-matching `"game": "qwixx"`, and the X-Change engine reuses the same
+- `game` is `"qwixx"` (this variant reuses the same
   `GameColor`/`ColorRow`/`TriangularScoring` machinery as classic Qwixx).
+  Discovery is by directory: each runner scans its own `spec/fixtures/<id>/`.
 - `config.scoringCap` is always `12` for this variant (classic scoring — no
   Big-Points-style cap-15). There is no `hasBonusRows` key: X-Change has no
   bonus rows at all, so that config key is simply absent (never `false`) to
