@@ -1,0 +1,229 @@
+{
+  "game": "qwixx",
+  "variant": "bonus",
+  "config": {
+    "scoringCap": 12
+  },
+  "name": "locking",
+  "description": "Index 10 needs 5 prior marks, adds the +1 lock scoring cross, locks the row; locking also forfeits that colour's remaining un-earned bar fields; the second lock ends the game and every move type then refuses (bar state included).",
+  "steps": [
+    {
+      "do": "markColor",
+      "color": "red",
+      "index": 0,
+      "expect": true,
+      "note": "value 2, not boxed"
+    },
+    {
+      "do": "markColor",
+      "color": "red",
+      "index": 1,
+      "expect": true,
+      "note": "value 3, boxed -> earns bar field 0"
+    },
+    {
+      "do": "markColor",
+      "color": "red",
+      "index": 2,
+      "expect": true,
+      "note": "value 4, not boxed"
+    },
+    {
+      "do": "markColor",
+      "color": "red",
+      "index": 3,
+      "expect": true,
+      "note": "value 5, not boxed"
+    },
+    {
+      "do": "markColor",
+      "color": "red",
+      "index": 10,
+      "expect": false,
+      "note": "only 4 marks - lock needs at least 5"
+    },
+    {
+      "do": "markColor",
+      "color": "red",
+      "index": 4,
+      "expect": true,
+      "note": "value 6, boxed -> earns bar field 1 (next earnable after 0)"
+    },
+    {
+      "assert": {
+        "barEarned": [
+          0,
+          1
+        ],
+        "barEarnedCount": 2,
+        "barForfeited": []
+      }
+    },
+    {
+      "do": "markColor",
+      "color": "red",
+      "index": 10,
+      "expect": true,
+      "note": "5 marks now - locking is legal"
+    },
+    {
+      "assert": {
+        "rowLocked": {
+          "red": true,
+          "yellow": false,
+          "green": false,
+          "blue": false
+        },
+        "lockedRowCount": 1,
+        "crosses": {
+          "red": 7
+        },
+        "points": {
+          "red": 28
+        },
+        "totalScore": 28,
+        "isGameOver": false,
+        "barEarned": [
+          0,
+          1
+        ],
+        "barForfeited": [
+          5,
+          8
+        ]
+      },
+      "note": "locking forfeits red's remaining bar fields 5 and 8 (never earned)"
+    },
+    {
+      "do": "markColor",
+      "color": "red",
+      "index": 6,
+      "expect": false,
+      "note": "a locked row refuses further marks"
+    },
+    {
+      "do": "markColor",
+      "color": "yellow",
+      "index": 0,
+      "expect": true,
+      "note": "value 2, not boxed"
+    },
+    {
+      "do": "markColor",
+      "color": "yellow",
+      "index": 1,
+      "expect": true,
+      "note": "value 3, not boxed for yellow"
+    },
+    {
+      "do": "markColor",
+      "color": "yellow",
+      "index": 2,
+      "expect": true,
+      "note": "value 4, not boxed"
+    },
+    {
+      "do": "markColor",
+      "color": "yellow",
+      "index": 3,
+      "expect": true,
+      "note": "value 5, boxed -> earns bar field 2 (next earnable)"
+    },
+    {
+      "do": "markColor",
+      "color": "yellow",
+      "index": 4,
+      "expect": true,
+      "note": "value 6, not boxed"
+    },
+    {
+      "assert": {
+        "barEarned": [
+          0,
+          1,
+          2
+        ],
+        "barForfeited": [
+          5,
+          8
+        ]
+      }
+    },
+    {
+      "do": "markColor",
+      "color": "yellow",
+      "index": 10,
+      "expect": true,
+      "note": "second lock ends the game"
+    },
+    {
+      "assert": {
+        "rowLocked": {
+          "red": true,
+          "yellow": true
+        },
+        "lockedRowCount": 2,
+        "crosses": {
+          "red": 7,
+          "yellow": 7
+        },
+        "points": {
+          "red": 28,
+          "yellow": 28
+        },
+        "totalScore": 56,
+        "isGameOver": true,
+        "barEarned": [
+          0,
+          1,
+          2
+        ],
+        "barForfeited": [
+          5,
+          7,
+          8,
+          9
+        ]
+      },
+      "note": "locking yellow forfeits its remaining bar fields 7 and 9 (5 and 8 already forfeited from red's lock)"
+    },
+    {
+      "do": "markColor",
+      "color": "green",
+      "index": 0,
+      "expect": false,
+      "note": "game over: every move type refuses"
+    },
+    {
+      "do": "penalty",
+      "expect": false
+    },
+    {
+      "do": "concede",
+      "color": "green",
+      "expect": false
+    },
+    {
+      "do": "finish",
+      "expect": false
+    },
+    {
+      "assert": {
+        "totalScore": 56,
+        "isGameOver": true,
+        "penalties": 0,
+        "barEarned": [
+          0,
+          1,
+          2
+        ],
+        "barForfeited": [
+          5,
+          7,
+          8,
+          9
+        ]
+      }
+    }
+  ]
+}

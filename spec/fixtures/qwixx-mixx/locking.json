@@ -1,0 +1,41 @@
+{
+  "game": "qwixx-mixx",
+  "variant": "variantB",
+  "config": { "board": "variantB", "scoringCap": 12 },
+  "name": "locking",
+  "description": "The lock cell (index 10) requires at least 5 prior marks in that row; locking counts as an extra scoring cross; the game ends the instant a second row locks, and every mutation is then refused.",
+  "steps": [
+    { "do": "mark", "row": 2, "index": 10, "expect": false, "note": "lock refused with zero prior marks" },
+    { "do": "mark", "row": 2, "index": 0, "expect": true },
+    { "do": "mark", "row": 2, "index": 1, "expect": true },
+    { "do": "mark", "row": 2, "index": 2, "expect": true },
+    { "do": "mark", "row": 2, "index": 3, "expect": true },
+    { "assert": { "crosses": { "2": 4 }, "rowLocked": { "2": false } } },
+    { "do": "mark", "row": 2, "index": 10, "expect": false, "note": "still refused: only 4 marks, needs >=5" },
+    { "do": "mark", "row": 2, "index": 4, "expect": true, "note": "5th mark reached" },
+    { "assert": { "crosses": { "2": 5 } } },
+    { "do": "mark", "row": 2, "index": 10, "expect": true, "note": "now legal: exactly 5 prior marks" },
+    { "assert": {
+        "crosses": { "2": 7 },
+        "rowLocked": { "2": true },
+        "lockedRowCount": 1,
+        "isGameOver": false
+    } },
+    { "do": "mark", "row": 2, "index": 9, "expect": false, "note": "row is locked, no further marks accepted" },
+    { "do": "mark", "row": 0, "index": 0, "expect": true },
+    { "do": "mark", "row": 0, "index": 1, "expect": true },
+    { "do": "mark", "row": 0, "index": 2, "expect": true },
+    { "do": "mark", "row": 0, "index": 3, "expect": true },
+    { "do": "mark", "row": 0, "index": 4, "expect": true },
+    { "do": "mark", "row": 0, "index": 10, "expect": true, "note": "second row locks -> game over" },
+    { "assert": {
+        "rowLocked": { "0": true, "2": true },
+        "lockedRowCount": 2,
+        "isGameOver": true
+    } },
+    { "do": "mark", "row": 1, "index": 0, "expect": false, "note": "game over: every mutation precondition is now false" },
+    { "do": "penalty", "expect": false },
+    { "do": "concede", "row": 1, "expect": false },
+    { "do": "finish", "expect": false }
+  ]
+}

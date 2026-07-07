@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Catalogue -->
+    <string name="qwixx_lucky15_title">Qwixx Lucky15</string>
+    <string name="qwixx_lucky15_subtitle">Klassische Reihen · Lucky-15-Bonusleiste</string>
+
+    <!-- Board content -->
+    <string name="lucky15_track_title">Lucky 15</string>
+
+    <!-- Rules dialog -->
+    <string name="lucky15_rules_title">Qwixx — Lucky 15</string>
+    <string name="lucky15_rules_subtitle">Offizielle Regeln für die Lucky-15-Jubiläumsvariante</string>
+    <string name="lucky15_rules_body_goal">Spiele klassisches Qwixx, aber eine neue orangefarbene Lucky-15-Leiste belohnt dich jedes Mal, wenn du mit den Würfeln genau 15 bilden kannst.</string>
+    <string name="lucky15_rules_body_card_2">Unter den Farbreihen befindet sich die orangefarbene Lucky-15-Leiste mit vier Feldern im Wert von 5, 11, 18 und 25 Punkten.</string>
+    <string name="lucky15_rules_body_crossing_2">In einem Zug darf die Summe der weißen Würfel in einer beliebigen Reihe angekreuzt werden; der aktive Spieler darf außerdem einen weißen Würfel zu einem Farbwürfel addieren und diese Farbe ankreuzen.</string>
+    <string name="lucky15_rules_heading_track">Die Lucky-15-Leiste</string>
+    <string name="lucky15_rules_body_track_1">Wann immer der aktive Spieler mit beiden weißen Würfeln plus einem Farbwürfel genau 15 würfelt, darf er das nächste freie Feld der Lucky-15-Leiste ankreuzen (nur der aktive Spieler).</string>
+    <string name="lucky15_rules_body_track_2">Die Lucky-15-Markierung ersetzt BEIDE üblichen Aktionen — sie ist deine einzige Aktion in diesem Zug. Sie zählt als Markierung und bewahrt dich damit auch vor einer Strafe.</string>
+    <string name="lucky15_rules_body_track_3">Die Leiste wird strikt von links nach rechts angekreuzt: 5, dann 11, dann 18, dann 25.</string>
+    <string name="lucky15_rules_body_scoring_1">Zähle pro Farbe die Kreuze (eigene Zahlen + Schloss, max. 12) und werte 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78.</string>
+    <string name="lucky15_rules_body_scoring_2">Der Lucky-15-Bonus entspricht dem Wert des höchsten von dir angekreuzten Feldes (0 / 5 / 11 / 18 / 25).</string>
+    <string name="lucky15_rules_body_scoring_3">Gesamt = Rot + Gelb + Grün + Blau + Lucky-15-Bonus − (5 × Strafpunkte).</string>
+    <string name="lucky15_rules_source">Qwixx 15 (Lucky-15-Variante) von White Goblin Games / Nürnberger-Spielkarten-Verlag (NSV); offizieller Spielblock.</string>
+</resources>

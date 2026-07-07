@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Catalogue -->
+    <string name="qwixx_connected_title">Qwixx Connected</string>
+    <string name="qwixx_connected_subtitle">Connected — Ketting · verbonden vakjes strepen automatisch mee</string>
+
+    <!-- Rules dialog -->
+    <string name="rules_title_connected">Qwixx — Connected (De Ketting)</string>
+    <string name="rules_subtitle_connected">Officiële regels voor de Connected „Kette”-variant (kaart A)</string>
+
+    <string name="rules_heading_connected_goal">Doel</string>
+    <string name="rules_body_connected_goal">Speel klassiek Qwixx, maar bepaalde omcirkelde vakjes zijn per twee verbonden door een gedrukte lijn. Streep je één vakje van een ketting weg, dan moet je automatisch ook het gekoppelde vakje wegstrepen.</string>
+
+    <string name="rules_heading_connected_card">De kaart</string>
+    <string name="rules_body_connected_card_1">Rode en gele rijen lopen 2 → 12 (van links naar rechts). Groene en blauwe rijen lopen 12 → 2.</string>
+    <string name="rules_body_connected_card_2">Verschillende vakjes zijn omcirkeld en verbonden met een vakje in een naburige rij door een kort lijntje. Op deze kaart zijn de kettingen: rood 6 ↔ geel 6, rood 11 ↔ geel 11, geel 3 ↔ groen 11, geel 8 ↔ groen 6, groen 9 ↔ blauw 9, en groen 4 ↔ blauw 4.</string>
+    <string name="rules_body_connected_card_3">Elke kaart (A–E) plaatst de kettingen anders.</string>
+
+    <string name="rules_heading_connected_crossing">Getallen wegstrepen</string>
+    <string name="rules_body_connected_crossing_1">Alle regels voor het wegstrepen binnen elke kleurrij blijven volledig ongewijzigd: streep van links naar rechts weg, overgeslagen getallen zijn verloren, en de dobbelprocedure en beurtvolgorde zijn precies als bij klassiek Qwixx.</string>
+
+    <string name="rules_heading_connected_chains">De kettingen</string>
+    <string name="rules_body_connected_chains_1">Wanneer je een omcirkeld kettingvakje wegstreept (volgens de gewone kleurregels), moet je automatisch ook het gekoppelde vakje wegstrepen.</string>
+    <string name="rules_body_connected_chains_2">Dit automatisch meestrepen gebeurt altijd en op elk moment in het spel. Het volgt NIET de gewone streepregels: het gekoppelde vakje wordt weggestreept, zelfs als je al verder naar rechts hebt gestreept, en zelfs als die rij al vergrendeld is.</string>
+    <string name="rules_body_connected_chains_3">Voorbeeld: je hebt de gele rij vergrendeld. Later streep je legaal een rood kettingvakje weg — het gekoppelde gele kettingvakje wordt dan alsnog automatisch weggestreept.</string>
+
+    <string name="rules_heading_connected_locking">Een rij vergrendelen</string>
+    <string name="rules_body_connected_locking_1">Om het meest rechtse getal weg te strepen (12 voor rood/geel, 2 voor groen/blauw) moet je al minstens 5 kruisjes in die rij hebben.</string>
+    <string name="rules_body_connected_locking_2">Als je dit bewust wegstreept, wordt de rij vergrendeld en telt het slot als extra kruisje. Een gedwongen kettingstreep vergrendelt nooit zelf een rij.</string>
+
+    <string name="rules_heading_connected_penalties">Strafpunten &amp; einde spel</string>
+    <string name="rules_body_connected_penalties_1">Streep je op je beurt niets weg, dan krijg je een strafpunt (−5 punten). Vier strafpunten beëindigen het spel.</string>
+    <string name="rules_body_connected_penalties_2">Het spel eindigt ook zodra twee rijen zijn vergrendeld.</string>
+
+    <string name="rules_heading_connected_scoring">Score</string>
+    <string name="rules_body_connected_scoring_1">De score is precies als bij klassiek Qwixx — de kettingen leveren zelf geen punten op. Ze laten je alleen extra kruisjes zetten.</string>
+    <string name="rules_body_connected_scoring_2">Tel per kleur de kruisjes (eigen getallen + het slot, max 12) en scoor 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78. Elk gekoppeld kruisje telt als een normaal kruisje in zijn eigen rij.</string>
+    <string name="rules_body_connected_scoring_3">Totaal = rood + geel + groen + blauw − (5 × strafpunten).</string>
+
+    <string name="rules_source_connected">Qwixx Connected („Die Kette” / The Chain, versie B) van Steffen Benndorf, Nürnberger-Spielkarten-Verlag (NSV); art. 088 19900030; officiële scorekaart &amp; regels (nsv.de).</string>
+</resources>

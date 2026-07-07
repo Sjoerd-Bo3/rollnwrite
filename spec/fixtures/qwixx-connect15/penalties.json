@@ -1,0 +1,28 @@
+{
+  "game": "qwixx-connect15",
+  "variant": "connect15",
+  "config": {},
+  "name": "penalties",
+  "description": "Each penalty costs 5 points and is independent of connection-field marking; the 4th penalty ends the game.",
+  "steps": [
+    {"assert": {"penalties": 0, "penaltyPoints": 0, "isGameOver": false}},
+    {"do": "penalty", "expect": true},
+    {"do": "penalty", "expect": true},
+    {"do": "penalty", "expect": true},
+    {"assert": {"penalties": 3, "penaltyPoints": 15, "isGameOver": false, "totalScore": -15}},
+    {"note": "marking a colour and a connection field does not consume or interact with a penalty slot", "do": "markColor", "color": "red", "index": 0, "expect": true},
+    {"do": "markConnection", "color": "red", "field": 0, "expect": true},
+    {"assert": {"penalties": 3, "crosses": {"red": 2}, "points": {"red": 3}, "totalScore": -12}},
+    {"do": "penalty", "expect": true},
+    {"assert": {
+      "penalties": 4,
+      "penaltyPoints": 20,
+      "isGameOver": true,
+      "totalScore": -17
+    }},
+    {"note": "a 5th penalty is refused once the game is over", "do": "penalty", "expect": false},
+    {"note": "the game being over blocks every other mutator too", "do": "markColor", "color": "blue", "index": 0, "expect": false},
+    {"do": "markConnection", "color": "blue", "field": 0, "expect": false},
+    {"do": "concede", "color": "blue", "expect": false}
+  ]
+}

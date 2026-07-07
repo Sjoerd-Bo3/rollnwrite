@@ -1,0 +1,30 @@
+{
+  "game": "qwixx-double",
+  "variant": "double-a",
+  "config": { "scoringCap": 16 },
+  "name": "penalties",
+  "description": "Penalties cost 5 points each, cap at 4, and the 4th ends the game; marks/doubles made earlier are unaffected and still score after game-over.",
+  "steps": [
+    { "do": "markColor", "color": "blue", "index": 0, "expect": true },
+    { "do": "doubleColor", "color": "blue", "index": 0, "expect": true },
+    { "assert": { "crosses": { "blue": 2 }, "points": { "blue": 3 } } },
+    { "do": "penalty", "expect": true },
+    { "assert": { "penalties": 1, "penaltyPoints": 5, "totalScore": -2 } },
+    { "do": "penalty", "expect": true },
+    { "do": "penalty", "expect": true },
+    { "assert": { "penalties": 3, "penaltyPoints": 15, "totalScore": -12, "isGameOver": false } },
+    { "do": "penalty", "expect": true, "note": "4th penalty ends the game" },
+    { "assert": {
+        "penalties": 4,
+        "penaltyPoints": 20,
+        "totalScore": -17,
+        "isGameOver": true,
+        "crosses": { "blue": 2 },
+        "points": { "blue": 3 }
+    } },
+    { "do": "penalty", "expect": false, "note": "game over: penalty cap already reached and game already over" },
+    { "do": "markColor", "color": "red", "index": 0, "expect": false, "note": "game over: no further marks" },
+    { "do": "doubleColor", "color": "blue", "index": 0, "expect": false, "note": "game over: no further doubles either" },
+    { "assert": { "penalties": 4, "totalScore": -17 } }
+  ]
+}

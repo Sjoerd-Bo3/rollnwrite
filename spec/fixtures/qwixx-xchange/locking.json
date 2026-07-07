@@ -1,0 +1,47 @@
+{
+  "game": "qwixx",
+  "variant": "xchange",
+  "config": { "scoringCap": 12 },
+  "name": "locking",
+  "description": "Locking the right-most (index 10) number requires >=5 prior marks in that row, adds a scoring lock bonus, and undo exactly un-locks. Classic Qwixx rules, unaffected by the X-Change row.",
+  "steps": [
+    { "do": "markColor", "color": "blue", "index": 10, "expect": false, "note": "0 marks - cannot lock yet" },
+    { "do": "markColor", "color": "blue", "index": 0, "expect": true },
+    { "do": "markColor", "color": "blue", "index": 1, "expect": true },
+    { "do": "markColor", "color": "blue", "index": 2, "expect": true },
+    { "do": "markColor", "color": "blue", "index": 3, "expect": true },
+    { "assert": { "crosses": { "blue": 4 }, "rowLocked": { "blue": false } } },
+    { "do": "markColor", "color": "blue", "index": 10, "expect": false, "note": "only 4 marks - still short of 5" },
+    { "do": "markColor", "color": "blue", "index": 4, "expect": true, "note": "5th mark" },
+    { "do": "markColor", "color": "blue", "index": 10, "expect": true, "note": "now legal - locks the row" },
+    { "assert": {
+        "rowLocked": { "blue": true },
+        "lockedRowCount": 1,
+        "crosses": { "blue": 7 },
+        "points": { "blue": 28 },
+        "totalScore": 28,
+        "isGameOver": false
+    } },
+    { "do": "markColor", "color": "blue", "index": 5, "expect": false, "note": "locked row refuses further marks" },
+    { "do": "markXChange", "index": 0, "expect": true, "note": "X-Change is independent of the blue lock" },
+    { "assert": { "xchangeCrossed": 1 } },
+    { "do": "undo", "expect": true, "note": "undoes the X-Change mark, not the lock (LIFO)" },
+    { "assert": { "xchangeCrossed": 0, "rowLocked": { "blue": true } } },
+    { "do": "undo", "expect": true, "note": "un-locks blue exactly" },
+    { "assert": {
+        "rowLocked": { "blue": false },
+        "lockedRowCount": 0,
+        "crosses": { "blue": 5 },
+        "points": { "blue": 15 },
+        "totalScore": 15,
+        "canRedo": true
+    } },
+    { "do": "redo", "expect": true, "note": "redo re-locks exactly" },
+    { "assert": {
+        "rowLocked": { "blue": true },
+        "crosses": { "blue": 7 },
+        "points": { "blue": 28 },
+        "totalScore": 28
+    } }
+  ]
+}

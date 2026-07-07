@@ -1,0 +1,31 @@
+{
+  "game": "qwixx-mixx",
+  "variant": "variantB",
+  "config": { "board": "variantB", "scoringCap": 12 },
+  "name": "concede-finish",
+  "description": "Conceding a row locks it (index 10 itself is never marked) but the engine's scoringCrosses still awards the +1 lock bonus off the `locked` flag alone, same as a self-lock — a conceded row scores exactly as if it had one more mark than it actually has. Concede still counts toward the two-locks end condition; manual finish ends the game outright regardless of locked-row count or penalties.",
+  "steps": [
+    { "do": "mark", "row": 3, "index": 0, "expect": true },
+    { "do": "mark", "row": 3, "index": 1, "expect": true },
+    { "do": "mark", "row": 3, "index": 2, "expect": true },
+    { "assert": { "crosses": { "3": 3 }, "points": { "3": 6 }, "rowLocked": { "3": false } } },
+    { "do": "concede", "row": 3, "expect": true, "note": "closes the row; index 10 itself is never marked, but locked flips true" },
+    { "assert": {
+        "crosses": { "3": 4 },
+        "points": { "3": 10 },
+        "rowLocked": { "3": true },
+        "lockedRowCount": 1,
+        "isGameOver": false
+    } },
+    { "do": "mark", "row": 3, "index": 5, "expect": false, "note": "conceded row is closed just like a self-locked one" },
+    { "do": "concede", "row": 3, "expect": false, "note": "already locked/conceded" },
+    { "do": "concede", "row": 1, "expect": true, "note": "second concede -> two locks -> game over" },
+    { "assert": {
+        "rowLocked": { "1": true, "3": true },
+        "lockedRowCount": 2,
+        "isGameOver": true
+    } },
+    { "do": "concede", "row": 0, "expect": false, "note": "game already over" },
+    { "do": "finish", "expect": false, "note": "already game over via locks; finish precondition is false" }
+  ]
+}

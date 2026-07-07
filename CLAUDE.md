@@ -198,7 +198,15 @@ rules/scoring portable and unit-testable off-device); `app` is the Compose UI.
 `spec/fixtures/` holds golden fixtures both platforms' engines must pass —
 the parity contract between the Swift and Kotlin implementations. New rules
 or engines need fixtures added there first, before either platform codes
-against them.
+against them. The two BASE dirs (`qwixx-big-points`, `qwixx-classic`) share
+one vocabulary and runners; every other variant has its OWN vocabulary
+(documented in its `spec/fixtures/<id>/README.md`) with its own runner pair.
+
+All NINE Qwixx games are ported (Big Points, classic, Lucky15, Connect15,
+Connected, X-Change, Double, Bonus, Mixx) — engines fixture-proven on both
+platforms, boards screenshot-compared against iOS. The Clever family is
+iOS-only for now (the KMP-vs-native checkpoint from the port plan applies
+before starting it). Known Android feature gap: the dice-roller strip (#30).
 
 Compile check: `cd android && ./gradlew build`. CI is workflow "7. Android
 Build" — runs per-PR on Linux (1× minutes, unlike macOS's 10×), path-filtered

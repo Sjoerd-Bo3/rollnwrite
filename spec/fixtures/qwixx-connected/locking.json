@@ -1,0 +1,38 @@
+{
+  "game": "qwixx",
+  "variant": "connected",
+  "config": { "scoringCap": 12 },
+  "name": "locking",
+  "description": "Locking rules are unchanged from classic Qwixx: the right-most cell (index 10) needs >=5 prior marks and locking adds one bonus cross. No chain uses index 10, so a chain co-mark can never itself lock a row.",
+  "steps": [
+    {"do": "markColor", "color": "red", "index": 10, "expect": false, "note": "0 prior marks - cannot lock yet"},
+    {"assert": {"rowLocked": {"red": false}}},
+
+    {"do": "markColor", "color": "red", "index": 0, "expect": true},
+    {"do": "markColor", "color": "red", "index": 1, "expect": true},
+    {"do": "markColor", "color": "red", "index": 2, "expect": true},
+    {"do": "markColor", "color": "red", "index": 3, "expect": true},
+    {"assert": {"crosses": {"red": 4}, "rowLocked": {"red": false}}},
+
+    {"do": "markColor", "color": "red", "index": 10, "expect": false, "note": "only 4 prior marks - still not enough"},
+    {"assert": {"rowLocked": {"red": false}}},
+
+    {"do": "markColor", "color": "red", "index": 4, "expect": true, "note": "red[4] (red 6) is a chain space - marking it auto-crosses yellow[4] too, and gives red its 5th mark"},
+    {"assert": {"crosses": {"red": 5, "yellow": 1}, "rowLocked": {"red": false}}},
+
+    {"do": "markColor", "color": "red", "index": 10, "expect": true, "note": "now >=5 prior marks - locking is legal; the lock itself is NOT a chain space, so no partner is auto-crossed by it"},
+    {"assert": {
+      "crosses": {"red": 7, "yellow": 1},
+      "points": {"red": 28},
+      "rowLocked": {"red": true},
+      "lockedRowCount": 1,
+      "isGameOver": false
+    }},
+
+    {"do": "markColor", "color": "red", "index": 9, "expect": false, "note": "red is locked - no further marks, even on a chain space (red[9]/red 11 is chained to yellow[9]/yellow 11)"},
+    {"assert": {"crosses": {"red": 7, "yellow": 1}}},
+
+    {"do": "undo", "expect": true, "note": "undo the lock: red unlocks, its lock-bonus cross is removed, back to 5 crosses (the chain co-mark from an EARLIER action is untouched)"},
+    {"assert": {"crosses": {"red": 5, "yellow": 1}, "rowLocked": {"red": false}}}
+  ]
+}

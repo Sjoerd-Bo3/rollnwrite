@@ -1,0 +1,43 @@
+{
+  "game": "qwixx",
+  "variant": "xchange",
+  "config": { "scoringCap": 12 },
+  "name": "scoring-basics",
+  "description": "Colour rows score the classic (cap 12) triangular sequence; the X-Change row contributes zero points at every point, even after several fields are crossed.",
+  "steps": [
+    { "do": "markColor", "color": "red", "index": 0, "expect": true },
+    { "do": "markColor", "color": "red", "index": 1, "expect": true },
+    { "do": "markColor", "color": "red", "index": 2, "expect": true },
+    { "assert": {
+        "crosses": { "red": 3 },
+        "points": { "red": 6 },
+        "totalScore": 6,
+        "canUndo": true,
+        "xchangeCrossed": 0
+    } },
+    { "do": "markXChange", "index": 0, "expect": true, "note": "field 0 is (8,5) - crossing it swaps to 5 or 8, used to mark a colour, but scores nothing itself" },
+    { "assert": {
+        "xchangeCrossed": 1,
+        "xchangeMarks": [0],
+        "totalScore": 6
+    } },
+    { "do": "markColor", "color": "yellow", "index": 3, "expect": true, "note": "the swapped value (e.g. 5 from field 0) used to mark yellow index 3 (printed 5)" },
+    { "do": "markColor", "color": "green", "index": 0, "expect": true },
+    { "do": "markColor", "color": "green", "index": 1, "expect": true },
+    { "do": "markColor", "color": "green", "index": 2, "expect": true },
+    { "do": "markColor", "color": "green", "index": 3, "expect": true },
+    { "do": "markXChange", "index": 1, "expect": true },
+    { "do": "markXChange", "index": 2, "expect": true },
+    { "assert": {
+        "crosses": { "red": 3, "yellow": 1, "green": 4, "blue": 0 },
+        "points": { "red": 6, "yellow": 1, "green": 10, "blue": 0 },
+        "penalties": 0,
+        "penaltyPoints": 0,
+        "totalScore": 17,
+        "isGameOver": false,
+        "lockedRowCount": 0,
+        "xchangeCrossed": 3,
+        "xchangeMarks": [0, 1, 2]
+    } }
+  ]
+}

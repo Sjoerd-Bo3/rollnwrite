@@ -1,0 +1,51 @@
+{
+  "game": "qwixx-lucky15",
+  "variant": "lucky15",
+  "config": {},
+  "name": "concede-finish",
+  "description": "Conceding a row locks it for free (no lock-bonus cross, but it still counts toward the two-locks end condition); a conceded row refuses further marks; and finishGame ends the game manually at any time, independent of locks/penalties/the Lucky 15 track.",
+  "steps": [
+    { "do": "markColor", "color": "red", "index": 0, "expect": true },
+    { "do": "markColor", "color": "red", "index": 1, "expect": true },
+    { "assert": { "crosses": { "red": 2 }, "points": { "red": 3 }, "rowLocked": { "red": false } } },
+
+    { "do": "concede", "color": "red", "expect": true, "note": "another player locked red - close it for free; conceding does not add a lock-bonus cross" },
+    { "assert": {
+        "crosses": { "red": 2 },
+        "points": { "red": 3 },
+        "rowLocked": { "red": true },
+        "lockedRowCount": 1,
+        "isGameOver": false
+    } },
+    { "do": "markColor", "color": "red", "index": 2, "expect": false, "note": "conceded row refuses further marks" },
+    { "do": "concede", "color": "red", "expect": false, "note": "cannot concede an already-locked row" },
+
+    { "do": "undo", "expect": true, "note": "undo the concede - row reopens" },
+    { "assert": { "rowLocked": { "red": false }, "lockedRowCount": 0, "canRedo": true } },
+    { "do": "markColor", "color": "red", "index": 2, "expect": true, "note": "row is open again after undo, but this is a FRESH forward move - it clears the redo stack" },
+    { "assert": { "canRedo": false } },
+
+    { "do": "concede", "color": "red", "expect": true, "note": "concede red again to reach the same locked state as before" },
+    { "assert": { "rowLocked": { "red": true }, "lockedRowCount": 1 } },
+
+    { "do": "markLucky", "expect": true },
+    { "assert": { "luckyCrossed": 1, "luckyPoints": 5 } },
+
+    { "do": "finish", "expect": true, "note": "manual finish ends the game with only one row locked and the Lucky 15 track not full" },
+    { "assert": {
+        "isGameOver": true,
+        "lockedRowCount": 1,
+        "luckyCrossed": 1,
+        "luckyPoints": 5
+    } },
+
+    { "do": "finish", "expect": false, "note": "already finished" },
+    { "do": "markLucky", "expect": false, "note": "game over - Lucky 15 track refused even though it still has room" },
+    { "do": "concede", "color": "yellow", "expect": false, "note": "game over - concede refused" },
+
+    { "do": "undo", "expect": true, "note": "undo the manual finish - game resumes" },
+    { "assert": { "isGameOver": false } },
+    { "do": "markLucky", "expect": true, "note": "engine is live again after undoing finish" },
+    { "assert": { "luckyCrossed": 2, "luckyPoints": 11 } }
+  ]
+}

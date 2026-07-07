@@ -1,4 +1,4 @@
-package dev.bo3.rollnwrite.engine.qwixx
+package dev.bo3.rollnwrite.engine.mixx
 
 import dev.bo3.rollnwrite.engine.TriangularScoring
 import kotlinx.serialization.json.Json
@@ -17,29 +17,18 @@ import org.junit.jupiter.api.TestFactory
 import java.io.File
 
 /**
- * Replays every golden fixture under `spec/fixtures/qwixx-*` against a real
- * [QwixxGame], per the runner semantics documented (normatively) in
- * `spec/README.md`. This is the parity contract with the Swift engine: a
- * rule divergence here fails this platform's build.
+ * Replays every golden fixture under `spec/fixtures/qwixx-mixx` against a
+ * real [MixxGame], per the runner semantics documented (normatively) in
+ * `spec/fixtures/qwixx-mixx/README.md`. This is the parity contract with the
+ * Swift engine (`MixxFixtureTests.swift`): a rule divergence here fails this
+ * platform's build.
  *
- * Reuses the fixture-shape parsing conventions from `FixtureFormatTest` but
- * additionally drives an engine instance and asserts observable state.
+ * Mirrors `QwixxFixtureRunnerTest` name-for-name, adapted to Mixx's
+ * row-by-index (not by-colour) vocabulary and lack of bonus rows.
  */
-class QwixxFixtureRunnerTest {
+class MixxFixtureRunnerTest {
 
     private val json = Json { ignoreUnknownKeys = true }
-
-    private val colorKeys = mapOf(
-        "red" to GameColor.RED,
-        "yellow" to GameColor.YELLOW,
-        "green" to GameColor.GREEN,
-        "blue" to GameColor.BLUE,
-    )
-
-    private val bonusRowKeys = mapOf(
-        "redYellow" to BonusRowId.REDYELLOW,
-        "greenBlue" to BonusRowId.GREENBLUE,
-    )
 
     private fun fixturesDir(): File {
         val path = System.getProperty("fixtures.dir")
@@ -51,53 +40,60 @@ class QwixxFixtureRunnerTest {
         return dir
     }
 
-    /**
-     * Only the BASE Qwixx directories: each variant has its own vocabulary
-     * and its own runner (see spec/fixtures/<id>/README.md) — this runner
-     * must not replay those against the base engine.
-     */
-    private val baseQwixxDirs = listOf("qwixx-big-points", "qwixx-classic")
-
     private fun fixtureFiles(dir: File): List<File> {
-        val files = baseQwixxDirs
-            .map { dir.resolve(it) }
-            .flatMap { sub -> sub.walkTopDown().filter { it.isFile && it.extension == "json" }.toList() }
+        val files = dir.walkTopDown().filter { it.isFile && it.extension == "json" }.toList()
         assertTrue(files.isNotEmpty()) {
-            "fixtures.dir '${dir.absolutePath}' contains no *.json fixtures in $baseQwixxDirs"
+            "fixtures.dir '${dir.absolutePath}' contains no *.json fixtures"
         }
         return files.sortedBy { it.path }
     }
 
     @TestFactory
-    fun `qwixx fixtures replay against the engine`(): List<DynamicTest> {
+    fun `qwixx-mixx fixtures replay against the engine`(): List<DynamicTest> {
         val dir = fixturesDir()
         val files = fixtureFiles(dir)
-        return files
-            .filter { it.readText().let { text -> """"game"\s*:\s*"qwixx"""".toRegex().containsMatchIn(text) } }
-            .map { file ->
-                DynamicTest.dynamicTest(file.relativeTo(dir).path) {
-                    replayFixture(file)
-                }
+        val mixxFixtures = files.filter {
+            it.readText().let { text -> """"game"\s*:\s*"qwixx-mixx"""".toRegex().containsMatchIn(text) }
+        }
+        // FAIL if no fixtures are found for this game, per the task contract —
+        // an empty directory must not silently pass as "0 dynamic tests, all green".
+        assertTrue(mixxFixtures.isNotEmpty()) {
+            "no qwixx-mixx fixtures found under '${dir.absolutePath}'"
+        }
+        return mixxFixtures.map { file ->
+            DynamicTest.dynamicTest(file.relativeTo(dir).path) {
+                replayFixture(file)
             }
+        }
     }
 
     private fun replayFixture(file: File) {
         val label = file.path
         val root = json.parseToJsonElement(file.readText()).jsonObject
 
+        val name = root["name"]?.jsonPrimitive?.contentOrNull ?: fail<Nothing>("$label: missing 'name'")
+        assertEquals(
+            file.nameWithoutExtension,
+            name,
+            "$label: fixture 'name' must match the filename (spec/fixtures/qwixx-mixx/README.md)",
+        )
+
+        val variant = root["variant"]?.jsonPrimitive?.contentOrNull ?: fail<Nothing>("$label: missing 'variant'")
         val config = root["config"]?.jsonObject ?: fail<Nothing>("$label: missing 'config' object")
+        val boardName = config["board"]?.jsonPrimitive?.contentOrNull
+            ?: fail<Nothing>("$label: missing config.board")
+        assertEquals(variant, boardName, "$label: 'variant' must equal 'config.board'")
         val scoringCap = config["scoringCap"]?.jsonPrimitive?.intOrNull
             ?: fail<Nothing>("$label: missing config.scoringCap")
-        val hasBonusRows = config["hasBonusRows"]?.jsonPrimitive?.booleanOrNull
-            ?: fail<Nothing>("$label: missing config.hasBonusRows")
 
+        val board = boardOf(boardName, label)
         val steps = (root["steps"] as? JsonArray) ?: fail<Nothing>("$label: missing 'steps' array")
 
-        val game = QwixxGame(scoring = TriangularScoring(cap = scoringCap), hasBonusRows = hasBonusRows)
+        val game = MixxGame(board = board, scoring = TriangularScoring(cap = scoringCap))
 
         steps.forEachIndexed { index, stepElement ->
             val step = stepElement.jsonObject
-            val stepLabel = "$label: step[$index] ${step}"
+            val stepLabel = "$label: step[$index] $step"
             when {
                 "do" in step -> applyDoStep(game, step, stepLabel)
                 "assert" in step -> applyAssertStep(game, step["assert"]!!.jsonObject, stepLabel)
@@ -106,37 +102,31 @@ class QwixxFixtureRunnerTest {
         }
     }
 
-    private fun applyDoStep(game: QwixxGame, step: JsonObject, stepLabel: String) {
+    private fun applyDoStep(game: MixxGame, step: JsonObject, stepLabel: String) {
         val action = step["do"]!!.jsonPrimitive.contentOrNull
             ?: fail<Nothing>("$stepLabel: 'do' must be a string")
         val expect = step["expect"]?.jsonPrimitive?.booleanOrNull
             ?: fail<Nothing>("$stepLabel: missing required 'expect' boolean")
 
         // Snapshot so a refused ("expect": false) mutation can be verified
-        // as a genuine no-op, per spec/README.md runner semantics.
+        // as a genuine no-op, per the runner semantics.
         val before = game.state
 
         when (action) {
-            "markColor" -> {
-                val color = colorOf(step, stepLabel)
+            "mark" -> {
+                val row = rowOf(step, stepLabel)
                 val idx = indexOf(step, stepLabel)
-                assertEquals(expect, game.canMarkColor(color, idx), "$stepLabel: canMarkColor mismatch")
-                game.markColor(color, idx)
-            }
-            "markBonus" -> {
-                val row = bonusRowOf(step, stepLabel)
-                val idx = indexOf(step, stepLabel)
-                assertEquals(expect, game.canMarkBonus(row, idx), "$stepLabel: canMarkBonus mismatch")
-                game.markBonus(row, idx)
+                assertEquals(expect, game.canMark(row, idx), "$stepLabel: canMark mismatch")
+                game.mark(row, idx)
             }
             "penalty" -> {
                 assertEquals(expect, game.canAddPenalty(), "$stepLabel: canAddPenalty mismatch")
                 game.addPenalty()
             }
             "concede" -> {
-                val color = colorOf(step, stepLabel)
-                assertEquals(expect, game.canConcedeRow(color), "$stepLabel: canConcedeRow mismatch")
-                game.concedeRow(color)
+                val row = rowOf(step, stepLabel)
+                assertEquals(expect, game.canConcedeRow(row), "$stepLabel: canConcedeRow mismatch")
+                game.concedeRow(row)
             }
             "finish" -> {
                 assertEquals(expect, game.canFinishManually(), "$stepLabel: canFinishManually mismatch")
@@ -158,21 +148,21 @@ class QwixxFixtureRunnerTest {
         }
     }
 
-    private fun applyAssertStep(game: QwixxGame, assertion: JsonObject, stepLabel: String) {
+    private fun applyAssertStep(game: MixxGame, assertion: JsonObject, stepLabel: String) {
         assertion["points"]?.jsonObject?.forEach { (key, value) ->
-            val color = colorKeys[key] ?: fail<Nothing>("$stepLabel.points: unknown color '$key'")
+            val row = rowIndexKey(key, stepLabel, "points")
             val expected = value.jsonPrimitive.intOrNull ?: fail("$stepLabel.points.$key must be an int")
-            assertEquals(expected, game.points(color), "$stepLabel: points[$key] mismatch")
+            assertEquals(expected, game.points(row), "$stepLabel: points[$key] mismatch")
         }
         assertion["crosses"]?.jsonObject?.forEach { (key, value) ->
-            val color = colorKeys[key] ?: fail<Nothing>("$stepLabel.crosses: unknown color '$key'")
+            val row = rowIndexKey(key, stepLabel, "crosses")
             val expected = value.jsonPrimitive.intOrNull ?: fail("$stepLabel.crosses.$key must be an int")
-            assertEquals(expected, game.crosses(color), "$stepLabel: crosses[$key] mismatch")
+            assertEquals(expected, game.crosses(row), "$stepLabel: crosses[$key] mismatch")
         }
         assertion["rowLocked"]?.jsonObject?.forEach { (key, value) ->
-            val color = colorKeys[key] ?: fail<Nothing>("$stepLabel.rowLocked: unknown color '$key'")
+            val row = rowIndexKey(key, stepLabel, "rowLocked")
             val expected = value.jsonPrimitive.booleanOrNull ?: fail("$stepLabel.rowLocked.$key must be a bool")
-            assertEquals(expected, game.row(color).locked, "$stepLabel: rowLocked[$key] mismatch")
+            assertEquals(expected, game.rowState(row).locked, "$stepLabel: rowLocked[$key] mismatch")
         }
         assertion["penalties"]?.let {
             assertEquals(it.jsonPrimitive.intOrNull, game.penalties, "$stepLabel: penalties mismatch")
@@ -197,17 +187,17 @@ class QwixxFixtureRunnerTest {
         }
     }
 
-    private fun colorOf(step: JsonObject, stepLabel: String): GameColor {
-        val key = step["color"]?.jsonPrimitive?.contentOrNull
-            ?: fail<Nothing>("$stepLabel: missing 'color'")
-        return colorKeys[key] ?: fail("$stepLabel: unknown color '$key'")
+    private fun boardOf(name: String, label: String): MixxBoard = when (name) {
+        "variantA" -> MixxBoard.VARIANT_A
+        "variantB" -> MixxBoard.VARIANT_B
+        else -> fail("$label: unknown board '$name'")
     }
 
-    private fun bonusRowOf(step: JsonObject, stepLabel: String): BonusRowId {
-        val key = step["row"]?.jsonPrimitive?.contentOrNull
-            ?: fail<Nothing>("$stepLabel: missing 'row'")
-        return bonusRowKeys[key] ?: fail("$stepLabel: unknown bonus row '$key'")
-    }
+    private fun rowOf(step: JsonObject, stepLabel: String): Int =
+        step["row"]?.jsonPrimitive?.intOrNull ?: fail("$stepLabel: missing 'row'")
+
+    private fun rowIndexKey(key: String, stepLabel: String, assertKey: String): Int =
+        key.toIntOrNull() ?: fail("$stepLabel.$assertKey: row key '$key' is not an integer")
 
     private fun indexOf(step: JsonObject, stepLabel: String): Int =
         step["index"]?.jsonPrimitive?.intOrNull ?: fail("$stepLabel: missing 'index'")

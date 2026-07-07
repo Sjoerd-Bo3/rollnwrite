@@ -1,0 +1,48 @@
+{
+  "game": "qwixx-lucky15",
+  "variant": "lucky15",
+  "config": {},
+  "name": "undo-redo",
+  "description": "Undo/redo is strictly LIFO across every action type including markLucky (undo decrements the track by one field, redo re-applies through markLucky()); a fresh move after an undo clears the redo stack, exactly like every other action.",
+  "steps": [
+    { "assert": { "canUndo": false, "canRedo": false } },
+
+    { "do": "markLucky", "expect": true },
+    { "assert": { "luckyCrossed": 1, "luckyPoints": 5, "canUndo": true, "canRedo": false } },
+
+    { "do": "markLucky", "expect": true },
+    { "assert": { "luckyCrossed": 2, "luckyPoints": 11 } },
+
+    { "do": "markColor", "color": "green", "index": 0, "expect": true },
+    { "assert": { "crosses": { "green": 1 }, "points": { "green": 1 } } },
+
+    { "do": "undo", "expect": true, "note": "undoes the green mark (LIFO - the most recent action)" },
+    { "assert": { "crosses": { "green": 0 }, "points": { "green": 0 }, "luckyCrossed": 2, "canRedo": true } },
+
+    { "do": "undo", "expect": true, "note": "undoes the second Lucky 15 field - crossed count decrements by exactly one" },
+    { "assert": { "luckyCrossed": 1, "luckyPoints": 5 } },
+
+    { "do": "undo", "expect": true, "note": "undoes the first Lucky 15 field" },
+    { "assert": { "luckyCrossed": 0, "luckyPoints": 0, "canUndo": false, "canRedo": true } },
+
+    { "do": "undo", "expect": false, "note": "history is empty - nothing left to undo" },
+    { "assert": { "luckyCrossed": 0 } },
+
+    { "do": "redo", "expect": true, "note": "re-applies the first Lucky 15 field through markLucky()" },
+    { "assert": { "luckyCrossed": 1, "luckyPoints": 5 } },
+    { "do": "redo", "expect": true },
+    { "assert": { "luckyCrossed": 2, "luckyPoints": 11 } },
+
+    { "do": "markColor", "color": "blue", "index": 0, "expect": true, "note": "a FRESH forward move after undoing - this must clear the remainder of the redo stack" },
+    { "assert": { "crosses": { "blue": 1 }, "canRedo": false } },
+    { "do": "redo", "expect": false, "note": "redo stack was cleared by the fresh blue mark - the green mark from before is gone forever" },
+    { "assert": { "crosses": { "green": 0 }, "luckyCrossed": 2 } },
+
+    { "do": "markColor", "color": "yellow", "index": 10, "expect": false, "note": "far below the >=5 lock threshold - illegal move, must not be recorded in history" },
+    { "assert": { "canUndo": true } },
+    { "do": "undo", "expect": true, "note": "the last APPLIED action is still the blue mark, not the refused yellow lock attempt" },
+    { "assert": { "crosses": { "blue": 0 }, "canRedo": true } },
+    { "do": "redo", "expect": true },
+    { "assert": { "crosses": { "blue": 1 }, "canRedo": false } }
+  ]
+}

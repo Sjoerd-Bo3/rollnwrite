@@ -1,0 +1,22 @@
+{
+  "game": "qwixx-connect15",
+  "variant": "connect15",
+  "config": {},
+  "name": "manual-finish",
+  "description": "Finishing manually ends the game immediately with whatever crosses/points have been recorded so far, blocking every further mutator, and is itself undoable.",
+  "steps": [
+    {"do": "markColor", "color": "red", "index": 0, "expect": true},
+    {"do": "markColor", "color": "red", "index": 1, "expect": true},
+    {"assert": {"crosses": {"red": 2}, "points": {"red": 3}, "isGameOver": false, "totalScore": 3}},
+    {"do": "finish", "expect": true},
+    {"assert": {"isGameOver": true, "totalScore": 3}},
+    {"do": "markColor", "color": "red", "index": 2, "expect": false},
+    {"do": "markConnection", "color": "red", "field": 0, "expect": false},
+    {"do": "penalty", "expect": false},
+    {"do": "concede", "color": "blue", "expect": false},
+    {"do": "finish", "expect": false},
+    {"note": "finishing is itself undoable, strictly LIFO", "do": "undo", "expect": true},
+    {"assert": {"isGameOver": false}},
+    {"do": "markColor", "color": "red", "index": 2, "expect": true}
+  ]
+}

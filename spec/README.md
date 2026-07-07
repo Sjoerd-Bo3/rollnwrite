@@ -28,24 +28,22 @@ One directory per game (or per rules-distinct variant family):
 
 ```
 spec/
-├─ README.md                      this document (normative)
+├─ README.md                      this document (normative for the BASE format)
 └─ fixtures/
-   ├─ qwixx-big-points/           Qwixx Big Points (cap 15, bonus rows)
-   │  ├─ scoring-basics.json
-   │  ├─ left-to-right.json
-   │  ├─ locking.json
-   │  ├─ bonus-rows.json
-   │  ├─ penalties.json
-   │  ├─ concede-finish.json
-   │  └─ undo-redo.json
-   └─ qwixx-classic/              classic Qwixx (cap 12, no bonus rows)
-      └─ basic.json
+   ├─ qwixx-big-points/           base vocabulary (cap 15, bonus rows)
+   ├─ qwixx-classic/              base vocabulary (cap 12, no bonus rows)
+   └─ qwixx-<variant>/            one directory per variant — bonus, connect15,
+                                  connected, double, lucky15, mixx, xchange —
+                                  each with its OWN vocabulary README.md and
+                                  its own runner pair (Kotlin + Swift)
 ```
 
-To add fixtures for a future game: create `spec/fixtures/<game-slug>/`, define
-that game's step vocabulary in this README (a new "do" verb set and "assert"
-key set mirroring its engine's mutators and observable state), and wire the
-directory into both platforms' runners.
+To add fixtures for a future game or variant: create
+`spec/fixtures/<game-slug>/` with its own `README.md` defining that game's
+step vocabulary (a "do" verb set and "assert" key set mirroring its engine's
+mutators and observable state), plus a runner pair — one Kotlin test in
+`android/engine`, one Swift test in `RollnWriteTests` — scanning that
+directory.
 
 ## Fixture file format
 
@@ -172,3 +170,11 @@ actual values.
   (including un-locking a row whose lock that action set) and pushes onto the
   redo stack; redo re-applies through the normal mutator; any fresh applied
   move clears the redo stack.
+
+## Variant directories
+
+Each variant's `README.md` is normative for that directory. One accepted
+historical drift: some variant fixtures identify themselves as
+`"game": "qwixx-<id>"`, others as `"game": "qwixx"` plus a `variant` key.
+Each directory is internally consistent and its own runners assert the
+convention it uses — new variants should prefer `"game": "qwixx"` + `variant`.

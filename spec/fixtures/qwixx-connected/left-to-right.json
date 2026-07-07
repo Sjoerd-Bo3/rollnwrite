@@ -1,0 +1,30 @@
+{
+  "game": "qwixx",
+  "variant": "connected",
+  "config": { "scoringCap": 12 },
+  "name": "left-to-right",
+  "description": "Ordinary colour-row left-to-right/forfeit rules are unchanged from classic Qwixx; an auto chain co-mark forfeits every earlier index in the partner's row exactly as a direct mark would.",
+  "steps": [
+    {"do": "markColor", "color": "red", "index": 3, "expect": true, "note": "red 5"},
+    {"do": "markColor", "color": "red", "index": 1, "expect": false, "note": "red 3 - to the left of an already-marked cell, forfeited"},
+    {"assert": {"crosses": {"red": 1}}},
+
+    {"do": "markColor", "color": "red", "index": 5, "expect": true, "note": "red 7, to the right - legal, skipping index 4 (red 6) forfeits it forever"},
+    {"assert": {"crosses": {"red": 2}}},
+
+    {"do": "markColor", "color": "red", "index": 4, "expect": false, "note": "red[4] (red 6) is a chain space, but forfeiture applies to chain spaces exactly like any other cell - it was skipped and is gone"},
+    {"assert": {"crosses": {"red": 2}}},
+
+    {"do": "markColor", "color": "yellow", "index": 8, "expect": true, "note": "yellow 10 - untouched row so far"},
+    {"assert": {"crosses": {"yellow": 1}, "rowLocked": {"green": false}}},
+
+    {"do": "markColor", "color": "green", "index": 6, "expect": true, "note": "green[6] (green 6) is chained to yellow[6] (yellow 8). Marking it auto-crosses yellow[6], but yellow's maxMarkedIndex is already 8 - the auto co-mark still lands on yellow[6] (ignores the normal rule) even though 6 < 8 would ordinarily be illegal"},
+    {"assert": {
+      "crosses": {"green": 1, "yellow": 2},
+      "rowLocked": {"yellow": false}
+    }},
+
+    {"do": "markColor", "color": "yellow", "index": 6, "expect": false, "note": "yellow[6] is now already marked (via the auto co-mark) - marking it again directly is illegal, same as any already-marked cell"},
+    {"assert": {"crosses": {"yellow": 2}}}
+  ]
+}

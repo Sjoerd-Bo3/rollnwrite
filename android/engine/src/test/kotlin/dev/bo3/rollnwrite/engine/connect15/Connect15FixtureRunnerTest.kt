@@ -1,6 +1,6 @@
-package dev.bo3.rollnwrite.engine.qwixx
+package dev.bo3.rollnwrite.engine.connect15
 
-import dev.bo3.rollnwrite.engine.TriangularScoring
+import dev.bo3.rollnwrite.engine.qwixx.GameColor
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -17,15 +17,18 @@ import org.junit.jupiter.api.TestFactory
 import java.io.File
 
 /**
- * Replays every golden fixture under `spec/fixtures/qwixx-*` against a real
- * [QwixxGame], per the runner semantics documented (normatively) in
- * `spec/README.md`. This is the parity contract with the Swift engine: a
+ * Replays every golden fixture under `spec/fixtures/qwixx-connect15` against
+ * a real [Connect15Game], per the runner semantics documented (normatively)
+ * in `spec/fixtures/qwixx-connect15/README.md`. This is the parity contract
+ * with the Swift engine (`RollnWriteTests/Connect15FixtureTests.swift`): a
  * rule divergence here fails this platform's build.
  *
- * Reuses the fixture-shape parsing conventions from `FixtureFormatTest` but
- * additionally drives an engine instance and asserts observable state.
+ * Structurally mirrors `Lucky15FixtureRunnerTest` but implements THIS
+ * variant's own action vocabulary (`markConnection` takes a `field` ordinal,
+ * not a color/row/index triple like `markColor`) rather than the base
+ * format or Lucky15's single-track vocabulary.
  */
-class QwixxFixtureRunnerTest {
+class Connect15FixtureRunnerTest {
 
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -34,11 +37,6 @@ class QwixxFixtureRunnerTest {
         "yellow" to GameColor.YELLOW,
         "green" to GameColor.GREEN,
         "blue" to GameColor.BLUE,
-    )
-
-    private val bonusRowKeys = mapOf(
-        "redYellow" to BonusRowId.REDYELLOW,
-        "greenBlue" to BonusRowId.GREENBLUE,
     )
 
     private fun fixturesDir(): File {
@@ -51,62 +49,57 @@ class QwixxFixtureRunnerTest {
         return dir
     }
 
-    /**
-     * Only the BASE Qwixx directories: each variant has its own vocabulary
-     * and its own runner (see spec/fixtures/<id>/README.md) — this runner
-     * must not replay those against the base engine.
-     */
-    private val baseQwixxDirs = listOf("qwixx-big-points", "qwixx-classic")
-
     private fun fixtureFiles(dir: File): List<File> {
-        val files = baseQwixxDirs
-            .map { dir.resolve(it) }
-            .flatMap { sub -> sub.walkTopDown().filter { it.isFile && it.extension == "json" }.toList() }
+        val sub = dir.resolve("qwixx-connect15")
+        assertTrue(sub.isDirectory) { "expected fixtures subdirectory '${sub.absolutePath}' to exist" }
+        val files = sub.walkTopDown().filter { it.isFile && it.extension == "json" }.toList()
         assertTrue(files.isNotEmpty()) {
-            "fixtures.dir '${dir.absolutePath}' contains no *.json fixtures in $baseQwixxDirs"
+            "fixtures dir '${sub.absolutePath}' contains no *.json fixtures"
         }
         return files.sortedBy { it.path }
     }
 
     @TestFactory
-    fun `qwixx fixtures replay against the engine`(): List<DynamicTest> {
+    fun `connect15 fixtures replay against the engine`(): List<DynamicTest> {
         val dir = fixturesDir()
         val files = fixtureFiles(dir)
-        return files
-            .filter { it.readText().let { text -> """"game"\s*:\s*"qwixx"""".toRegex().containsMatchIn(text) } }
-            .map { file ->
-                DynamicTest.dynamicTest(file.relativeTo(dir).path) {
-                    replayFixture(file)
-                }
+        return files.map { file ->
+            DynamicTest.dynamicTest(file.relativeTo(dir).path) {
+                replayFixture(file)
             }
+        }
     }
 
     private fun replayFixture(file: File) {
         val label = file.path
         val root = json.parseToJsonElement(file.readText()).jsonObject
 
-        val config = root["config"]?.jsonObject ?: fail<Nothing>("$label: missing 'config' object")
-        val scoringCap = config["scoringCap"]?.jsonPrimitive?.intOrNull
-            ?: fail<Nothing>("$label: missing config.scoringCap")
-        val hasBonusRows = config["hasBonusRows"]?.jsonPrimitive?.booleanOrNull
-            ?: fail<Nothing>("$label: missing config.hasBonusRows")
+        val game = root.stringField("game", label)
+        assertEquals("qwixx-connect15", game, "$label: unexpected 'game' value")
+
+        val name = root.stringField("name", label)
+        assertEquals(
+            file.nameWithoutExtension,
+            name,
+            "$label: fixture 'name' must match the filename",
+        )
 
         val steps = (root["steps"] as? JsonArray) ?: fail<Nothing>("$label: missing 'steps' array")
 
-        val game = QwixxGame(scoring = TriangularScoring(cap = scoringCap), hasBonusRows = hasBonusRows)
+        val engine = Connect15Game()
 
         steps.forEachIndexed { index, stepElement ->
             val step = stepElement.jsonObject
-            val stepLabel = "$label: step[$index] ${step}"
+            val stepLabel = "$label: step[$index] $step"
             when {
-                "do" in step -> applyDoStep(game, step, stepLabel)
-                "assert" in step -> applyAssertStep(game, step["assert"]!!.jsonObject, stepLabel)
+                "do" in step -> applyDoStep(engine, step, stepLabel)
+                "assert" in step -> applyAssertStep(engine, step["assert"]!!.jsonObject, stepLabel)
                 else -> fail<Unit>("$stepLabel: must contain exactly one of 'do' or 'assert'")
             }
         }
     }
 
-    private fun applyDoStep(game: QwixxGame, step: JsonObject, stepLabel: String) {
+    private fun applyDoStep(game: Connect15Game, step: JsonObject, stepLabel: String) {
         val action = step["do"]!!.jsonPrimitive.contentOrNull
             ?: fail<Nothing>("$stepLabel: 'do' must be a string")
         val expect = step["expect"]?.jsonPrimitive?.booleanOrNull
@@ -123,11 +116,11 @@ class QwixxFixtureRunnerTest {
                 assertEquals(expect, game.canMarkColor(color, idx), "$stepLabel: canMarkColor mismatch")
                 game.markColor(color, idx)
             }
-            "markBonus" -> {
-                val row = bonusRowOf(step, stepLabel)
-                val idx = indexOf(step, stepLabel)
-                assertEquals(expect, game.canMarkBonus(row, idx), "$stepLabel: canMarkBonus mismatch")
-                game.markBonus(row, idx)
+            "markConnection" -> {
+                val color = colorOf(step, stepLabel)
+                val field = fieldOf(step, stepLabel)
+                assertEquals(expect, game.canMarkConnection(color, field), "$stepLabel: canMarkConnection mismatch")
+                game.markConnection(color, field)
             }
             "penalty" -> {
                 assertEquals(expect, game.canAddPenalty(), "$stepLabel: canAddPenalty mismatch")
@@ -158,7 +151,7 @@ class QwixxFixtureRunnerTest {
         }
     }
 
-    private fun applyAssertStep(game: QwixxGame, assertion: JsonObject, stepLabel: String) {
+    private fun applyAssertStep(game: Connect15Game, assertion: JsonObject, stepLabel: String) {
         assertion["points"]?.jsonObject?.forEach { (key, value) ->
             val color = colorKeys[key] ?: fail<Nothing>("$stepLabel.points: unknown color '$key'")
             val expected = value.jsonPrimitive.intOrNull ?: fail("$stepLabel.points.$key must be an int")
@@ -203,12 +196,12 @@ class QwixxFixtureRunnerTest {
         return colorKeys[key] ?: fail("$stepLabel: unknown color '$key'")
     }
 
-    private fun bonusRowOf(step: JsonObject, stepLabel: String): BonusRowId {
-        val key = step["row"]?.jsonPrimitive?.contentOrNull
-            ?: fail<Nothing>("$stepLabel: missing 'row'")
-        return bonusRowKeys[key] ?: fail("$stepLabel: unknown bonus row '$key'")
-    }
-
     private fun indexOf(step: JsonObject, stepLabel: String): Int =
         step["index"]?.jsonPrimitive?.intOrNull ?: fail("$stepLabel: missing 'index'")
+
+    private fun fieldOf(step: JsonObject, stepLabel: String): Int =
+        step["field"]?.jsonPrimitive?.intOrNull ?: fail("$stepLabel: missing 'field'")
+
+    private fun JsonObject.stringField(key: String, label: String): String =
+        this[key]?.jsonPrimitive?.contentOrNull ?: fail("$label: missing required string field '$key'")
 }

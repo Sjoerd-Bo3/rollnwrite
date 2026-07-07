@@ -1,0 +1,40 @@
+{
+  "game": "qwixx-lucky15",
+  "variant": "lucky15",
+  "config": {},
+  "name": "left-to-right",
+  "description": "Colour rows enforce strict left-to-right marking (skipped cells are forfeited forever) exactly like classic Qwixx; the Lucky 15 track is independently strictly ordered by construction (markLucky always targets the single next field, so there is no way to skip a field) and its legality never depends on colour-row state.",
+  "steps": [
+    { "do": "markColor", "color": "green", "index": 3, "expect": true, "note": "cross printed 9 first" },
+    { "do": "markColor", "color": "green", "index": 1, "expect": false, "note": "index 1 (printed 11) is left of the already-marked index 3 - forfeited forever" },
+    { "assert": { "crosses": { "green": 1 }, "points": { "green": 1 } } },
+    { "do": "markColor", "color": "green", "index": 3, "expect": false, "note": "already marked" },
+    { "do": "markColor", "color": "green", "index": 4, "expect": true, "note": "index 4 (printed 8) is right of index 3 - legal" },
+    { "assert": { "crosses": { "green": 2 }, "points": { "green": 3 } } },
+
+    { "do": "markLucky", "expect": true, "note": "Lucky 15 field 1 (value 5) - independent of any colour-row state" },
+    { "assert": { "luckyCrossed": 1, "luckyPoints": 5 } },
+    { "do": "markLucky", "expect": true, "note": "always advances to the single next field (value 11) - no way to address/skip a field" },
+    { "assert": { "luckyCrossed": 2, "luckyPoints": 11 } },
+
+    { "do": "markColor", "color": "red", "index": 10, "expect": false, "note": "lock index needs >=5 marks first; only 0 so far" },
+    { "do": "markColor", "color": "red", "index": 0, "expect": true },
+    { "do": "markColor", "color": "red", "index": 1, "expect": true },
+    { "do": "markColor", "color": "red", "index": 2, "expect": true },
+    { "do": "markColor", "color": "red", "index": 3, "expect": true },
+    { "do": "markColor", "color": "red", "index": 4, "expect": true },
+    { "assert": { "crosses": { "red": 5 }, "rowLocked": { "red": false } } },
+    { "do": "markColor", "color": "red", "index": 10, "expect": true, "note": "now >=5 marks - lock is legal; marks {0,1,2,3,4,10} = 6 own marks + 1 lock bonus = 7 scoring crosses" },
+    { "assert": {
+        "crosses": { "red": 7 },
+        "points": { "red": 28 },
+        "rowLocked": { "red": true },
+        "lockedRowCount": 1,
+        "isGameOver": false
+    } },
+    { "do": "markColor", "color": "red", "index": 5, "expect": false, "note": "row is locked - no further marks" },
+
+    { "do": "markLucky", "expect": true, "note": "still fully independent of the now-locked red row" },
+    { "assert": { "luckyCrossed": 3, "luckyPoints": 18, "totalScore": 49 } }
+  ]
+}

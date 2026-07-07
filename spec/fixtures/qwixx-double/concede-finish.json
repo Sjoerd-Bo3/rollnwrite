@@ -1,0 +1,39 @@
+{
+  "game": "qwixx-double",
+  "variant": "double-a",
+  "config": { "scoringCap": 16 },
+  "name": "concede-finish",
+  "description": "Conceding a colour closes the row for the two-locks end condition WITHOUT the lock scoring bonus; manual finish independently ends the game (before any two locks) and both refuse once the game is already over.",
+  "steps": [
+    { "do": "markColor", "color": "green", "index": 0, "expect": true },
+    { "do": "doubleColor", "color": "green", "index": 0, "expect": true },
+    { "assert": { "crosses": { "green": 2 }, "rowLocked": { "green": false } } },
+    { "do": "concede", "color": "green", "expect": true },
+    { "assert": {
+        "rowLocked": { "green": true },
+        "lockedRowCount": 1,
+        "crosses": { "green": 2 },
+        "points": { "green": 3 },
+        "isGameOver": false
+    }, "note": "concede never adds the +1 lock bonus - crossCount unchanged by the concede itself" },
+    { "do": "markColor", "color": "green", "index": 3, "expect": false, "note": "conceded row is locked - no further marks" },
+    { "do": "doubleColor", "color": "green", "index": 0, "expect": false, "note": "conceded row also refuses doubles" },
+    { "do": "concede", "color": "green", "expect": false, "note": "already locked - concede refuses too" },
+
+    { "do": "markColor", "color": "red", "index": 0, "expect": true },
+    { "do": "finish", "expect": true, "note": "manual finish ends the game with only 1 row locked - an independent end condition" },
+    { "assert": {
+        "lockedRowCount": 1,
+        "isGameOver": true,
+        "crosses": { "red": 1 },
+        "points": { "red": 1 }
+    } },
+    { "do": "markColor", "color": "blue", "index": 0, "expect": false, "note": "game over: no further marks" },
+    { "do": "concede", "color": "blue", "expect": false, "note": "game over: concede refuses too" },
+    { "do": "finish", "expect": false, "note": "already finished" },
+
+    { "do": "undo", "expect": true, "note": "undo the finish - the game resumes live" },
+    { "assert": { "isGameOver": false, "lockedRowCount": 1 } },
+    { "do": "markColor", "color": "blue", "index": 0, "expect": true, "note": "legal again now the game is live" }
+  ]
+}

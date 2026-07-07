@@ -1,0 +1,43 @@
+{
+  "game": "qwixx",
+  "variant": "connected",
+  "config": { "scoringCap": 12 },
+  "name": "chains",
+  "description": "Crossing a circled chain space auto-crosses its linked partner, even out of left-to-right order on the partner's row and even into an already-locked partner row; an already-marked partner is left alone (no double mark). The forced co-mark never locks a row by itself.",
+  "steps": [
+    {"assert": {"crosses": {"red": 0, "yellow": 0, "green": 0, "blue": 0}, "rowLocked": {"red": false, "yellow": false, "green": false, "blue": false}}},
+
+    {"do": "markColor", "color": "red", "index": 4, "expect": true, "note": "red[4] (red 6) is chained to yellow[4] (yellow 6); marking it auto-crosses yellow 6 too, as ONE action"},
+    {"assert": {
+      "crosses": {"red": 1, "yellow": 1},
+      "rowLocked": {"red": false, "yellow": false}
+    }},
+
+    {"do": "markColor", "color": "yellow", "index": 4, "expect": false, "note": "yellow[4] is already marked (via the chain, not directly) - marking it again directly is illegal"},
+    {"assert": {"crosses": {"yellow": 1}}},
+
+    {"do": "markColor", "color": "yellow", "index": 1, "expect": false, "note": "yellow[1] (yellow 3, chained to green[1]/green 11) is now forfeited: the auto co-mark set yellow's maxMarkedIndex to 4, so index 1 < 4 is illegal exactly like any ordinary forfeited cell - the chain grants no left-to-right immunity on its OWN row"},
+    {"assert": {"crosses": {"yellow": 1}, "penalties": 0}},
+
+    {"do": "concede", "color": "blue", "expect": true, "note": "close blue for no points, locking it without touching its marks - sets up the next check"},
+    {"assert": {"rowLocked": {"blue": true}, "lockedRowCount": 1, "isGameOver": false}},
+
+    {"do": "markColor", "color": "green", "index": 8, "expect": true, "note": "green[8] (green 4) is chained to blue[8] (blue 4). Marking green[8] is legal (green untouched so far) and auto-crosses blue[8] EVEN THOUGH blue is already locked - the automatic co-mark ignores the normal marking rules entirely, per the official rule"},
+    {"assert": {
+      "crosses": {"green": 1, "blue": 1},
+      "rowLocked": {"blue": true},
+      "isGameOver": false
+    }},
+
+    {"do": "undo", "expect": true, "note": "undo reverses the deliberate green[8] cross AND its forced blue[8] co-mark together, as one atomic step - blue stays locked (concede is a separate history entry)"},
+    {"assert": {"crosses": {"green": 0, "blue": 0}, "rowLocked": {"blue": true}}},
+
+    {"do": "redo", "expect": true, "note": "redo re-applies markColor(green,8) through the same mutator, which re-derives the chain partner deterministically and reproduces the identical auto co-mark"},
+    {"assert": {"crosses": {"green": 1, "blue": 1}, "rowLocked": {"blue": true}}},
+
+    {"do": "concede", "color": "yellow", "expect": true, "note": "now 2 rows are locked (blue, yellow) - the game ends"},
+    {"assert": {"lockedRowCount": 2, "isGameOver": true}},
+
+    {"do": "markColor", "color": "green", "index": 3, "expect": false, "note": "once the game is over, every mutation's precondition is false, including a legal-looking chain cross"}
+  ]
+}

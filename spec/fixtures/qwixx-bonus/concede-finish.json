@@ -1,0 +1,211 @@
+{
+  "game": "qwixx",
+  "variant": "bonus",
+  "config": {
+    "scoringCap": 12
+  },
+  "name": "concede-finish",
+  "description": "Concede locks a row with no lock bonus, conceded rows count toward the two-lock game end AND forfeit that colour's remaining un-earned bar fields, finish ends the game immediately, and both are exactly undoable (including the bar forfeiture).",
+  "steps": [
+    {
+      "do": "markColor",
+      "color": "red",
+      "index": 0,
+      "expect": true,
+      "note": "value 2, not boxed"
+    },
+    {
+      "do": "markColor",
+      "color": "red",
+      "index": 1,
+      "expect": true,
+      "note": "value 3, boxed -> earns bar field 0"
+    },
+    {
+      "assert": {
+        "barEarned": [
+          0
+        ],
+        "barEarnedCount": 1
+      }
+    },
+    {
+      "do": "concede",
+      "color": "red",
+      "expect": true,
+      "note": "another player locked red - close it for free"
+    },
+    {
+      "assert": {
+        "rowLocked": {
+          "red": true
+        },
+        "lockedRowCount": 1,
+        "crosses": {
+          "red": 2
+        },
+        "points": {
+          "red": 3
+        },
+        "totalScore": 3,
+        "isGameOver": false,
+        "barEarned": [
+          0
+        ],
+        "barForfeited": [
+          5,
+          8
+        ]
+      },
+      "note": "concede forfeits red's remaining un-earned bar fields 5 and 8 (field 0 stays earned)"
+    },
+    {
+      "do": "concede",
+      "color": "red",
+      "expect": false,
+      "note": "cannot concede an already-locked row"
+    },
+    {
+      "do": "markColor",
+      "color": "red",
+      "index": 5,
+      "expect": false,
+      "note": "conceded row refuses marks"
+    },
+    {
+      "do": "undo",
+      "expect": true,
+      "note": "undo the concede - row reopens and its bar forfeiture reverses"
+    },
+    {
+      "assert": {
+        "rowLocked": {
+          "red": false
+        },
+        "lockedRowCount": 0,
+        "crosses": {
+          "red": 2
+        },
+        "isGameOver": false,
+        "canRedo": true,
+        "barEarned": [
+          0
+        ],
+        "barForfeited": []
+      }
+    },
+    {
+      "do": "concede",
+      "color": "red",
+      "expect": true,
+      "note": "fresh move clears the redo stack"
+    },
+    {
+      "assert": {
+        "canRedo": false,
+        "barForfeited": [
+          5,
+          8
+        ]
+      }
+    },
+    {
+      "do": "concede",
+      "color": "yellow",
+      "expect": true,
+      "note": "second locked row - conceded rows count toward game end; yellow has no bar earns yet so all 3 of its fields (1, 7, 9) forfeit"
+    },
+    {
+      "assert": {
+        "lockedRowCount": 2,
+        "isGameOver": true,
+        "crosses": {
+          "yellow": 0
+        },
+        "points": {
+          "yellow": 0
+        },
+        "totalScore": 3,
+        "barEarned": [
+          0
+        ],
+        "barForfeited": [
+          1,
+          5,
+          7,
+          8,
+          9
+        ]
+      }
+    },
+    {
+      "do": "undo",
+      "expect": true,
+      "note": "undo the yellow concede - play resumes, yellow's forfeiture reverses"
+    },
+    {
+      "assert": {
+        "lockedRowCount": 1,
+        "isGameOver": false,
+        "barForfeited": [
+          5,
+          8
+        ]
+      }
+    },
+    {
+      "do": "finish",
+      "expect": true,
+      "note": "manual finish ends the game immediately; finish never touches the bar"
+    },
+    {
+      "assert": {
+        "isGameOver": true,
+        "lockedRowCount": 1,
+        "totalScore": 3,
+        "barEarned": [
+          0
+        ],
+        "barForfeited": [
+          5,
+          8
+        ]
+      }
+    },
+    {
+      "do": "markColor",
+      "color": "green",
+      "index": 0,
+      "expect": false
+    },
+    {
+      "do": "undo",
+      "expect": true,
+      "note": "undo the finish - play resumes"
+    },
+    {
+      "assert": {
+        "isGameOver": false,
+        "canRedo": true
+      }
+    },
+    {
+      "do": "redo",
+      "expect": true,
+      "note": "redo re-applies the finish"
+    },
+    {
+      "assert": {
+        "isGameOver": true,
+        "totalScore": 3,
+        "barEarned": [
+          0
+        ],
+        "barForfeited": [
+          5,
+          8
+        ]
+      }
+    }
+  ]
+}

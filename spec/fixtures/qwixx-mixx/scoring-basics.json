@@ -1,0 +1,42 @@
+{
+  "game": "qwixx-mixx",
+  "variant": "variantA",
+  "config": { "board": "variantA", "scoringCap": 12 },
+  "name": "scoring-basics",
+  "description": "Triangular scoring per row (no bonus rows exist in Mixx): marks accumulate 1,3,6,10,... and a completely filled row (11 marks + lock = 12 crosses, the cap) scores exactly 78.",
+  "steps": [
+    { "assert": {
+        "points": { "0": 0, "1": 0, "2": 0, "3": 0 },
+        "crosses": { "0": 0, "1": 0, "2": 0, "3": 0 },
+        "totalScore": 0
+    } },
+    { "do": "mark", "row": 0, "index": 0, "expect": true, "note": "1 cross -> 1 point" },
+    { "assert": { "crosses": { "0": 1 }, "points": { "0": 1 }, "totalScore": 1 } },
+    { "do": "mark", "row": 0, "index": 1, "expect": true, "note": "2 crosses -> 3 points" },
+    { "assert": { "crosses": { "0": 2 }, "points": { "0": 3 }, "totalScore": 3 } },
+    { "do": "mark", "row": 0, "index": 2, "expect": true, "note": "3 crosses -> 6 points" },
+    { "assert": { "crosses": { "0": 3 }, "points": { "0": 6 }, "totalScore": 6 } },
+    { "do": "mark", "row": 0, "index": 3, "expect": true },
+    { "assert": { "crosses": { "0": 4 }, "points": { "0": 10 } } },
+    { "do": "mark", "row": 0, "index": 4, "expect": true, "note": "5th mark: now eligible to lock (>=5 marks)" },
+    { "assert": { "crosses": { "0": 5 }, "points": { "0": 15 } } },
+    { "do": "mark", "row": 0, "index": 5, "expect": true },
+    { "do": "mark", "row": 0, "index": 6, "expect": true },
+    { "do": "mark", "row": 0, "index": 7, "expect": true },
+    { "do": "mark", "row": 0, "index": 8, "expect": true },
+    { "do": "mark", "row": 0, "index": 9, "expect": true },
+    { "assert": { "crosses": { "0": 10 }, "points": { "0": 55 }, "rowLocked": { "0": false } } },
+    { "do": "mark", "row": 0, "index": 10, "expect": true, "note": "11 marks + lock bonus = 12 crosses, exactly the cap" },
+    { "assert": {
+        "crosses": { "0": 12 },
+        "points": { "0": 78 },
+        "rowLocked": { "0": true },
+        "lockedRowCount": 1,
+        "totalScore": 78,
+        "isGameOver": false
+    } },
+    { "do": "mark", "row": 1, "index": 0, "expect": true },
+    { "do": "mark", "row": 1, "index": 10, "expect": false, "note": "lock refused: only 1 mark, needs >=5" },
+    { "assert": { "crosses": { "1": 1 }, "points": { "1": 1 }, "totalScore": 79 } }
+  ]
+}

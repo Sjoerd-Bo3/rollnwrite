@@ -38,7 +38,8 @@ import java.io.File
  * ```
  * `variant` is `"big-points"` (config: cap 15, bonus rows true) or
  * `"classic"` (config: cap 12, bonus rows false) — `config` MUST agree with
- * `variant`.
+ * `variant`. Every other Qwixx variant has its OWN vocabulary and format
+ * test (see `spec/fixtures/<id>/README.md`); this test never sees those.
  *
  * A step is EITHER a "do" or an "assert":
  * ```json
@@ -141,11 +142,12 @@ class FixtureFormatTest {
         require(game, "game", "qwixx", label)
 
         val variant = root.stringField("variant", label)
-        val variantBounds = variantConfigs[variant]
-            ?: fail<Nothing>("$label: variant '$variant' must be one of ${variantConfigs.keys}")
 
         val config = root["config"]?.jsonObject
             ?: fail<Nothing>("$label: missing 'config' object")
+
+        val variantBounds = variantConfigs[variant]
+            ?: fail<Nothing>("$label: variant '$variant' must be one of ${variantConfigs.keys}")
         val scoringCap = config.intField("scoringCap", label)
         val hasBonusRows = config.boolField("hasBonusRows", label)
         val (expectedCap, expectedBonus) = variantBounds

@@ -1,0 +1,29 @@
+{
+  "game": "qwixx-mixx",
+  "variant": "variantA",
+  "config": { "board": "variantA", "scoringCap": 12 },
+  "name": "penalties",
+  "description": "Each penalty costs 5 points and is capped at 4; the 4th penalty ends the game even with zero rows locked.",
+  "steps": [
+    { "assert": { "penalties": 0, "penaltyPoints": 0, "totalScore": 0 } },
+    { "do": "mark", "row": 0, "index": 0, "expect": true },
+    { "do": "mark", "row": 0, "index": 1, "expect": true },
+    { "assert": { "crosses": { "0": 2 }, "points": { "0": 3 }, "totalScore": 3 } },
+    { "do": "penalty", "expect": true },
+    { "assert": { "penalties": 1, "penaltyPoints": 5, "totalScore": -2 } },
+    { "do": "penalty", "expect": true },
+    { "do": "penalty", "expect": true },
+    { "assert": { "penalties": 3, "penaltyPoints": 15, "totalScore": -12, "isGameOver": false } },
+    { "do": "penalty", "expect": true, "note": "4th penalty ends the game" },
+    { "assert": {
+        "penalties": 4,
+        "penaltyPoints": 20,
+        "totalScore": -17,
+        "isGameOver": true,
+        "lockedRowCount": 0
+    } },
+    { "do": "penalty", "expect": false, "note": "already at the 4-penalty maximum and game over" },
+    { "do": "mark", "row": 1, "index": 0, "expect": false, "note": "game over: marking is refused too" },
+    { "assert": { "penalties": 4, "totalScore": -17 } }
+  ]
+}

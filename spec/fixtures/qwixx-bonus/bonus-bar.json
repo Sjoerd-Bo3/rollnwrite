@@ -1,0 +1,269 @@
+{
+  "game": "qwixx",
+  "variant": "bonus",
+  "config": {
+    "scoringCap": 12
+  },
+  "name": "bonus-bar",
+  "description": "The bonus bar is a single shared left-to-right chain: ANY colour's boxed cross earns the next earnable field regardless of which colour triggered it; locking a colour forfeits ONLY that colour's own remaining fields (never another colour's, and never an already-earned one); undo reverses an earn/forfeit atomically with the colour mark that caused it.",
+  "steps": [
+    {
+      "assert": {
+        "barEarned": [],
+        "barForfeited": [],
+        "barEarnedCount": 0
+      }
+    },
+    {
+      "do": "markColor",
+      "color": "green",
+      "index": 0,
+      "expect": true,
+      "note": "value 12, not boxed"
+    },
+    {
+      "do": "markColor",
+      "color": "green",
+      "index": 1,
+      "expect": true,
+      "note": "value 11, boxed for green -> earns bar field 0 (red)"
+    },
+    {
+      "assert": {
+        "barEarned": [
+          0
+        ],
+        "barEarnedCount": 1
+      }
+    },
+    {
+      "do": "markColor",
+      "color": "blue",
+      "index": 2,
+      "expect": true,
+      "note": "value 10, boxed for blue -> earns bar field 1 (yellow), the next earnable regardless of colour"
+    },
+    {
+      "assert": {
+        "barEarned": [
+          0,
+          1
+        ],
+        "barEarnedCount": 2
+      }
+    },
+    {
+      "do": "markColor",
+      "color": "red",
+      "index": 1,
+      "expect": true,
+      "note": "value 3, boxed for red -> earns bar field 2 (green)"
+    },
+    {
+      "assert": {
+        "barEarned": [
+          0,
+          1,
+          2
+        ],
+        "barEarnedCount": 3,
+        "barForfeited": [],
+        "crosses": {
+          "red": 1,
+          "yellow": 0,
+          "green": 2,
+          "blue": 1
+        }
+      }
+    },
+    {
+      "do": "markColor",
+      "color": "green",
+      "index": 2,
+      "expect": true,
+      "note": "value 10, not boxed for green"
+    },
+    {
+      "do": "markColor",
+      "color": "green",
+      "index": 3,
+      "expect": true,
+      "note": "value 9, not boxed"
+    },
+    {
+      "do": "markColor",
+      "color": "green",
+      "index": 4,
+      "expect": true,
+      "note": "value 8, not boxed for green"
+    },
+    {
+      "assert": {
+        "barEarned": [
+          0,
+          1,
+          2
+        ],
+        "barForfeited": []
+      },
+      "note": "no new boxed cells hit while filling to 5 marks"
+    },
+    {
+      "do": "markColor",
+      "color": "green",
+      "index": 10,
+      "expect": true,
+      "note": "5 marks now (0,1,2,3,4) - locking is legal"
+    },
+    {
+      "assert": {
+        "rowLocked": {
+          "green": true
+        },
+        "lockedRowCount": 1,
+        "crosses": {
+          "green": 7
+        },
+        "points": {
+          "green": 28
+        },
+        "barEarned": [
+          0,
+          1,
+          2
+        ],
+        "barForfeited": [
+          4,
+          11
+        ],
+        "barEarnedCount": 3
+      },
+      "note": "green owns bar fields 2, 4, 11; field 2 was already earned so only 4 and 11 forfeit \u2014 field 0 (red) and 1 (yellow) are untouched"
+    },
+    {
+      "do": "markColor",
+      "color": "blue",
+      "index": 4,
+      "expect": true,
+      "note": "value 8, boxed for blue -> earns next earnable field 3 (blue) \u2014 forfeited green fields are skipped, never re-earned"
+    },
+    {
+      "assert": {
+        "barEarned": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "barForfeited": [
+          4,
+          11
+        ],
+        "barEarnedCount": 4
+      }
+    },
+    {
+      "do": "undo",
+      "expect": true,
+      "note": "reverses the blue mark AND its bar earn atomically"
+    },
+    {
+      "assert": {
+        "barEarned": [
+          0,
+          1,
+          2
+        ],
+        "barForfeited": [
+          4,
+          11
+        ],
+        "crosses": {
+          "blue": 1
+        }
+      }
+    },
+    {
+      "do": "undo",
+      "expect": true,
+      "note": "reverses green's lock: un-locks, removes the index-10 mark, un-forfeits fields 4 and 11"
+    },
+    {
+      "assert": {
+        "rowLocked": {
+          "green": false
+        },
+        "lockedRowCount": 0,
+        "crosses": {
+          "green": 5
+        },
+        "barEarned": [
+          0,
+          1,
+          2
+        ],
+        "barForfeited": []
+      },
+      "note": "forfeiture is undone together with the lock that caused it"
+    },
+    {
+      "do": "redo",
+      "expect": true,
+      "note": "redo re-applies the lock through markColor, restoring the forfeiture exactly"
+    },
+    {
+      "assert": {
+        "rowLocked": {
+          "green": true
+        },
+        "lockedRowCount": 1,
+        "crosses": {
+          "green": 7
+        },
+        "barEarned": [
+          0,
+          1,
+          2
+        ],
+        "barForfeited": [
+          4,
+          11
+        ]
+      }
+    },
+    {
+      "do": "concede",
+      "color": "blue",
+      "expect": true,
+      "note": "conceding blue also forfeits its remaining un-earned bar fields (3, 6, 10) \u2014 none were earned"
+    },
+    {
+      "assert": {
+        "rowLocked": {
+          "blue": true
+        },
+        "lockedRowCount": 2,
+        "isGameOver": true,
+        "crosses": {
+          "blue": 1
+        },
+        "points": {
+          "blue": 1
+        },
+        "barEarned": [
+          0,
+          1,
+          2
+        ],
+        "barForfeited": [
+          3,
+          4,
+          6,
+          10,
+          11
+        ],
+        "barEarnedCount": 3
+      }
+    }
+  ]
+}

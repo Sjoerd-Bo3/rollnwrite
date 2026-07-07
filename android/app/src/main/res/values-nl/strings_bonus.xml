@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Catalogue -->
+    <string name="qwixx_bonus_title">Qwixx Bonus</string>
+    <string name="qwixx_bonus_subtitle">Klassieke rijen · genummerde vakjes voeden een bonusbalk</string>
+
+    <!-- Board content -->
+    <string name="bonus_bar_field_content_description">Bonusbalk %1$s</string>
+    <string name="bonus_bar_field_state_earned">weggestreept</string>
+    <string name="bonus_bar_field_state_forfeited">vervallen</string>
+    <string name="bonus_bar_field_state_open">open</string>
+
+    <!-- Rules dialog -->
+    <string name="rules_title_bonus">Qwixx — Bonus (versie A)</string>
+    <string name="rules_subtitle_bonus">Officiële regels voor de Qwixx Bonus-uitbreiding, versie A</string>
+
+    <string name="rules_heading_bonus_goal">Doel</string>
+    <string name="rules_body_bonus_goal">Speel klassieke Qwixx, maar twaalf speciale getallen (gedrukt in een zwart vakje) voeden een bonusbalk die je gratis extra kruisjes oplevert.</string>
+
+    <string name="rules_heading_bonus_card">De kaart</string>
+    <string name="rules_body_bonus_card_1">De rode en gele rij lopen 2 → 12 (van links naar rechts). De groene en blauwe rij lopen 12 → 2.</string>
+    <string name="rules_body_bonus_card_2">Drie getallen in elke kleurenrij staan in een zwart vakje — twaalf omkaderde getallen in totaal.</string>
+    <string name="rules_body_bonus_card_3">Onder de rijen ligt de bonusbalk: een keten van twaalf gekleurde vakjes, van links naar rechts.</string>
+
+    <string name="rules_heading_bonus_crossing">Getallen wegstrepen</string>
+    <string name="rules_body_bonus_crossing_1">In elke rij streep je van links naar rechts weg. Je mag getallen overslaan, maar overgeslagen getallen kunnen later nooit meer worden weggestreept.</string>
+    <string name="rules_body_bonus_crossing_2">Tijdens een beurt mag de som van de witte dobbelstenen in één rij worden weggestreept; de actieve speler mag ook een witte dobbelsteen bij een kleurdobbelsteen optellen en die kleur wegstrepen.</string>
+
+    <string name="rules_heading_bonus_bar">Omkaderde getallen &amp; de bonusbalk</string>
+    <string name="rules_body_bonus_bar_1">Telkens wanneer je een omkaderd getal wegstreept, streep je meteen het meest linkse nog vrije vakje van de bonusbalk weg.</string>
+    <string name="rules_body_bonus_bar_2">De bonusbalk wordt van links naar rechts weggestreept, altijd op het meest linkse vakje dat niet is weggestreept of vervallen — vervallen vakjes worden simpelweg overgeslagen.</string>
+    <string name="rules_body_bonus_bar_3">Het vakje dat je zojuist wegstreepte toont een kleur. Je maakt meteen één extra kruisje in die kleurenrij — het eerstvolgende geldige (meest linkse vrije) getal.</string>
+    <string name="rules_body_bonus_bar_4">Als dat gratis extra kruisje op nog een omkaderd getal valt, schuift de bonusbalk opnieuw op, zodat er kettingen kunnen ontstaan. Je mag een extra kruisje niet weigeren.</string>
+
+    <string name="rules_heading_bonus_forfeit">Voltooide kleuren laten balkvakjes vervallen</string>
+    <string name="rules_body_bonus_forfeit_1">Zodra een kleur tijdens het spel is voltooid, strepen alle spelers meteen de resterende vakjes van die kleur op de bonusbalk weg. Die vakjes tellen niet meer mee — ze zijn vervallen en worden vanaf dan simpelweg overgeslagen.</string>
+    <string name="rules_body_bonus_forfeit_2">Dit geldt zowel wanneer je de rij zelf hebt vergrendeld als wanneer een andere speler dat deed.</string>
+    <string name="rules_body_bonus_forfeit_3">Een vakje in een voltooide rij mag onder geen beding meer worden aangekruist.</string>
+
+    <string name="rules_heading_bonus_locking">Een rij vergrendelen</string>
+    <string name="rules_body_bonus_locking_1">Om het meest rechtse getal weg te strepen (12 voor rood/geel, 2 voor groen/blauw) moet je al minstens 5 kruisjes in die rij hebben.</string>
+    <string name="rules_body_bonus_locking_2">Wegstrepen vergrendelt de rij en telt het slot als één extra kruisje.</string>
+
+    <string name="rules_heading_bonus_penalties">Strafpunten &amp; einde spel</string>
+    <string name="rules_body_bonus_penalties_1">Als je tijdens je beurt niets wegstreept, neem je een strafpunt (−5 punten). Vier strafpunten beëindigen het spel.</string>
+    <string name="rules_body_bonus_penalties_2">Het spel eindigt ook op het moment dat twee rijen vergrendeld zijn.</string>
+
+    <string name="rules_heading_bonus_scoring">Puntentelling</string>
+    <string name="rules_body_bonus_scoring_1">Versie A scoort precies als klassieke Qwixx — de bonusbalk levert zelf geen punten op; hij laat je alleen sneller rijen vullen.</string>
+    <string name="rules_body_bonus_scoring_2">Tel per kleur de kruisjes (eigen getallen + het slot, max. 12) en scoor 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78.</string>
+    <string name="rules_body_bonus_scoring_3">Totaal = rood + geel + groen + blauw − (5 × strafpunten).</string>
+
+    <string name="rules_source_bonus">Qwixx Bonus (versie A) van Nürnberger-Spielkarten-Verlag (NSV) / White Goblin Games; officiële scorekaart (art. 4105).</string>
+</resources>

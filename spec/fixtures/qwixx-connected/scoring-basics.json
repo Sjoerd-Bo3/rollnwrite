@@ -1,0 +1,37 @@
+{
+  "game": "qwixx",
+  "variant": "connected",
+  "config": { "scoringCap": 12 },
+  "name": "scoring-basics",
+  "description": "Connected scores exactly like classic Qwixx (triangular, cap 12) - the printed chains never add or change points, an auto-crossed partner just counts as a normal cross in its own row.",
+  "steps": [
+    {"assert": {"points": {"red": 0, "yellow": 0, "green": 0, "blue": 0}, "totalScore": 0}},
+
+    {"do": "markColor", "color": "red", "index": 0, "expect": true, "note": "red 2, not a chain space -> 1 cross"},
+    {"assert": {"crosses": {"red": 1}, "points": {"red": 1}, "totalScore": 1}},
+
+    {"do": "markColor", "color": "red", "index": 1, "expect": true, "note": "red 3, not a chain space -> 2 crosses"},
+    {"assert": {"crosses": {"red": 2}, "points": {"red": 3}, "totalScore": 3}},
+
+    {"do": "markColor", "color": "red", "index": 2, "expect": true},
+    {"do": "markColor", "color": "red", "index": 3, "expect": true},
+    {"assert": {"crosses": {"red": 4}, "points": {"red": 10}, "totalScore": 10}},
+
+    {"do": "markColor", "color": "red", "index": 4, "expect": true, "note": "red[4] (red 6) is a chain space -> auto-crosses yellow[4] (yellow 6) too, adding ONE point to red and ONE to yellow"},
+    {"assert": {
+      "crosses": {"red": 5, "yellow": 1},
+      "points": {"red": 15, "yellow": 1},
+      "totalScore": 16
+    }},
+
+    {"do": "markColor", "color": "yellow", "index": 5, "expect": true, "note": "yellow 7, not a chain space -> yellow now has 2 crosses (index 4 from the chain + index 5 direct)"},
+    {"assert": {"crosses": {"yellow": 2}, "points": {"yellow": 3}, "totalScore": 18}},
+
+    {"do": "markColor", "color": "green", "index": 0, "expect": true, "note": "green 12, not a chain space"},
+    {"do": "markColor", "color": "blue", "index": 0, "expect": true, "note": "blue 12, not a chain space"},
+    {"assert": {
+      "points": {"red": 15, "yellow": 3, "green": 1, "blue": 1},
+      "totalScore": 20
+    }}
+  ]
+}

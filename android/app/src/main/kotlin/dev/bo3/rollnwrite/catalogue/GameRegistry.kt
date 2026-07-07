@@ -2,16 +2,28 @@ package dev.bo3.rollnwrite.catalogue
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Casino
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.GridOn
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.Shuffle
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.outlined.Casino
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import dev.bo3.rollnwrite.R
+import dev.bo3.rollnwrite.connect15.Connect15ScorecardScreen
+import dev.bo3.rollnwrite.lucky15.Lucky15ScorecardScreen
 import dev.bo3.rollnwrite.qwixx.QwixxRulesVariant
 import dev.bo3.rollnwrite.qwixx.QwixxScorecardScreen
 import dev.bo3.rollnwrite.qwixx.qwixxBigPointsViewModels
 import dev.bo3.rollnwrite.qwixx.qwixxClassicViewModels
+import dev.bo3.rollnwrite.bonus.BonusScorecardScreen
+import dev.bo3.rollnwrite.connected.ConnectedScorecardScreen
+import dev.bo3.rollnwrite.mixx.MixxScorecardScreen
+import dev.bo3.rollnwrite.qwixxdouble.DoubleScorecardScreen
+import dev.bo3.rollnwrite.xchange.XChangeScorecardScreen
 
 /**
  * One catalogue entry: metadata for the menu row plus a factory for its
@@ -72,6 +84,76 @@ object GameRegistry {
                     onBack = onBack,
                 )
             },
+        ),
+        GameDefinition(
+            id = "qwixx-lucky15",
+            title = { stringResource(R.string.qwixx_lucky15_title) },
+            subtitle = { stringResource(R.string.qwixx_lucky15_subtitle) },
+            // Mirrors iOS `QwixxLucky15Game.accent` (Color(red: 0.93, green: 0.45, blue: 0.13)).
+            accent = Color(red = 0.93f, green = 0.45f, blue = 0.13f),
+            icon = Icons.Filled.Casino,
+            family = "Qwixx",
+            makeScreen = { onBack -> Lucky15ScorecardScreen(onBack = onBack) },
+        ),
+        GameDefinition(
+            id = "qwixx-connect15",
+            title = { stringResource(R.string.qwixx_connect15_title) },
+            subtitle = { stringResource(R.string.qwixx_connect15_subtitle) },
+            // Mirrors iOS QwixxConnect15Game's orange accent and link icon.
+            accent = Color(red = 0.93f, green = 0.45f, blue = 0.13f),
+            icon = Icons.Filled.Link,
+            family = "Qwixx",
+            makeScreen = { onBack -> Connect15ScorecardScreen(onBack = onBack) },
+        ),
+        GameDefinition(
+            id = "qwixx-connected",
+            title = { stringResource(R.string.qwixx_connected_title) },
+            subtitle = { stringResource(R.string.qwixx_connected_subtitle) },
+            // Mirrors iOS QwixxConnectedGame's accent (Color(red: 0.20, green: 0.55, blue: 0.85)) and link icon.
+            accent = Color(red = 0.20f, green = 0.55f, blue = 0.85f),
+            icon = Icons.Filled.Link,
+            family = "Qwixx",
+            makeScreen = { onBack -> ConnectedScorecardScreen(onBack = onBack) },
+        ),
+        GameDefinition(
+            id = "qwixx-xchange",
+            title = { stringResource(R.string.qwixx_xchange_title) },
+            subtitle = { stringResource(R.string.qwixx_xchange_subtitle) },
+            // Mirrors iOS QwixxXChangeGame's deep-magenta accent and swap icon.
+            accent = Color(red = 0.55f, green = 0.10f, blue = 0.42f),
+            icon = Icons.Filled.SwapHoriz,
+            family = "Qwixx",
+            makeScreen = { onBack -> XChangeScorecardScreen(onBack = onBack) },
+        ),
+        GameDefinition(
+            id = "qwixx-double",
+            title = { stringResource(R.string.qwixx_double_title) },
+            subtitle = { stringResource(R.string.qwixx_double_subtitle) },
+            // Mirrors iOS QwixxDoubleGame's red accent and boxed-x icon.
+            accent = Color(red = 0.86f, green = 0.18f, blue = 0.18f),
+            icon = Icons.Filled.Close,
+            family = "Qwixx",
+            makeScreen = { onBack -> DoubleScorecardScreen(onBack = onBack) },
+        ),
+        GameDefinition(
+            id = "qwixx-bonus",
+            title = { stringResource(R.string.qwixx_bonus_title) },
+            subtitle = { stringResource(R.string.qwixx_bonus_subtitle) },
+            // Matches QwixxBonusGame.swift's orange accent; boxed-grid icon.
+            accent = Color(red = 0.93f, green = 0.45f, blue = 0.13f),
+            icon = Icons.Filled.GridOn,
+            family = "Qwixx",
+            makeScreen = { onBack -> BonusScorecardScreen(onBack = onBack) },
+        ),
+        GameDefinition(
+            id = "qwixx-mixx",
+            title = { stringResource(R.string.qwixx_mixx_title) },
+            subtitle = { stringResource(R.string.qwixx_mixx_subtitle) },
+            // Matches QwixxMixxGame.swift's red accent and shuffle icon.
+            accent = Color(red = 0.86f, green = 0.18f, blue = 0.18f),
+            icon = Icons.Filled.Shuffle,
+            family = "Qwixx",
+            makeScreen = { onBack -> MixxScorecardScreen(onBack = onBack) },
         ),
     )
 
