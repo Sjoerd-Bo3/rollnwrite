@@ -1,11 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Transparent layer: the background bitmap carries the full iOS artwork. -->
+<!--
+    The iOS icon artwork as a vector: tilted white card with five coloured
+    crosses (die-5 pattern). Geometry and colours were measured from
+    RollnWrite/Assets.xcassets/AppIcon.appiconset/AppIcon.png: card side
+    600/1024 with corner radius 120, rotated -8°, crosses at (±154, ±154)
+    in card space, bar stroke 29 — scaled so the card's circumradius stays
+    inside the 66dp adaptive-icon safe zone (card side 52dp → radius 33dp).
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M0,0h108v108h-108z" />
+    <group
+        android:rotation="-8"
+        android:pivotX="54"
+        android:pivotY="54">
+        <path
+            android:fillColor="#FCFCFA"
+            android:pathData="M38.4,28 H69.6 A10.4,10.4 0 0 1 80,38.4 V69.6 A10.4,10.4 0 0 1 69.6,80 H38.4 A10.4,10.4 0 0 1 28,69.6 V38.4 A10.4,10.4 0 0 1 38.4,28 Z" />
+        <path
+            android:strokeColor="#D52B2B"
+            android:strokeWidth="2.5"
+            android:strokeLineCap="round"
+            android:pathData="M36.41,36.41 L44.99,44.99 M44.99,36.41 L36.41,44.99" />
+        <path
+            android:strokeColor="#F0BE28"
+            android:strokeWidth="2.5"
+            android:strokeLineCap="round"
+            android:pathData="M63.01,36.41 L71.59,44.99 M71.59,36.41 L63.01,44.99" />
+        <path
+            android:strokeColor="#282C3C"
+            android:strokeWidth="2.5"
+            android:strokeLineCap="round"
+            android:pathData="M49.71,49.71 L58.29,58.29 M58.29,49.71 L49.71,58.29" />
+        <path
+            android:strokeColor="#28A556"
+            android:strokeWidth="2.5"
+            android:strokeLineCap="round"
+            android:pathData="M36.41,63.01 L44.99,71.59 M44.99,63.01 L36.41,71.59" />
+        <path
+            android:strokeColor="#286ED2"
+            android:strokeWidth="2.5"
+            android:strokeLineCap="round"
+            android:pathData="M63.01,63.01 L71.59,71.59 M71.59,63.01 L63.01,71.59" />
+    </group>
 </vector>
