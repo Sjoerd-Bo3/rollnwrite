@@ -46,7 +46,7 @@ import dev.bo3.rollnwrite.core.LockTile
 import dev.bo3.rollnwrite.core.NumberTile
 import dev.bo3.rollnwrite.core.PenaltyBox
 import dev.bo3.rollnwrite.core.ScoreTile
-import dev.bo3.rollnwrite.core.colourBand
+import dev.bo3.rollnwrite.core.segmentedColourBand
 import dev.bo3.rollnwrite.engine.mixx.MixxState
 import dev.bo3.rollnwrite.qwixx.displayName
 import dev.bo3.rollnwrite.qwixx.QwixxGameOverOverlay
@@ -194,12 +194,16 @@ private fun MixxRowBand(
     val lock = layout.lockColor
     val corner = min(w.value, th.value) * 0.3f
     // One "band" colour per column, in order: chevron * 11 numbers * lock * score.
-    // A single Modifier.colourBand only supports one flat tint, so the segmented
-    // background is drawn as adjoining coloured Boxes behind each tile column.
+    // Segmented per-cell colour (Variant A's colour segments show on the bar
+    // itself, matching iOS's `segmentedColourBand`; Variant B's cells all share
+    // the row colour, so this renders as a flat band there, same as before).
+    val segments = remember(layout, lock) {
+        listOf(lock.tint) + layout.cells.map { it.color.tint } + listOf(lock.tint, lock.tint)
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .colourBand(tint = lock.tint, corner = corner.dp)
+            .segmentedColourBand(columns = segments, columnWidth = w, gap = TILE_GAP.dp, hPad = BAND_PAD.dp, corner = corner.dp)
             .padding(horizontal = BAND_PAD.dp, vertical = (th.value * 0.09f).dp),
         horizontalArrangement = Arrangement.spacedBy(TILE_GAP.dp),
         verticalAlignment = Alignment.CenterVertically,
