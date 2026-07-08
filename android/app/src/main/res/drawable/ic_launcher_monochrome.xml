@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Themed-icon (Android 13+) layer: the five crosses of the die-5 glyph in a
+    single colour — the system tints it. Drawn larger and bolder than the
+    foreground (no card around it) so it stays legible at themed-icon sizes.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:rotation="-8"
+        android:pivotX="54"
+        android:pivotY="54">
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="3.1"
+            android:strokeLineCap="round"
+            android:pathData="M32.2,32.2 L42.8,42.8 M42.8,32.2 L32.2,42.8" />
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="3.1"
+            android:strokeLineCap="round"
+            android:pathData="M65.2,32.2 L75.8,42.8 M75.8,32.2 L65.2,42.8" />
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="3.1"
+            android:strokeLineCap="round"
+            android:pathData="M48.7,48.7 L59.3,59.3 M59.3,48.7 L48.7,59.3" />
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="3.1"
+            android:strokeLineCap="round"
+            android:pathData="M32.2,65.2 L42.8,75.8 M42.8,65.2 L32.2,75.8" />
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="3.1"
+            android:strokeLineCap="round"
+            android:pathData="M65.2,65.2 L75.8,75.8 M75.8,65.2 L65.2,75.8" />
+    </group>
+</vector>
