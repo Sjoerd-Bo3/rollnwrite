@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -423,4 +424,45 @@ fun BandChevron(w: Dp, h: Dp) {
 fun Modifier.colourBand(tint: Color, corner: Dp): Modifier = this
     .clip(RoundedCornerShape(corner))
     .background(tint)
+    .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(corner))
+
+/**
+ * A horizontally **segmented** band background: one colour per column slot,
+ * in band order (chevron, the number cells, lock, score). Lets a row whose
+ * cells span several colours — e.g. Qwixx Mixx Variant A — show those colour
+ * segments on the *bar itself*, not just on the number tiles. Mirrors
+ * `segmentedColourBand(columns:columnWidth:gap:hPad:vPad:corner:)` in
+ * `RollnWrite/Core/BoardComponents.swift`.
+ *
+ * [columnWidth]/[gap] must match the band's foreground `Row` (same slot width
+ * per column, same spacing). Each interior segment spans its slot plus half
+ * the gap on each side, so a colour boundary falls in the middle of the gap
+ * between two differently-coloured tiles (not hard against one tile), and
+ * runs of the same colour still read as one continuous segment. The first and
+ * last segments absorb [hPad] so the strip reaches the band edges. With a
+ * uniform `columns` list this renders identically to [colourBand].
+ */
+fun Modifier.segmentedColourBand(
+    columns: List<Color>,
+    columnWidth: Dp,
+    gap: Dp,
+    hPad: Dp,
+    corner: Dp,
+): Modifier = this
+    .clip(RoundedCornerShape(corner))
+    .drawBehind {
+        val wPx = columnWidth.toPx()
+        val gapPx = gap.toPx()
+        val hPadPx = hPad.toPx()
+        var x = 0f
+        columns.forEachIndexed { idx, color ->
+            val segWidth = when (idx) {
+                0 -> hPadPx + wPx + gapPx / 2f
+                columns.lastIndex -> gapPx / 2f + wPx + hPadPx
+                else -> wPx + gapPx
+            }
+            drawRect(color = color, topLeft = Offset(x, 0f), size = Size(segWidth, size.height))
+            x += segWidth
+        }
+    }
     .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(corner))
