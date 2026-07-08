@@ -442,13 +442,23 @@ private fun BottomBar(
 }
 
 /**
- * Tile sizing, mirroring the iOS derivation exactly: width fills the full
- * container width; height fills the container but is capped at the width
- * (square is the MAX) and floored at a readable MIN. Row units: 4 colour
- * bands + the bottom bar (1.05*th) = the iOS `rowUnits = 4 + 0.95`,
- * `rowCount = 5` derivation (band height itself, not a separate unit
- * multiplier, since Connect15's connection fields overlay the number strip
- * rather than adding a row).
+ * Tile sizing, mirroring the iOS derivation: width fills the full container
+ * width; height fills the container but is capped at the width (square is
+ * the MAX) and floored at a readable MIN.
+ *
+ * iOS expresses this via the shared `BoardMetrics.tile(rowUnits: 4 + 0.95,
+ * rowCount: 5)` helper, whose convention counts a plain colour band as
+ * weight 1.0 because SwiftUI's `.colourBand` padding there doesn't inflate
+ * the row past the `GeometryReader`-fitted frame. This Android `sizing()`
+ * (like every other Compose board's — `QwixxBoardView`, `Lucky15BoardView`,
+ * `ConnectedBoardView`, `XChangeBoardView`, `MixxBoardView`) instead sizes
+ * each `Column` child directly from these units, and a colour band's actual
+ * on-screen height is `th + 2*(th*0.09) = 1.18*th` (see `ColourBandRow`'s
+ * `vertical = th*0.09` padding) — so it must use the Android-idiom
+ * `bandCount * 1.18f`, not the raw Swift `bandCount * 1.0f`, or the solved
+ * `th` comes out too large, overflows the available height, and Compose
+ * squeezes the whole board (most visibly crushing the bottom bar and its
+ * "Total" text). Bottom bar stays 1.05*th (fixed frame, no padding).
  */
 private fun sizing(availWidthDp: Float, availHeightDp: Float): Pair<Float, Float> {
     val bandCount = 4f
@@ -457,7 +467,7 @@ private fun sizing(availWidthDp: Float, availHeightDp: Float): Pair<Float, Float
 
     val w = maxOf(14f, (availWidthDp - (COLUMNS - 1) * TILE_GAP - 2 * BAND_PAD) / COLUMNS)
 
-    val units = bandCount + 0.95f
+    val units = bandCount * 1.18f + 1.05f
     val fill = (availHeightDp - gaps * ROW_GAP) / units
     val th = maxOf(20f, minOf(fill, w))
     return w to th
