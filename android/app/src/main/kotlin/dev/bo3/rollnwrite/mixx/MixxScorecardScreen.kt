@@ -2,27 +2,11 @@ package dev.bo3.rollnwrite.mixx
 
 import android.app.Activity
 import android.content.pm.ActivityInfo
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.outlined.People
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -39,10 +23,11 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.bo3.rollnwrite.R
+import dev.bo3.rollnwrite.core.GameHeader
+import dev.bo3.rollnwrite.core.ImmersiveGameEffect
 import dev.bo3.rollnwrite.engine.mixx.MixxBoard
 
 /**
@@ -76,6 +61,7 @@ fun MixxScorecardScreen(onBack: () -> Unit) {
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         }
     }
+    ImmersiveGameEffect()
 
     // One ViewModel per board x player, mirroring `QwixxScorecardScreen`'s
     // player-1/player-2 pair, doubled for the two independent Mixx boards
@@ -112,14 +98,13 @@ fun MixxScorecardScreen(onBack: () -> Unit) {
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            MixxHeader(
+            GameHeader(
                 title = stringResource(R.string.qwixx_mixx_title),
-                board = board,
-                onBoardChange = { board = it },
                 twoPlayer = twoPlayer,
                 onBack = onBack,
                 onToggleTwoPlayer = { twoPlayer = !twoPlayer },
                 onShowRules = { showRules = true },
+                accessory = { MixxBoardSwitch(board = board, onBoardChange = { board = it }) },
             )
             Box(modifier = Modifier.weight(1f).fillMaxSize()) {
                 if (twoPlayer) {
@@ -163,64 +148,31 @@ private fun TwoPlayerBoards(playerOne: MixxViewModel, playerTwo: MixxViewModel) 
     }
 }
 
+/**
+ * The A/B board switch, plugged into [dev.bo3.rollnwrite.core.GameHeader]'s
+ * `accessory` slot — mirrors iOS's `headerAccessory` segmented Picker in
+ * `QwixxMixxScorecardView`. `SegmentedButton`'s own touch target already
+ * clears the 44dp minimum, so no extra sizing is needed here to match the
+ * compact header row.
+ */
 @Composable
-private fun MixxHeader(
-    title: String,
-    board: MixxBoard,
-    onBoardChange: (MixxBoard) -> Unit,
-    twoPlayer: Boolean,
-    onBack: () -> Unit,
-    onToggleTwoPlayer: () -> Unit,
-    onShowRules: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top))
-            .padding(horizontal = 12.dp, vertical = 4.dp),
-        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        IconButton(onClick = onBack) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
-        }
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 1,
-            modifier = Modifier.weight(1f),
-        )
-        // The A/B board switch, centred as the header accessory - mirrors
-        // iOS's `headerAccessory` segmented Picker in `QwixxMixxScorecardView`.
-        SingleChoiceSegmentedButtonRow(modifier = Modifier.widthIn(max = 160.dp)) {
-            MixxBoard.entries.forEachIndexed { index, option ->
-                SegmentedButton(
-                    selected = board == option,
-                    onClick = { onBoardChange(option) },
-                    shape = SegmentedButtonDefaults.itemShape(index = index, count = MixxBoard.entries.size),
-                    label = {
-                        Text(
-                            if (option == MixxBoard.VARIANT_A) {
-                                stringResource(R.string.mixx_board_a_short)
-                            } else {
-                                stringResource(R.string.mixx_board_b_short)
-                            },
-                        )
-                    },
-                )
-            }
-        }
-        IconButton(onClick = onToggleTwoPlayer) {
-            Icon(
-                imageVector = if (twoPlayer) Icons.Filled.Person else Icons.Outlined.People,
-                contentDescription = stringResource(
-                    if (twoPlayer) R.string.single_player else R.string.two_players,
-                ),
+private fun MixxBoardSwitch(board: MixxBoard, onBoardChange: (MixxBoard) -> Unit) {
+    SingleChoiceSegmentedButtonRow(modifier = Modifier.widthIn(max = 160.dp)) {
+        MixxBoard.entries.forEachIndexed { index, option ->
+            SegmentedButton(
+                selected = board == option,
+                onClick = { onBoardChange(option) },
+                shape = SegmentedButtonDefaults.itemShape(index = index, count = MixxBoard.entries.size),
+                label = {
+                    Text(
+                        if (option == MixxBoard.VARIANT_A) {
+                            stringResource(R.string.mixx_board_a_short)
+                        } else {
+                            stringResource(R.string.mixx_board_b_short)
+                        },
+                    )
+                },
             )
-        }
-        IconButton(onClick = onShowRules) {
-            Icon(Icons.Filled.Info, contentDescription = stringResource(R.string.rules))
         }
     }
 }
