@@ -2,28 +2,11 @@ package dev.bo3.rollnwrite.connected
 
 import android.app.Activity
 import android.content.pm.ActivityInfo
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.outlined.People
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -35,10 +18,10 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.bo3.rollnwrite.R
+import dev.bo3.rollnwrite.core.GameHeader
+import dev.bo3.rollnwrite.core.ImmersiveGameEffect
 
 /**
  * Hosts one Qwixx Connected board: compact in-board header (back, title,
@@ -74,6 +57,7 @@ fun ConnectedScorecardScreen(onBack: () -> Unit) {
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         }
     }
+    ImmersiveGameEffect()
 
     val playerOneViewModel: ConnectedViewModel = viewModel(
         key = "qwixx-connected-p1",
@@ -86,7 +70,7 @@ fun ConnectedScorecardScreen(onBack: () -> Unit) {
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            ConnectedScorecardHeader(
+            GameHeader(
                 title = stringResource(R.string.qwixx_connected_title),
                 twoPlayer = twoPlayer,
                 onBack = onBack,
@@ -138,42 +122,3 @@ private fun TwoPlayerConnectedBoards(playerOne: ConnectedViewModel, playerTwo: C
     }
 }
 
-@Composable
-private fun ConnectedScorecardHeader(
-    title: String,
-    twoPlayer: Boolean,
-    onBack: () -> Unit,
-    onToggleTwoPlayer: () -> Unit,
-    onShowRules: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top))
-            .padding(horizontal = 12.dp, vertical = 4.dp),
-        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        IconButton(onClick = onBack) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
-        }
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 1,
-            modifier = Modifier.weight(1f),
-        )
-        IconButton(onClick = onToggleTwoPlayer) {
-            Icon(
-                imageVector = if (twoPlayer) Icons.Filled.Person else Icons.Outlined.People,
-                contentDescription = stringResource(
-                    if (twoPlayer) R.string.single_player else R.string.two_players,
-                ),
-            )
-        }
-        IconButton(onClick = onShowRules) {
-            Icon(Icons.Filled.Info, contentDescription = stringResource(R.string.rules))
-        }
-    }
-}

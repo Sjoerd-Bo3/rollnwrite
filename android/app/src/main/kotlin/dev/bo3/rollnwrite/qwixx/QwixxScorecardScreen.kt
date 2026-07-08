@@ -2,28 +2,11 @@ package dev.bo3.rollnwrite.qwixx
 
 import android.app.Activity
 import android.content.pm.ActivityInfo
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.outlined.People
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -34,11 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import dev.bo3.rollnwrite.R
+import dev.bo3.rollnwrite.core.GameHeader
+import dev.bo3.rollnwrite.core.ImmersiveGameEffect
 import dev.bo3.rollnwrite.engine.TriangularScoring
 
 /** Which official rules text to show — the two Qwixx flavours differ only in copy, never in engine code. */
@@ -146,10 +127,11 @@ fun QwixxScorecardScreen(
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         }
     }
+    ImmersiveGameEffect()
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            ScorecardHeader(
+            GameHeader(
                 title = title,
                 twoPlayer = twoPlayer,
                 onBack = onBack,
@@ -197,46 +179,6 @@ private fun TwoPlayerBoards(playerOne: QwixxViewModel, playerTwo: QwixxViewModel
             Box(modifier = Modifier.weight(1f).fillMaxSize()) {
                 QwixxBoardView(playerOne)
             }
-        }
-    }
-}
-
-@Composable
-private fun ScorecardHeader(
-    title: String,
-    twoPlayer: Boolean,
-    onBack: () -> Unit,
-    onToggleTwoPlayer: () -> Unit,
-    onShowRules: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top))
-            .padding(horizontal = 12.dp, vertical = 4.dp),
-        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        IconButton(onClick = onBack) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
-        }
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 1,
-            modifier = Modifier.weight(1f),
-        )
-        IconButton(onClick = onToggleTwoPlayer) {
-            Icon(
-                imageVector = if (twoPlayer) Icons.Filled.Person else Icons.Outlined.People,
-                contentDescription = stringResource(
-                    if (twoPlayer) R.string.single_player else R.string.two_players,
-                ),
-            )
-        }
-        IconButton(onClick = onShowRules) {
-            Icon(Icons.Filled.Info, contentDescription = stringResource(R.string.rules))
         }
     }
 }
