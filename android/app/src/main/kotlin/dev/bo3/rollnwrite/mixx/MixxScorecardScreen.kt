@@ -26,8 +26,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.bo3.rollnwrite.R
+import dev.bo3.rollnwrite.catalogue.qwixxDice
+import dev.bo3.rollnwrite.core.DiceRollerStrip
 import dev.bo3.rollnwrite.core.GameHeader
 import dev.bo3.rollnwrite.core.ImmersiveGameEffect
+import dev.bo3.rollnwrite.core.rememberDiceVisibility
 import dev.bo3.rollnwrite.engine.mixx.MixxBoard
 
 /**
@@ -46,6 +49,7 @@ fun MixxScorecardScreen(onBack: () -> Unit) {
     var board by rememberSaveable { mutableStateOf(MixxBoard.VARIANT_A) }
     var twoPlayer by rememberSaveable { mutableStateOf(false) }
     var showRules by rememberSaveable { mutableStateOf(false) }
+    val dice = rememberDiceVisibility(stringResource(R.string.qwixx_mixx_title))
 
     val isPhone = configuration.smallestScreenWidthDp < 600
     val locksLandscape = isPhone && !twoPlayer
@@ -105,7 +109,12 @@ fun MixxScorecardScreen(onBack: () -> Unit) {
                 onToggleTwoPlayer = { twoPlayer = !twoPlayer },
                 onShowRules = { showRules = true },
                 accessory = { MixxBoardSwitch(board = board, onBoardChange = { board = it }) },
+                diceShown = dice.shown,
+                onToggleDice = dice.toggle,
             )
+            if (dice.shown) {
+                DiceRollerStrip(dice = qwixxDice)
+            }
             Box(modifier = Modifier.weight(1f).fillMaxSize()) {
                 if (twoPlayer) {
                     TwoPlayerBoards(playerOne, playerTwo)

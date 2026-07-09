@@ -19,8 +19,11 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import dev.bo3.rollnwrite.R
+import dev.bo3.rollnwrite.catalogue.qwixxDice
+import dev.bo3.rollnwrite.core.DiceRollerStrip
 import dev.bo3.rollnwrite.core.GameHeader
 import dev.bo3.rollnwrite.core.ImmersiveGameEffect
+import dev.bo3.rollnwrite.core.rememberDiceVisibility
 
 /**
  * Hosts one Qwixx Lucky15 board: compact in-board header (back, title,
@@ -42,6 +45,8 @@ fun Lucky15ScorecardScreen(onBack: () -> Unit) {
     val configuration = LocalConfiguration.current
     var twoPlayer by rememberSaveable { mutableStateOf(false) }
     var showRules by rememberSaveable { mutableStateOf(false) }
+    val title = stringResource(R.string.qwixx_lucky15_title)
+    val dice = rememberDiceVisibility(title)
 
     // Single-player on a phone (smallest width < 600dp) pins landscape;
     // two-player or tablet rotates freely — mirrors `landscapeLockediPhone(when:)`.
@@ -66,12 +71,17 @@ fun Lucky15ScorecardScreen(onBack: () -> Unit) {
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             GameHeader(
-                title = stringResource(R.string.qwixx_lucky15_title),
+                title = title,
                 twoPlayer = twoPlayer,
                 onBack = onBack,
                 onToggleTwoPlayer = { twoPlayer = !twoPlayer },
                 onShowRules = { showRules = true },
+                diceShown = dice.shown,
+                onToggleDice = dice.toggle,
             )
+            if (dice.shown) {
+                DiceRollerStrip(dice = qwixxDice)
+            }
             Box(modifier = Modifier.weight(1f).fillMaxSize()) {
                 if (twoPlayer) {
                     TwoPlayerBoards(playerOneViewModel, playerTwoViewModel)

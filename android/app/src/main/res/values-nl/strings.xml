@@ -32,6 +32,15 @@
     <string name="single_player">Eén speler</string>
     <string name="two_players">Twee spelers</string>
 
+    <!-- Dice roller (issue #30) -->
+    <string name="dice_roll">Gooien</string>
+    <string name="show_dice">Dobbelstenen tonen</string>
+    <string name="hide_dice">Dobbelstenen verbergen</string>
+    <string name="dice_held">Vastgehouden</string>
+    <string name="dice_holds_hint">Houdt deze dobbelsteen vast bij het gooien</string>
+    <string name="dice_releases_hint">Laat deze dobbelsteen weer los</string>
+    <string name="dice_die_value">%1$s dobbelsteen: %2$d</string>
+
     <!-- Board content -->
     <string name="total">Totaal</string>
     <string name="penalties">Strafpunten</string>

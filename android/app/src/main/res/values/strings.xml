@@ -32,6 +32,15 @@
     <string name="single_player">Single player</string>
     <string name="two_players">Two players</string>
 
+    <!-- Dice roller (issue #30) -->
+    <string name="dice_roll">Roll</string>
+    <string name="show_dice">Show dice</string>
+    <string name="hide_dice">Hide dice</string>
+    <string name="dice_held">Held</string>
+    <string name="dice_holds_hint">Holds this die during rolls</string>
+    <string name="dice_releases_hint">Releases this die</string>
+    <string name="dice_die_value">%1$s die: %2$d</string>
+
     <!-- Board content -->
     <string name="total">Total</string>
     <string name="penalties">Penalties</string>

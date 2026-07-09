@@ -21,9 +21,27 @@ import dev.bo3.rollnwrite.qwixx.qwixxBigPointsViewModels
 import dev.bo3.rollnwrite.qwixx.qwixxClassicViewModels
 import dev.bo3.rollnwrite.bonus.BonusScorecardScreen
 import dev.bo3.rollnwrite.connected.ConnectedScorecardScreen
+import dev.bo3.rollnwrite.core.DieSpec
 import dev.bo3.rollnwrite.mixx.MixxScorecardScreen
 import dev.bo3.rollnwrite.qwixxdouble.DoubleScorecardScreen
 import dev.bo3.rollnwrite.xchange.XChangeScorecardScreen
+
+/**
+ * The six physical Qwixx dice — two white plus one per colour row — shared by
+ * every Qwixx flavour (they all use the same dice). Fixed colours matching
+ * the row tints. Mirrors `RollnWrite/Games/Qwixx/QwixxClassicGame.swift`'s
+ * `qwixxDice` (same colours, same order: white, white, red, yellow, green,
+ * blue). Powers the optional informational dice roller only (issue #30);
+ * never any rule.
+ */
+val qwixxDice: List<DieSpec> = listOf(
+    DieSpec.white(),
+    DieSpec.white(),
+    DieSpec(name = "Red", color = Color(red = 0.86f, green = 0.18f, blue = 0.18f)),
+    DieSpec(name = "Yellow", color = Color(red = 0.98f, green = 0.80f, blue = 0.10f), isLight = true),
+    DieSpec(name = "Green", color = Color(red = 0.18f, green = 0.62f, blue = 0.30f)),
+    DieSpec(name = "Blue", color = Color(red = 0.16f, green = 0.40f, blue = 0.78f)),
+)
 
 /**
  * One catalogue entry: metadata for the menu row plus a factory for its
@@ -31,6 +49,10 @@ import dev.bo3.rollnwrite.xchange.XChangeScorecardScreen
  * catalogue UI and the `smokeTestGame` hook both iterate [GameRegistry.games],
  * so adding a game means adding ONE entry here, never touching the menu or
  * the smoke-test lookup (Open/Closed).
+ *
+ * [diceSet] mirrors iOS `GameDefinition.diceSet` — the game's physical dice
+ * for the optional informational roller (issue #30). `null` (the default)
+ * means the game declares no dice, so its header shows no dice toggle at all.
  */
 data class GameDefinition(
     val id: String,
@@ -40,6 +62,7 @@ data class GameDefinition(
     val icon: ImageVector,
     val family: String,
     val makeScreen: @Composable (onBack: () -> Unit) -> Unit,
+    val diceSet: List<DieSpec>? = null,
 )
 
 /**
@@ -56,6 +79,7 @@ object GameRegistry {
             accent = RollnWriteRed,
             icon = Icons.Filled.Casino,
             family = "Qwixx",
+            diceSet = qwixxDice,
             makeScreen = { onBack ->
                 val (p1, p2) = qwixxBigPointsViewModels()
                 QwixxScorecardScreen(
@@ -74,6 +98,7 @@ object GameRegistry {
             accent = Color(red = 0.93f, green = 0.55f, blue = 0.13f),
             icon = Icons.Outlined.Casino,
             family = "Qwixx",
+            diceSet = qwixxDice,
             makeScreen = { onBack ->
                 val (p1, p2) = qwixxClassicViewModels()
                 QwixxScorecardScreen(
@@ -93,6 +118,7 @@ object GameRegistry {
             accent = Color(red = 0.93f, green = 0.45f, blue = 0.13f),
             icon = Icons.Filled.Casino,
             family = "Qwixx",
+            diceSet = qwixxDice,
             makeScreen = { onBack -> Lucky15ScorecardScreen(onBack = onBack) },
         ),
         GameDefinition(
@@ -103,6 +129,7 @@ object GameRegistry {
             accent = Color(red = 0.93f, green = 0.45f, blue = 0.13f),
             icon = Icons.Filled.Link,
             family = "Qwixx",
+            diceSet = qwixxDice,
             makeScreen = { onBack -> Connect15ScorecardScreen(onBack = onBack) },
         ),
         GameDefinition(
@@ -113,6 +140,7 @@ object GameRegistry {
             accent = Color(red = 0.20f, green = 0.55f, blue = 0.85f),
             icon = Icons.Filled.Link,
             family = "Qwixx",
+            diceSet = qwixxDice,
             makeScreen = { onBack -> ConnectedScorecardScreen(onBack = onBack) },
         ),
         GameDefinition(
@@ -123,6 +151,7 @@ object GameRegistry {
             accent = Color(red = 0.55f, green = 0.10f, blue = 0.42f),
             icon = Icons.Filled.SwapHoriz,
             family = "Qwixx",
+            diceSet = qwixxDice,
             makeScreen = { onBack -> XChangeScorecardScreen(onBack = onBack) },
         ),
         GameDefinition(
@@ -133,6 +162,7 @@ object GameRegistry {
             accent = Color(red = 0.86f, green = 0.18f, blue = 0.18f),
             icon = Icons.Filled.Close,
             family = "Qwixx",
+            diceSet = qwixxDice,
             makeScreen = { onBack -> DoubleScorecardScreen(onBack = onBack) },
         ),
         GameDefinition(
@@ -143,6 +173,7 @@ object GameRegistry {
             accent = Color(red = 0.93f, green = 0.45f, blue = 0.13f),
             icon = Icons.Filled.GridOn,
             family = "Qwixx",
+            diceSet = qwixxDice,
             makeScreen = { onBack -> BonusScorecardScreen(onBack = onBack) },
         ),
         GameDefinition(
@@ -153,6 +184,7 @@ object GameRegistry {
             accent = Color(red = 0.86f, green = 0.18f, blue = 0.18f),
             icon = Icons.Filled.Shuffle,
             family = "Qwixx",
+            diceSet = qwixxDice,
             makeScreen = { onBack -> MixxScorecardScreen(onBack = onBack) },
         ),
     )

@@ -20,19 +20,20 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.bo3.rollnwrite.R
+import dev.bo3.rollnwrite.catalogue.qwixxDice
+import dev.bo3.rollnwrite.core.DiceRollerStrip
 import dev.bo3.rollnwrite.core.GameHeader
 import dev.bo3.rollnwrite.core.ImmersiveGameEffect
+import dev.bo3.rollnwrite.core.rememberDiceVisibility
 
 /**
- * Hosts one Qwixx Double board: compact in-board header (back, title, 2-player
- * toggle, rules), NO system app bar, per-screen landscape lock, and the
- * optional mirrored two-player layout. Mirrors
+ * Hosts one Qwixx Double board: compact in-board header (back, title, dice
+ * toggle, 2-player toggle, rules), NO system app bar, per-screen landscape
+ * lock, and the optional mirrored two-player layout. Mirrors
  * `dev.bo3.rollnwrite.qwixx.QwixxScorecardScreen` /
  * `RollnWrite/Games/QwixxDouble/DoubleScorecardView.swift`.
  *
- * Qwixx Double has no bonus rows and no dice-roller header accessory (dice
- * roller is a known cross-platform gap - issue #30 - not yet on Android for
- * ANY game, so its absence here matches every other Android board).
+ * Qwixx Double has no bonus rows but uses the standard Qwixx dice (issue #30).
  */
 @Composable
 fun DoubleScorecardScreen(onBack: () -> Unit) {
@@ -44,6 +45,8 @@ fun DoubleScorecardScreen(onBack: () -> Unit) {
     // MainActivity.
     var twoPlayer by rememberSaveable { mutableStateOf(false) }
     var showRules by rememberSaveable { mutableStateOf(false) }
+    val title = stringResource(R.string.qwixx_double_title)
+    val dice = rememberDiceVisibility(title)
 
     // Single-player on a phone (smallest width < 600dp) pins landscape;
     // two-player or tablet rotates freely — mirrors `landscapeLockediPhone(when:)`.
@@ -75,12 +78,17 @@ fun DoubleScorecardScreen(onBack: () -> Unit) {
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             GameHeader(
-                title = stringResource(R.string.qwixx_double_title),
+                title = title,
                 twoPlayer = twoPlayer,
                 onBack = onBack,
                 onToggleTwoPlayer = { twoPlayer = !twoPlayer },
                 onShowRules = { showRules = true },
+                diceShown = dice.shown,
+                onToggleDice = dice.toggle,
             )
+            if (dice.shown) {
+                DiceRollerStrip(dice = qwixxDice)
+            }
             Box(modifier = Modifier.weight(1f).fillMaxSize()) {
                 if (twoPlayer) {
                     TwoPlayerDoubleBoards(playerOneViewModel, playerTwoViewModel)
