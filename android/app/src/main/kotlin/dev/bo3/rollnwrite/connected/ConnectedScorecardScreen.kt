@@ -20,19 +20,21 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.bo3.rollnwrite.R
+import dev.bo3.rollnwrite.catalogue.qwixxDice
+import dev.bo3.rollnwrite.core.DiceRollerStrip
 import dev.bo3.rollnwrite.core.GameHeader
 import dev.bo3.rollnwrite.core.ImmersiveGameEffect
+import dev.bo3.rollnwrite.core.rememberDiceVisibility
 
 /**
  * Hosts one Qwixx Connected board: compact in-board header (back, title,
- * 2-player toggle, rules), NO system app bar, per-screen landscape lock, and
- * the optional mirrored two-player layout. Mirrors
+ * dice toggle, 2-player toggle, rules), NO system app bar, per-screen
+ * landscape lock, and the optional mirrored two-player layout. Mirrors
  * `RollnWrite/Games/QwixxConnected/ConnectedScorecardView.swift`
  * (`QwixxConnectedScorecardView`) and `dev.bo3.rollnwrite.bonus.BonusScorecardScreen`'s wiring.
  *
- * This variant has no header accessory beyond the standard back/title/
- * 2-player/rules set — its dice are the standard Qwixx set, surfaced only
- * via the (not-yet-ported) dice-roller strip, so nothing extra is wired here.
+ * This variant has no header accessory beyond the standard back/title/dice/
+ * 2-player/rules set — its dice are the standard Qwixx set (issue #30).
  */
 @Composable
 fun ConnectedScorecardScreen(onBack: () -> Unit) {
@@ -40,6 +42,8 @@ fun ConnectedScorecardScreen(onBack: () -> Unit) {
     val configuration = LocalConfiguration.current
     var twoPlayer by rememberSaveable { mutableStateOf(false) }
     var showRules by rememberSaveable { mutableStateOf(false) }
+    val title = stringResource(R.string.qwixx_connected_title)
+    val dice = rememberDiceVisibility(title)
 
     // Single-player on a phone (smallest width < 600dp) pins landscape;
     // two-player or tablet rotates freely — mirrors `landscapeLockediPhone(when:)`.
@@ -71,12 +75,17 @@ fun ConnectedScorecardScreen(onBack: () -> Unit) {
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             GameHeader(
-                title = stringResource(R.string.qwixx_connected_title),
+                title = title,
                 twoPlayer = twoPlayer,
                 onBack = onBack,
                 onToggleTwoPlayer = { twoPlayer = !twoPlayer },
                 onShowRules = { showRules = true },
+                diceShown = dice.shown,
+                onToggleDice = dice.toggle,
             )
+            if (dice.shown) {
+                DiceRollerStrip(dice = qwixxDice)
+            }
             Box(modifier = Modifier.weight(1f).fillMaxSize()) {
                 if (twoPlayer) {
                     TwoPlayerConnectedBoards(playerOneViewModel, playerTwoViewModel)

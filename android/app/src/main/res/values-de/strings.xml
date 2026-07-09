@@ -32,6 +32,15 @@
     <string name="single_player">Ein Spieler</string>
     <string name="two_players">Zwei Spieler</string>
 
+    <!-- Dice roller (issue #30) -->
+    <string name="dice_roll">Würfeln</string>
+    <string name="show_dice">Würfel einblenden</string>
+    <string name="hide_dice">Würfel ausblenden</string>
+    <string name="dice_held">Gehalten</string>
+    <string name="dice_holds_hint">Hält diesen Würfel beim Würfeln fest</string>
+    <string name="dice_releases_hint">Gibt diesen Würfel wieder frei</string>
+    <string name="dice_die_value">%1$s Würfel: %2$d</string>
+
     <!-- Board content -->
     <string name="total">Gesamt</string>
     <string name="penalties">Strafen</string>

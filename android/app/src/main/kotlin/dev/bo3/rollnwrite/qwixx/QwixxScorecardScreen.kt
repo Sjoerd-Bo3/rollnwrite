@@ -18,8 +18,11 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import dev.bo3.rollnwrite.catalogue.qwixxDice
+import dev.bo3.rollnwrite.core.DiceRollerStrip
 import dev.bo3.rollnwrite.core.GameHeader
 import dev.bo3.rollnwrite.core.ImmersiveGameEffect
+import dev.bo3.rollnwrite.core.rememberDiceVisibility
 import dev.bo3.rollnwrite.engine.TriangularScoring
 
 /** Which official rules text to show — the two Qwixx flavours differ only in copy, never in engine code. */
@@ -110,6 +113,7 @@ fun QwixxScorecardScreen(
     // MainActivity.
     var twoPlayer by rememberSaveable { mutableStateOf(false) }
     var showRules by rememberSaveable { mutableStateOf(false) }
+    val dice = rememberDiceVisibility(title)
 
     // Single-player on a phone (smallest width < 600dp) pins landscape;
     // two-player or tablet rotates freely — mirrors `landscapeLockediPhone(when:)`.
@@ -137,7 +141,12 @@ fun QwixxScorecardScreen(
                 onBack = onBack,
                 onToggleTwoPlayer = { twoPlayer = !twoPlayer },
                 onShowRules = { showRules = true },
+                diceShown = dice.shown,
+                onToggleDice = dice.toggle,
             )
+            if (dice.shown) {
+                DiceRollerStrip(dice = qwixxDice)
+            }
             Box(modifier = Modifier.weight(1f).fillMaxSize()) {
                 if (twoPlayer) {
                     TwoPlayerBoards(playerOne, playerTwo)

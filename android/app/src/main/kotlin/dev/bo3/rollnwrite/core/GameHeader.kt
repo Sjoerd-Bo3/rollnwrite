@@ -12,8 +12,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.Casino
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -49,12 +51,15 @@ object GameHeaderMetrics {
 
 /**
  * The compact in-board header row: back, title, an optional per-game
- * [accessory] slot (e.g. Mixx's A/B board switch), a 2-player toggle, and
- * rules info. Every scorecard screen (`QwixxScorecardScreen`,
- * `Connect15ScorecardScreen`, `Lucky15ScorecardScreen`,
- * `ConnectedScorecardScreen`, `DoubleScorecardScreen`, `BonusScorecardScreen`,
- * `XChangeScorecardScreen`, `MixxScorecardScreen`) renders this instead of
- * pasting its own copy — mirrors iOS's shared `ScorecardScaffold` header.
+ * [accessory] slot (e.g. Mixx's A/B board switch), an optional dice-strip
+ * toggle (shown only when the game has [dev.bo3.rollnwrite.catalogue.GameDefinition.diceSet]
+ * — leftmost of the right-side icon group, mirroring iOS's
+ * `ScorecardScaffold` header order), a 2-player toggle, and rules info.
+ * Every scorecard screen (`QwixxScorecardScreen`, `Connect15ScorecardScreen`,
+ * `Lucky15ScorecardScreen`, `ConnectedScorecardScreen`,
+ * `DoubleScorecardScreen`, `BonusScorecardScreen`, `XChangeScorecardScreen`,
+ * `MixxScorecardScreen`) renders this instead of pasting its own copy —
+ * mirrors iOS's shared `ScorecardScaffold` header.
  *
  * NO system app bar — this Row IS the header, positioned by the caller as the
  * first child of the screen's top-level `Column`.
@@ -67,6 +72,8 @@ fun GameHeader(
     onToggleTwoPlayer: () -> Unit,
     onShowRules: () -> Unit,
     accessory: @Composable (() -> Unit)? = null,
+    diceShown: Boolean? = null,
+    onToggleDice: (() -> Unit)? = null,
 ) {
     Row(
         modifier = Modifier
@@ -89,6 +96,13 @@ fun GameHeader(
             modifier = Modifier.weight(1f),
         )
         accessory?.invoke()
+        if (diceShown != null && onToggleDice != null) {
+            GameHeaderIconButton(
+                icon = if (diceShown) Icons.Filled.Casino else Icons.Outlined.Casino,
+                contentDescription = stringResource(if (diceShown) R.string.hide_dice else R.string.show_dice),
+                onClick = onToggleDice,
+            )
+        }
         GameHeaderIconButton(
             icon = if (twoPlayer) Icons.Filled.Person else Icons.Outlined.People,
             contentDescription = stringResource(if (twoPlayer) R.string.single_player else R.string.two_players),

@@ -20,13 +20,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.bo3.rollnwrite.R
+import dev.bo3.rollnwrite.catalogue.qwixxDice
+import dev.bo3.rollnwrite.core.DiceRollerStrip
 import dev.bo3.rollnwrite.core.GameHeader
 import dev.bo3.rollnwrite.core.ImmersiveGameEffect
+import dev.bo3.rollnwrite.core.rememberDiceVisibility
 
 /**
- * Hosts one X-Change board: compact in-board header (back, title, 2-player
- * toggle, rules), NO system app bar, per-screen landscape lock, and the
- * optional mirrored two-player layout. Mirrors
+ * Hosts one X-Change board: compact in-board header (back, title, dice
+ * toggle, 2-player toggle, rules), NO system app bar, per-screen landscape
+ * lock, and the optional mirrored two-player layout. Mirrors
  * `RollnWrite/Games/QwixxXChange/XChangeScorecardView.swift` /
  * `dev.bo3.rollnwrite.qwixx.QwixxScorecardScreen` (same wiring pattern, per
  * CLAUDE.md's Android-port instructions).
@@ -37,6 +40,8 @@ fun XChangeScorecardScreen(onBack: () -> Unit) {
     val configuration = LocalConfiguration.current
     var twoPlayer by rememberSaveable { mutableStateOf(false) }
     var showRules by rememberSaveable { mutableStateOf(false) }
+    val title = stringResource(R.string.qwixx_xchange_title)
+    val dice = rememberDiceVisibility(title)
 
     // Single-player on a phone (smallest width < 600dp) pins landscape;
     // two-player or tablet rotates freely - mirrors `landscapeLockediPhone(when:)`.
@@ -68,12 +73,17 @@ fun XChangeScorecardScreen(onBack: () -> Unit) {
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             GameHeader(
-                title = stringResource(R.string.qwixx_xchange_title),
+                title = title,
                 twoPlayer = twoPlayer,
                 onBack = onBack,
                 onToggleTwoPlayer = { twoPlayer = !twoPlayer },
                 onShowRules = { showRules = true },
+                diceShown = dice.shown,
+                onToggleDice = dice.toggle,
             )
+            if (dice.shown) {
+                DiceRollerStrip(dice = qwixxDice)
+            }
             Box(modifier = Modifier.weight(1f).fillMaxSize()) {
                 if (twoPlayer) {
                     TwoPlayerBoards(playerOneViewModel, playerTwoViewModel)
